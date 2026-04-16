@@ -37,9 +37,11 @@ echo Adding all changes...
 git add -A
 echo.
 
-:: Auto-generate commit message with timestamp and summary
-for /f "tokens=1-3 delims=/ " %%a in ('date /t') do set DATESTAMP=%%c-%%a-%%b
-for /f "tokens=1-2 delims=: " %%a in ('time /t') do set TIMESTAMP=%%a:%%b
+:: Auto-generate commit message with timestamp
+:: Use wmic for reliable date/time regardless of locale
+for /f "skip=1" %%d in ('wmic os get localdatetime') do if not defined DTRAW set DTRAW=%%d
+set DATESTAMP=%DTRAW:~0,4%-%DTRAW:~4,2%-%DTRAW:~6,2%
+set TIMESTAMP=%DTRAW:~8,2%:%DTRAW:~10,2%
 
 :: Count changed files
 for /f %%i in ('git diff --cached --numstat ^| find /c /v ""') do set FILECOUNT=%%i
@@ -68,14 +70,64 @@ if %errorlevel% neq 0 (
 for /f %%h in ('git rev-parse --short HEAD') do set COMMIT_HASH=%%h
 
 :: Log the change to CHANGELOG.log
-echo [%DATESTAMP% %TIMESTAMP%] %FILECOUNT% file(s) ^| %COMMIT_HASH% >> CHANGELOG.log
-for /f "delims=" %%f in ('git diff --name-only HEAD~1 HEAD') do (
-    echo   - %%f >> CHANGELOG.log
+echo ---------------------------------------- >> git.tools\CHANGELOG.log
+echo [%DATESTAMP% %TIMESTAMP%] %FILECOUNT% file(s) ^| commit: %COMMIT_HASH% >> git.tools\CHANGELOG.log
+echo ---------------------------------------- >> git.tools\CHANGELOG.log
+
+:: Get total insertions/deletions for the whole commit
+for /f "tokens=1,2 delims= " %%a in ('git diff --shortstat HEAD~1 HEAD') do set TOTAL_STATS=placeholder
+for /f "delims=" %%s in ('git diff --shortstat HEAD~1 HEAD') do (
+    echo   Summary: %%s >> git.tools\CHANGELOG.log
 )
-echo. >> CHANGELOG.log
+echo. >> git.tools\CHANGELOG.log
+
+:: Log each file with detailed +/- line and character counts
+for /f "tokens=1,2,3" %%a in ('git diff --numstat HEAD~1 HEAD') do (
+    set "ADDED=%%a"
+    set "REMOVED=%%b"
+    set "FNAME=%%c"
+    if "!ADDED!"=="-" (
+        echo   [binary]  !FNAME! >> git.tools\CHANGELOG.log
+    ) else (
+        :: Count characters added/removed per file
+        set "CHARS_ADD=0"
+        set "CHARS_DEL=0"
+        for /f "delims=" %%x in ('git diff HEAD~1 HEAD -- "!FNAME!" ^| findstr /r "^+" ^| findstr /v "^+++" ') do (
+            set "LINE=%%x"
+            call :strlen "!LINE!" CLEN
+            set /a CHARS_ADD+=!CLEN!
+        )
+        for /f "delims=" %%x in ('git diff HEAD~1 HEAD -- "!FNAME!" ^| findstr /r "^-" ^| findstr /v "^---" ') do (
+            set "LINE=%%x"
+            call :strlen "!LINE!" CLEN
+            set /a CHARS_DEL+=!CLEN!
+        )
+        echo   [+!ADDED!/-!REMOVED! lines] [+!CHARS_ADD!/-!CHARS_DEL! chars]  !FNAME! >> git.tools\CHANGELOG.log
+    )
+)
+echo. >> git.tools\CHANGELOG.log
+goto :skipstrlen
+
+:strlen
+setlocal enabledelayedexpansion
+set "s=!%~1!"
+set len=0
+if defined s (
+    for %%i in (4096 2048 1024 512 256 128 64 32 16 8 4 2 1) do (
+        if not "!s:~%%i,1!"=="" (
+            set /a len+=%%i
+            set "s=!s:~%%i!"
+        )
+    )
+    set /a len+=1
+)
+endlocal & set %~2=%len%
+exit /b
+
+:skipstrlen
 
 :: Stage and amend the log into the same commit
-git add CHANGELOG.log
+git add git.tools\CHANGELOG.log
 git commit --amend --no-edit
 
 echo.

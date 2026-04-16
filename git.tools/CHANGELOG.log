@@ -1,0 +1,102 @@
+========================================
+  BRISBANE TVs - Change Log
+========================================
+
+----------------------------------------
+[2026-04-16 18:11] 36 file(s) | commit: a9fad30
+  Initial commit - Brisbane TVs website
+----------------------------------------
+  Summary: 36 files changed, 6490 insertions(+)
+
+  [+17/-0 lines]     .gitignore
+  [+120/-0 lines]    about.html
+  [+234/-0 lines]    aspley.html
+  [+234/-0 lines]    banyo.html
+  [+192/-0 lines]    book.html
+  [+234/-0 lines]    boondall.html
+  [+234/-0 lines]    carseldine.html
+  [+234/-0 lines]    chermside-west.html
+  [+234/-0 lines]    chermside.html
+  [+234/-0 lines]    clayfield.html
+  [+575/-0 lines]    css/style.css
+  [+234/-0 lines]    fitzgibbon.html
+  [+234/-0 lines]    geebung.html
+  [+414/-0 lines]    generate-areas.js
+  [+234/-0 lines]    hendra.html
+  [binary 146KB]     img/apartment-install.jpg
+  [binary 2.7MB]     img/before-after.png
+  [binary 152KB]     img/bracket-closeup.jpg
+  [binary 208KB]     img/clean-wall-mount.jpg
+  [binary 54KB]      img/hero-banner.jpg
+  [binary 131KB]     img/living-room-mount.jpg
+  [binary 107KB]     img/tech-installing.jpg
+  [binary 117KB]     img/tv-above-fireplace.jpg
+  [binary 153KB]     img/tv-soundbar-mount.jpg
+  [+324/-0 lines]    index.html
+  [+234/-0 lines]    kedron.html
+  [+234/-0 lines]    northgate.html
+  [+234/-0 lines]    nudgee.html
+  [+234/-0 lines]    nundah.html
+  [+168/-0 lines]    services.html
+  [+234/-0 lines]    taigum.html
+  [+234/-0 lines]    toombul.html
+  [+234/-0 lines]    virginia.html
+  [+234/-0 lines]    wavell-heights.html
+  [+234/-0 lines]    wooloowin.html
+  [+234/-0 lines]    zillmere.html
+
+----------------------------------------
+[2026-04-16 18:14] 36 file(s) | commit: 2b37421
+  Move site files to repo root, remove nested folders
+----------------------------------------
+  Summary: 36 files changed, 0 insertions(+), 0 deletions(-) [renames only]
+
+  [renamed]  brisbanetvs-local/brisbanetvs-local/.gitignore -> .gitignore
+  [renamed]  brisbanetvs-local/brisbanetvs-local/about.html -> about.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/aspley.html -> aspley.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/banyo.html -> banyo.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/book.html -> book.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/boondall.html -> boondall.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/carseldine.html -> carseldine.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/chermside-west.html -> chermside-west.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/chermside.html -> chermside.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/clayfield.html -> clayfield.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/css/style.css -> css/style.css
+  [renamed]  brisbanetvs-local/brisbanetvs-local/fitzgibbon.html -> fitzgibbon.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/geebung.html -> geebung.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/generate-areas.js -> generate-areas.js
+  [renamed]  brisbanetvs-local/brisbanetvs-local/hendra.html -> hendra.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/img/* -> img/*
+  [renamed]  brisbanetvs-local/brisbanetvs-local/index.html -> index.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/kedron.html -> kedron.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/northgate.html -> northgate.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/nudgee.html -> nudgee.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/nundah.html -> nundah.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/services.html -> services.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/taigum.html -> taigum.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/toombul.html -> toombul.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/virginia.html -> virginia.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/wavell-heights.html -> wavell-heights.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/wooloowin.html -> wooloowin.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/zillmere.html -> zillmere.html
+
+----------------------------------------
+[2026-04-16 18:24] 4 file(s) | commit: d1429a3
+  Add git.tools batch files and README
+----------------------------------------
+  Summary: 4 files changed, 276 insertions(+)
+
+  [+95/-0 lines]     README.md
+  [+43/-0 lines]     git.tools/start-dev-server.bat
+  [+39/-0 lines]     git.tools/sync-from-main.bat
+  [+99/-0 lines]     git.tools/update-main.bat
+
+---------------------------------------- 
+[2026-04-16 18:33] 3 file(s) | commit: f24c3dc 
+---------------------------------------- 
+  Summary:  3 files changed, 154 insertions(+), 8 deletions(-) 
+ 
+  [+1/-0 lines] [+0/-0 chars]  .gitignore 
+  [+93/-0 lines] [+232/-0 chars]  git.tools/CHANGELOG.log 
+  [+60/-8 lines] [+929/-0 chars]  git.tools/update-main.bat 
+ 
