@@ -16,25 +16,31 @@ echo.
 echo ============================================
 echo.
 
-:: Check if there are any changes to commit (including untracked files)
-git diff --quiet --exit-code
-set UNSTAGED=%errorlevel%
+:: Always stage everything first (picks up new folders, deleted files, etc.)
+echo Adding all changes...
+git add -A
+echo.
+
+:: Check if there is anything to commit
 git diff --quiet --exit-code --cached
-set STAGED=%errorlevel%
-
-:: Check for untracked files
-for /f %%i in ('git ls-files --others --exclude-standard') do set UNTRACKED=1
-if not defined UNTRACKED set UNTRACKED=0
-
-if %UNSTAGED%==0 if %STAGED%==0 if %UNTRACKED%==0 (
-    echo No changes detected. Nothing to push.
+if %errorlevel%==0 (
+    echo No new changes to commit.
+    echo Checking for unpushed commits...
+    echo.
+    git push origin main
+    if %errorlevel%==0 (
+        echo.
+        echo ============================================
+        echo   All up to date!
+        echo ============================================
+    ) else (
+        echo.
+        echo [NOTE] Nothing to push or push failed.
+    )
     echo.
     pause
     exit /b 0
 )
-
-echo Adding all changes...
-git add -A
 echo.
 
 :: Auto-generate commit message with timestamp
