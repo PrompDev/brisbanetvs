@@ -1517,6 +1517,16 @@
             text-align: center;
             margin-bottom: 28px;
         }
+        .gallery-eyebrow {
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 1.8px;
+            text-transform: uppercase;
+            color: #403ed0;
+            margin-bottom: 10px;
+            display: block;
+        }
         .gallery-title {
             font-family: 'Fraunces', serif;
             font-size: clamp(1.9rem, 2.6vw, 2.6rem);
@@ -1657,9 +1667,9 @@
         .blog-view-all:hover { gap: 12px; }
         .blog-grid {
             display: grid;
-            grid-template-columns: 1.05fr 1fr;
+            grid-template-columns: 1.15fr 1fr;
             gap: 28px;
-            align-items: stretch;
+            align-items: start;
         }
         .blog-featured {
             display: flex;
@@ -1669,12 +1679,11 @@
         }
         .blog-featured-img {
             width: 100%;
+            aspect-ratio: 16 / 10;
             overflow: hidden;
             background: #eee;
             border-radius: 2px;
             margin-bottom: 16px;
-            flex: 1 1 auto;
-            min-height: 320px;
         }
         .blog-featured-body {
             display: flex;
@@ -1736,28 +1745,22 @@
         .blog-list {
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            height: 100%;
+            gap: 28px;
         }
         .blog-list-item {
             display: grid;
-            grid-template-columns: clamp(130px, 12vw, 180px) 1fr;
-            gap: 20px;
-            padding: 18px 0;
-            border-bottom: 1px solid rgba(0,0,0,0.09);
+            grid-template-columns: clamp(170px, 11.5vw, 230px) 1fr;
+            gap: 22px;
+            padding: 0;
             cursor: pointer;
-            flex: 1;
-            align-items: stretch;
+            align-items: start;
         }
-        .blog-list-item:first-child { padding-top: 0; }
-        .blog-list-item:last-child { border-bottom: none; padding-bottom: 0; }
         .blog-list-img {
             width: 100%;
-            aspect-ratio: 4 / 5;
+            aspect-ratio: 1 / 1;
             overflow: hidden;
             background: #eee;
             border-radius: 2px;
-            align-self: start;
         }
         .blog-list-img img {
             width: 100%;
@@ -1766,7 +1769,7 @@
             transition: transform 0.5s ease;
         }
         .blog-list-item:hover .blog-list-img img { transform: scale(1.06); }
-        .blog-list-text { display: flex; flex-direction: column; justify-content: center; }
+        .blog-list-text { display: flex; flex-direction: column; justify-content: flex-start; }
         .blog-list-title {
             font-family: 'Inter', sans-serif;
             font-size: 13.5px;
@@ -1934,7 +1937,7 @@
             .blog-title { font-size: clamp(1.9rem, 2.6vw, 2.6rem); }
             .areas-section { padding: 90px 0 90px; }
             .faq-section { padding: 90px 0 90px; }
-            .blog-list-item { grid-template-columns: clamp(160px, 11vw, 220px) 1fr; gap: 24px; }
+            .blog-list-item { grid-template-columns: clamp(200px, 12vw, 260px) 1fr; gap: 24px; }
             .blog-featured-title { font-size: 16px; }
             .blog-list-title { font-size: 14.5px; }
             .hero2-section { height: 55vh; min-height: 520px; }
@@ -2043,7 +2046,7 @@
             .blog-title { font-size: 1.6rem; }
             .blog-view-all { font-size: 13px; }
             .blog-grid { grid-template-columns: 1fr; gap: 28px; align-items: initial; }
-            .blog-featured-img { aspect-ratio: 16 / 10 !important; height: auto !important; min-height: 0 !important; flex: 0 0 auto !important; }
+            .blog-featured-img { aspect-ratio: 16 / 10 !important; height: auto !important; }
             .blog-featured-title { font-size: 15.5px; }
             .blog-list-item { grid-template-columns: 100px 1fr; gap: 14px; padding: 14px 0; }
             .blog-list-img { height: auto; min-height: 0; aspect-ratio: 1 / 1; }
@@ -2488,6 +2491,7 @@
 <section class="gallery-section">
     <div class="gallery-inner">
         <div class="gallery-header">
+            <span class="gallery-eyebrow">Brisbane-Wide Coverage</span>
             <h2 class="gallery-title">Service Areas — TV Mounting Across Brisbane</h2>
             <div class="gallery-rating">
                 <span class="gallery-stars">
@@ -2606,7 +2610,7 @@
             <!-- Three smaller posts -->
             <div class="blog-list">
                 <a href="#" class="blog-list-item">
-                    <div class="blog-list-img"><img src="https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&w=400&q=80" alt="Mounting an 85-inch TV on a Brisbane double brick wall"></div>
+                    <div class="blog-list-img"><img src="https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&w=500&q=80" alt="Mounting an 85-inch TV on a Brisbane double brick wall" loading="lazy"></div>
                     <div class="blog-list-text">
                         <div class="blog-list-title">Mounting An 85-Inch TV: What Your Wall Actually Needs</div>
                         <p class="blog-list-excerpt">Oversized TVs are only as stable as what's behind them. Here's how we check studs, anchor into double brick, and spec the right bracket for a screen that heavy.</p>
@@ -2614,7 +2618,7 @@
                     </div>
                 </a>
                 <a href="#" class="blog-list-item">
-                    <div class="blog-list-img"><img src="https://images.unsplash.com/photo-1581235720704-06d3acfcb36f?auto=format&fit=crop&w=400&q=80" alt="Starlink dish installation on a Brisbane roofline"></div>
+                    <div class="blog-list-img"><img src="https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=500&q=80" alt="Open sky above a Brisbane rooftop — Starlink installation line-of-sight" loading="lazy"></div>
                     <div class="blog-list-text">
                         <div class="blog-list-title">Starlink Install for Brisbane Homes: Positioning For A Clear Sky</div>
                         <p class="blog-list-excerpt">Jacaranda trees, corrugated iron, and summer storms all mess with your signal. Here's where we mount Starlink dishes in Brisbane — and why the roof isn't always right.</p>
@@ -2622,7 +2626,7 @@
                     </div>
                 </a>
                 <a href="#" class="blog-list-item">
-                    <div class="blog-list-img"><img src="https://images.unsplash.com/photo-1615873968403-89e068629265?auto=format&fit=crop&w=400&q=80" alt="Comparison of TV mounting on double brick versus gyprock Brisbane walls"></div>
+                    <div class="blog-list-img"><img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=500&q=80" alt="Brick versus gyprock wall — Brisbane TV mount surface comparison" loading="lazy"></div>
                     <div class="blog-list-text">
                         <div class="blog-list-title">Brick, Gyprock, or Hebel: Which Brisbane Wall Is Hardest to Mount?</div>
                         <p class="blog-list-excerpt">Every suburb has a different wall. Double-brick in Ashgrove, Hebel in Newstead, old gyprock in Woolloongabba. Here's what each one demands from an installer.</p>
