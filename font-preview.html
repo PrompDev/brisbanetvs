@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brisbane TVs — Font Preview</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700&family=Instrument+Serif:ital@0;1&family=DM+Serif+Display:ital@0;1&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Gloock&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --ink: #0a0a0a;
+    --muted: #6b6b6b;
+    --line: #e4e1da;
+    --bg: #fafaf7;
+    --accent: #4036d9;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+  }
+
+  .page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 60px 40px 120px;
+  }
+
+  .intro {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 40px;
+    margin-bottom: 60px;
+  }
+
+  .intro-eyebrow {
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 18px;
+  }
+
+  .intro h1 {
+    font-family: 'Inter', sans-serif;
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    margin-bottom: 14px;
+  }
+
+  .intro p {
+    color: var(--muted);
+    max-width: 680px;
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  .font-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 42px 48px 50px;
+    margin-bottom: 32px;
+  }
+
+  .font-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 18px;
+    margin-bottom: 36px;
+  }
+
+  .font-number {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+
+  .font-num {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .font-name {
+    font-family: 'Inter', sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+  }
+
+  .font-blurb {
+    font-size: 13px;
+    color: var(--muted);
+    max-width: 420px;
+    text-align: right;
+  }
+
+  /* Sample blocks */
+  .sample-group {
+    display: grid;
+    gap: 32px;
+  }
+
+  .sample {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+
+  .sample-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-top: 10px;
+    font-weight: 500;
+  }
+
+  /* Hero tagline — massive display */
+  .tagline {
+    font-size: clamp(3rem, 6vw, 5.5rem);
+    line-height: 0.95;
+    letter-spacing: -0.02em;
+    font-weight: 400;
+  }
+  .tagline em {
+    font-style: italic;
+  }
+
+  /* Section headings — large */
+  .section-title {
+    font-size: clamp(2rem, 3.4vw, 3rem);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    font-weight: 400;
+  }
+
+  /* H1 — utility headline */
+  .h1-util {
+    font-family: 'Inter', sans-serif !important;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 0;
+    padding-top: 14px;
+  }
+
+  /* Mega-menu featured card heading */
+  .mega-heading {
+    font-size: 22px;
+    line-height: 1.2;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+
+  /* Font-specific application — only h1-level titles get the target font */
+  .fnt-fraunces .tagline,
+  .fnt-fraunces .section-title,
+  .fnt-fraunces .mega-heading { font-family: 'Fraunces', serif; }
+
+  .fnt-instrument .tagline,
+  .fnt-instrument .section-title,
+  .fnt-instrument .mega-heading { font-family: 'Instrument Serif', serif; }
+
+  .fnt-dmserif .tagline,
+  .fnt-dmserif .section-title,
+  .fnt-dmserif .mega-heading { font-family: 'DM Serif Display', serif; font-weight: 400; }
+
+  .fnt-playfair .tagline,
+  .fnt-playfair .section-title,
+  .fnt-playfair .mega-heading { font-family: 'Playfair Display', serif; }
+
+  .fnt-cormorant .tagline,
+  .fnt-cormorant .section-title,
+  .fnt-cormorant .mega-heading { font-family: 'Cormorant Garamond', serif; font-weight: 500; }
+
+  .fnt-gloock .tagline,
+  .fnt-gloock .section-title,
+  .fnt-gloock .mega-heading { font-family: 'Gloock', serif; font-weight: 400; }
+
+  /* Footer */
+  .footer-note {
+    margin-top: 48px;
+    padding: 24px 28px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .footer-note strong { color: var(--ink); font-weight: 600; }
+
+  @media (max-width: 720px) {
+    .page { padding: 40px 20px 80px; }
+    .font-card { padding: 28px 24px 32px; }
+    .font-header { flex-direction: column; gap: 10px; }
+    .font-blurb { text-align: left; }
+    .sample { grid-template-columns: 1fr; gap: 10px; }
+    .sample-label { padding-top: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="intro">
+    <div class="intro-eyebrow">FONT PREVIEW · BRISBANE TVs</div>
+    <h1>Title font options — side by side</h1>
+    <p>Each card shows the same three title samples rendered in a different serif. Pick the one that feels right — just tell me the number (1–6) and I'll swap it across the whole site in one pass.</p>
+  </div>
+
+  <!-- 1 — Current: Fraunces -->
+  <div class="font-card fnt-fraunces">
+    <div class="font-header">
+      <div class="font-number">
+        <span class="font-num">01 — CURRENT</span>
+        <span class="font-name">Fraunces</span>
+      </div>
+      <div class="font-blurb">What you have now. Editorial, warm, slight retro feel.</div>
+    </div>
+    <div class="sample-group">
+      <div class="sample">
+        <span class="sample-label">Hero</span>
+        <div class="tagline">Precision in <em>every</em><br>detail period.</div>
+      </div>
+      <div class="sample">
+        <span class="sample-label">Section</span>
+        <div class="section-title">TV Mounting Services Brisbane</div>
+      </div>
+      <div class="sample">
+        <span class="sample-label">Menu card</span>
+        <div class="mega-heading">Complete Media Room Install</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2 — Instrument Serif -->
+  <div class="font-card fnt-instrument">
+    <div class="font-header">
+      <div class="font-number">
+        <span class="font-num">02 — RECOMMENDED</span>
+        <span class="font-name">Instrument Serif</span>
+      </div>
+      <div class="font-blurb">Modern editorial. The current darling of premium DTC brands — cleaner, sharper, more contemporary than Fraunces.</div>
+    </div>
+    <div class="sample-group">
+      <div class="sample">
+        <span class="sample-label">Hero</span>
+        <div class="tagline">Precision in <em>every</em><br>detail period.</div>
+      </div>
+      <div class="sample">
+        <span class="sample-label">Section</span>
+        <div class="section-title">TV Mounting Services Brisbane</div>
+      </div>
+      <div class="sample">
+        <span class="sample-label">Menu card</span>
+        <div class="mega-heading">Complete Media Room Install</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3 — DM Serif Display -->
+  <div class="font-card fnt-dmserif">
+    <div class="font-header">
+      <div class="font-number">
+        <span class="font-num">03</span>
+        <span class="font-name">DM Serif Display</span>
+      </div>
+      <div class="font-blurb">Bolder, high-contrast, confident. Feels "established, high-end" — a little heavier presence.</div>
+    </div>
+    <div class="sample-group">
+      <div class="sample">
+        <span class="sample-label">Hero</span>
+        <div class="tagline">Precision in <em>every</em><br>detail period.</div>
+      </div>
+      <div class="sample">
+        <span class="sample-label">Section</span>
+        <div class="section-title">TV Mounting Services Brisbane</div>
+      </div>
+      <div class="sample">
+        <span class="sample-label">Menu card</span>
+        <div class="mega-heading">Complete Media Room Install</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4 — Playfair Display -->
+  <div class="font-card fnt-playfair">
+    <div class="font-header">
+      <div class="font-number">
+        <span class="font-num">04</span>
+        <span class="font-name">Playfair Display</span>
+      </div>
+      <div class="font-blurb">Classic editorial serif with dramatic thick/thin contrast. Magazine-grade, timeless.</div>
+    </div>
+    <div class="sample-group">
+      <div class="sample">
+        <span class="sample-label">Hero</span>
+        <div class="tagline">Precision in <em>every</em><br>detail period.</div>
+      </div>
+      <div class="sample">
+        <span class="sample-label">Section</span>
+        <div class="section-title">TV Mounting Services Brisbane</div>
+      </div>
+      <div class="sample">
+        <span class="sample-label">Menu card</span>
+        <div class="mega-heading">Complete Media Room Install</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5 — Cormorant Garamond -->
+  <div class="font-card fnt-cormorant">
+    <div class="font-header">
+      <div class="font-number">
+        <span class="font-num">05</span>
+        <span class="font-name">Cormorant Garamond</span>
+      </div>
+      <div class="font-blurb">Refined and thin. Reads as "luxury" more than "confident." Leans lighter.</div>
+    </div>
+    <div class="sample-group">
+      <div class="sample">
+        <span class="sample-label">Hero</span>
+        <div class="tagline">Precision in <em>every</em><br>detail period.</div>
+      </div>
+      <div class="sample">
+        <span class="sample-label">Section</span>
+        <div class="section-title">TV Mounting Services Brisbane</div>
+      </div>
+      <div class="sample">
+        <span class="sample-label">Menu card</span>
+        <div class="mega-heading">Complete Media Room Install</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6 — Gloock -->
+  <div class="font-card fnt-gloock">
+    <div class="font-header">
+      <div class="font-number">
+        <span class="font-num">06</span>
+        <span class="font-name">Gloock</span>
+      </div>
+      <div class="font-blurb">Close cousin of paid fonts like Canela. Distinctive, modern, warm — a bit more unique than the others.</div>
+    </div>
+    <div class="sample-group">
+      <div class="sample">
+        <span class="sample-label">Hero</span>
+        <div class="tagline">Precision in <em>every</em><br>detail period.</div>
+      </div>
+      <div class="sample">
+        <span class="sample-label">Section</span>
+        <div class="section-title">TV Mounting Services Brisbane</div>
+      </div>
+      <div class="sample">
+        <span class="sample-label">Menu card</span>
+        <div class="mega-heading">Complete Media Room Install</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    <strong>Body / UI text stays Inter</strong> across all options — only the display/title font changes. Just reply with the number and I'll apply it across hero, section headings, mega-menu cards, blog titles and footer headings.
+  </div>
+
+</div>
+
+</body>
+</html>
