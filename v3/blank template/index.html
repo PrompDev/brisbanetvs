@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TV Mounting Brisbane — Same-Day Wall Installs from $179 | Brisbane TVs</title>
-    <meta name="description" content="TV mounting Brisbane from $179 — expert wall mount installation, cable concealment, 5-year warranty. Same-day service across 109 Brisbane suburbs.">
+    <title>Page Title | Brisbane TVs</title>
+    <meta name="description" content="Page description goes here.">
     <meta name="keywords" content="TV mounting Brisbane, TV mounting near me, TV wall mounting Brisbane, TV installation Brisbane, cable concealment Brisbane, same-day TV mounting, TV mount Paddington, TV mount Ashgrove, TV mount New Farm">
     <link rel="canonical" href="https://brisbanetvs.com.au/">
     <meta property="og:title" content="TV Mounting Brisbane — Same-Day Wall Installs from $179">
@@ -3773,18 +3773,81 @@
             }
             .tab-nav::-webkit-scrollbar { display: none; }
         }
+
+        /* =========================================================
+           BLANK TEMPLATE OVERRIDES
+           Forces the header into its white/light ("is-menu-open")
+           state permanently and makes it sit statically at the
+           top of the page instead of being overlaid on a hero.
+           ========================================================= */
+        body.blank-tpl {
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        /* The wrapper provides a white backdrop for the header so the
+           existing top-bar & main-header margins (8px + 8px) read as
+           WHITE spacing instead of grey body/hero. The header's own
+           structure and proportions are left exactly as the homepage
+           — only the background/colours are swapped. */
+        .page-header-wrapper {
+            position: relative;
+            background: #fff;
+            /* Create a block formatting context so the 8px margin-top on
+               .top-bar doesn't collapse out of the wrapper and reveal the
+               body/html behind it as a grey strip. */
+            padding-top: 1px;
+            margin-top: -1px;
+        }
+        .page-header-wrapper .site-header {
+            position: relative;
+            background: #fff;
+            box-shadow: none;
+            /* Trap .top-bar's margin-top inside the header so the header's
+               own white background paints over it. Without this, the 8px
+               margin escapes the header and the mega-menu backdrop (30%
+               black overlay) shows through as a grey strip above the top bar. */
+            padding-top: 1px;
+            margin-top: -1px;
+        }
+        /* Lock the "is-menu-open" look without needing JS */
+        .page-header-wrapper .site-header .top-bar,
+        .page-header-wrapper .site-header .top-bar a,
+        .page-header-wrapper .site-header .top-bar .item {
+            color: rgba(0,0,0,0.7);
+        }
+        .page-header-wrapper .site-header .top-bar a:hover { color: #000; }
+        .page-header-wrapper .site-header .top-bar .search-bar-sm {
+            border-color: rgba(0,0,0,0.15);
+        }
+        .page-header-wrapper .site-header .top-bar .search-bar-sm input,
+        .page-header-wrapper .site-header .top-bar .search-bar-sm input::placeholder,
+        .page-header-wrapper .site-header .top-bar .search-bar-sm svg {
+            color: rgba(0,0,0,0.55);
+        }
+        .page-header-wrapper .site-header .main-nav a,
+        .page-header-wrapper .site-header .main-nav .nav-dropdown-trigger,
+        .page-header-wrapper .site-header .header-phone {
+            color: #1a1a1a;
+        }
+        .page-header-wrapper .site-header .logo img {
+            filter: brightness(0);
+        }
+        /* Hamburger keeps its original dark-circle / white-bar styling */
+
+        /* Blank main content area — grows to push footer to bottom */
+        .page-main {
+            flex: 1 0 auto;
+            min-height: 60vh;
+            background: #fff;
+        }
     </style>
 </head>
-<body>
+<body class="blank-tpl">
 
-<!-- Hero Section -->
-<section class="hero-wrapper">
-    <div class="hero-bg">
-        <img src="https://cdn.brisbanetvs.com/BrisbaneTVs-hero.png" alt="Professional TV wall mounting in a modern Brisbane living room" onerror="this.style.display='none'">
-    </div>
-    <div class="hero-overlay"></div>
-
-    <!-- Header (overlaid on hero) -->
+<!-- Page Header (white / static version) -->
+<div class="page-header-wrapper">
     <div class="site-header">
         <!-- Top Bar: Support | trust items | Areas + Search -->
         <div class="top-bar">
@@ -3821,7 +3884,7 @@
         <!-- Main Header: Logo | Nav (centered) | Phone + Book Now -->
         <header class="main-header">
             <div class="container">
-                <a href="index.html" class="logo">
+                <a href="../index.html" class="logo">
                     <img src="https://cdn.brisbanetvs.com/brisbanetvs-logo-white.png" alt="Brisbane TVs">
                 </a>
 
@@ -3841,7 +3904,7 @@
                     <a href="#">Pricing</a>
                     <a href="#">Gallery</a>
                     <a href="#">Blog</a>
-                    <a href="about.html">About</a>
+                    <a href="../about.html">About</a>
                 </nav>
 
                 <div class="header-right">
@@ -3849,7 +3912,7 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                         1300 312 271
                     </a>
-                    <a href="book.html" class="header-book-btn">BOOK NOW</a>
+                    <a href="../book.html" class="header-book-btn">BOOK NOW</a>
                 </div>
 
                 <button class="hamburger" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
@@ -3875,7 +3938,7 @@
                                 <a href="#">Schools &amp; Clinics</a>
                                 <a href="#">Warranty Call-Outs</a>
                             </div>
-                            <a href="services.html" class="mega-view-all">View All Services →</a>
+                            <a href="../services.html" class="mega-view-all">View All Services →</a>
                         </div>
 
                         <div class="mega-col">
@@ -4062,794 +4125,17 @@
     <!-- Mega Menu Backdrop -->
     <div class="mega-backdrop"></div>
 
-    <!-- Hero Content -->
-    <div class="hero-content">
-        <div class="hero-text">
-            <p class="hero-tagline">Precision in<br><em>every</em> detail.</p>
-            <p class="hero-sub">Expert Residential &amp; Commercial TV Mounting in Brisbane.</p>
-            <h1 class="hero-h1">TV Mounting Brisbane — Wall Mount Installs Near You From $179</h1>
-            <a href="book.html" class="hero-cta">BOOK YOUR INSTALL</a>
-        </div>
+</div>  <!-- /.page-header-wrapper -->
+
+<!-- =========================================================
+     BLANK TEMPLATE — main content area
+     Add your page content inside <main class="page-main">.
+     ========================================================= -->
+<main class="page-main" role="main">
+    <div class="container" style="padding: 80px 20px; max-width: 1200px; margin: 0 auto;">
+        <!-- Your page content goes here -->
     </div>
-
-</section>
-
-<!-- Photo Grid (below hero) -->
-<section class="photo-grid-section">
-    <div class="photo-grid-inner">
-        <div class="photo-grid-item">
-            <div class="photo-img">
-                <img loading="lazy" decoding="async" width="1200" height="1200"
-                     src="https://cdn.brisbanetvs.com/TV%20Flush%20Mount%20Living%20Room2-800x800.webp"
-                     srcset="https://cdn.brisbanetvs.com/TV%20Flush%20Mount%20Living%20Room2-800x800.webp 800w, https://cdn.brisbanetvs.com/TV%20Flush%20Mount%20Living%20Room2-1200x1200.webp 1200w"
-                     sizes="(max-width: 1024px) 50vw, 12vw"
-                     alt="TV flush-mounted on living room wall — Brisbane TVs install">
-            </div>
-            <span class="photo-label">Living Room</span>
-        </div>
-        <div class="photo-grid-item">
-            <div class="photo-img">
-                <img loading="lazy" decoding="async" width="1200" height="1200"
-                     src="https://cdn.brisbanetvs.com/Tilt%20Mount%20Bedroom800x800.webp"
-                     srcset="https://cdn.brisbanetvs.com/Tilt%20Mount%20Bedroom800x800.webp 800w, https://cdn.brisbanetvs.com/Tilt%20Mount%20Bedroom1200x1200.webp 1200w"
-                     sizes="(max-width: 1024px) 50vw, 12vw"
-                     alt="Tilt-mounted TV above bedroom dresser — Brisbane TVs install">
-            </div>
-            <span class="photo-label">Bedroom</span>
-        </div>
-        <div class="photo-grid-item">
-            <div class="photo-img">
-                <img loading="lazy" decoding="async" width="1200" height="1200"
-                     src="https://cdn.brisbanetvs.com/Full-Motion%20Corner%20Install800x800.webp"
-                     srcset="https://cdn.brisbanetvs.com/Full-Motion%20Corner%20Install800x800.webp 800w, https://cdn.brisbanetvs.com/Full-Motion%20Corner%20Install1200x1200.webp 1200w"
-                     sizes="(max-width: 1024px) 50vw, 12vw"
-                     alt="Full-motion corner TV mount install — Brisbane TVs">
-            </div>
-            <span class="photo-label">Full Motion Install</span>
-        </div>
-        <div class="photo-grid-item">
-            <div class="photo-img">
-                <img loading="lazy" decoding="async" width="1200" height="1200"
-                     src="https://cdn.brisbanetvs.com/Cable%20Concealment800x800.webp"
-                     srcset="https://cdn.brisbanetvs.com/Cable%20Concealment800x800.webp 800w, https://cdn.brisbanetvs.com/Cable%20Concealment1200x1200.webp 1200w"
-                     sizes="(max-width: 1024px) 50vw, 12vw"
-                     alt="In-wall cable concealment behind mounted TV — Brisbane TVs">
-            </div>
-            <span class="photo-label">Cable Concealment</span>
-        </div>
-        <div class="photo-grid-item">
-            <div class="photo-img">
-                <img loading="lazy" decoding="async" width="1200" height="1200"
-                     src="https://cdn.brisbanetvs.com/Brick%20Wall%20Mount-800x800.webp"
-                     srcset="https://cdn.brisbanetvs.com/Brick%20Wall%20Mount-800x800.webp 800w, https://cdn.brisbanetvs.com/Brick%20Wall%20Mount1200x1200.webp 1200w"
-                     sizes="(max-width: 1024px) 50vw, 12vw"
-                     alt="TV wall-mounted on exposed brick — Brisbane TVs install">
-            </div>
-            <span class="photo-label">Brick Wall Install</span>
-        </div>
-        <div class="photo-grid-item">
-            <div class="photo-img">
-                <img loading="lazy" decoding="async" width="1200" height="1200"
-                     src="https://cdn.brisbanetvs.com/Starlink%20Roof%20Install800x800.webp"
-                     srcset="https://cdn.brisbanetvs.com/Starlink%20Roof%20Install800x800.webp 800w, https://cdn.brisbanetvs.com/Starlink%20Roof%20Install1200x1200.webp 1200w"
-                     sizes="(max-width: 1024px) 50vw, 12vw"
-                     alt="Starlink dish roof installation — Brisbane TVs">
-            </div>
-            <span class="photo-label">Starlink</span>
-        </div>
-        <div class="photo-grid-item">
-            <div class="photo-img">
-                <img loading="lazy" decoding="async" width="1200" height="1200"
-                     src="https://cdn.brisbanetvs.com/Soundbar%20Wall%20Mount800x800.webp"
-                     srcset="https://cdn.brisbanetvs.com/Soundbar%20Wall%20Mount800x800.webp 800w, https://cdn.brisbanetvs.com/Soundbar%20Wall%20Mount1200x1200.webp 1200w"
-                     sizes="(max-width: 1024px) 50vw, 12vw"
-                     alt="Soundbar wall-mounted beneath TV — Brisbane TVs install">
-            </div>
-            <span class="photo-label">Commercial</span>
-        </div>
-        <div class="photo-grid-item">
-            <div class="photo-img">
-                <img loading="lazy" decoding="async" width="1200" height="1200"
-                     src="https://cdn.brisbanetvs.com/85_%20Samsung%20Cinema%20Setup800x800.webp"
-                     srcset="https://cdn.brisbanetvs.com/85_%20Samsung%20Cinema%20Setup800x800.webp 800w, https://cdn.brisbanetvs.com/85_%20Samsung%20Cinema%20Setup1200x1200.webp 1200w"
-                     sizes="(max-width: 1024px) 50vw, 12vw"
-                     alt="85-inch Samsung cinema setup above fireplace — Brisbane TVs install">
-            </div>
-            <span class="photo-label">85&quot; Cinema Setup</span>
-        </div>
-    </div>
-</section>
-
-<!-- Most Popular -->
-<section class="most-popular">
-    <div class="most-popular-inner">
-        <div class="most-popular-header">
-            <span class="most-popular-eyebrow">Most Booked</span>
-            <h2 class="section-heading">TV Mounting Services Brisbane</h2>
-            <p class="most-popular-sub">Browse the rooms and setups Brisbane homeowners book most — living rooms, bedrooms, outdoor alfrescos, and Starlink dishes. Every install comes with the same fixed price, same-day availability, and lifetime workmanship guarantee.</p>
-        </div>
-        <div class="tab-nav" id="popularTabs">
-            <a href="#" class="active" data-tab="living">Living Room</a>
-            <a href="#" data-tab="bedroom">Bedroom</a>
-            <a href="#" data-tab="outdoor">Outdoor</a>
-            <a href="#" data-tab="starlink">Starlink</a>
-            <a href="#" class="shop-all" data-tab="all">View All <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
-        </div>
-        <div class="popular-grid" id="popularGrid"></div>
-    </div>
-</section>
-
-<!-- Pricing -->
-<section class="pricing-section" id="pricing">
-    <div class="pricing-inner">
-        <div class="pricing-header">
-            <span class="pricing-eyebrow">Interactive Pricing</span>
-            <h2 class="pricing-title">TV Wall Mounting Prices Brisbane</h2>
-            <p class="pricing-sub">Flat-rate pricing for every Brisbane home — no surprise fees, no call-out charges, GST included. All installs come with our lifetime workmanship guarantee.</p>
-        </div>
-
-        <!-- Quick Quote Calculator -->
-        <div class="pricing-calculator" id="pricingCalculator">
-            <div class="calc-inputs">
-                <div class="calc-field">
-                    <label class="calc-label">Number of TVs</label>
-                    <div class="calc-stepper" data-stepper>
-                        <button type="button" data-action="dec" aria-label="Decrease">−</button>
-                        <span class="calc-stepper-value" id="calcCount">1</span>
-                        <button type="button" data-action="inc" aria-label="Increase">+</button>
-                    </div>
-                </div>
-                <div class="calc-field">
-                    <label class="calc-label">TV Size</label>
-                    <div class="calc-segmented" id="calcSize">
-                        <button type="button" data-tier="standard" data-price="149" data-label='Standard mount (up to 55")'>Up to 55"</button>
-                        <button type="button" class="is-active" data-tier="large" data-price="229" data-label='Large mount (55–75")'>55 – 75"</button>
-                        <button type="button" data-tier="premium" data-price="349" data-label='Premium mount (75–98")'>75 – 98"</button>
-                        <button type="button" data-tier="outdoor" data-price="399" data-label="Outdoor / alfresco install">Outdoor</button>
-                    </div>
-                </div>
-                <div class="calc-field">
-                    <label class="calc-label">Add-ons (per TV)</label>
-                    <div class="calc-addons" id="calcAddons">
-                        <label class="calc-checkbox"><input type="checkbox" data-price="100" data-label="In-wall cable concealment"> <span>Cable concealment <em>+$100</em></span></label>
-                        <label class="calc-checkbox"><input type="checkbox" data-price="80" data-label="Soundbar mount"> <span>Soundbar mount <em>+$80</em></span></label>
-                        <label class="calc-checkbox"><input type="checkbox" data-price="50" data-label="Full-motion bracket upgrade"> <span>Full-motion bracket <em>+$50</em></span></label>
-                    </div>
-                </div>
-            </div>
-            <div class="calc-summary">
-                <div class="calc-summary-label">Estimated Total</div>
-                <div class="calc-total"><span class="currency">$</span><span id="calcTotal">229</span></div>
-                <div class="calc-breakdown" id="calcBreakdown">1 TV · Large mount (55–75")</div>
-                <a href="book.html" class="calc-cta" id="calcCta">Book this install <span>›</span></a>
-            </div>
-        </div>
-
-        <div class="pricing-grid">
-            <div class="pricing-card" data-tier="standard">
-                <div class="pricing-card-name">Standard Mount</div>
-                <div class="pricing-card-meta">TVs up to 55"</div>
-                <div class="pricing-card-price"><span class="currency">$</span>149</div>
-                <div class="pricing-card-price-note">Fixed price, Brisbane metro</div>
-                <ul class="pricing-card-features">
-                    <li>Fixed or tilt bracket supplied</li>
-                    <li>Stud-mount into gyprock or timber</li>
-                    <li>Level + signal test before we leave</li>
-                    <li>All cabling tucked neatly behind TV</li>
-                    <li>Lifetime workmanship guarantee</li>
-                </ul>
-                <a href="#" class="pricing-card-cta">Book Standard <span>›</span></a>
-            </div>
-
-            <div class="pricing-card is-featured" data-tier="large">
-                <span class="pricing-card-tag">Most Booked</span>
-                <div class="pricing-card-name">Large TV Mount</div>
-                <div class="pricing-card-meta">TVs 55" – 75"</div>
-                <div class="pricing-card-price"><span class="currency">$</span>229</div>
-                <div class="pricing-card-price-note">Most Brisbane living rooms</div>
-                <ul class="pricing-card-features">
-                    <li>Full-motion bracket supplied</li>
-                    <li>Double-brick, Hebel & stud ready</li>
-                    <li>In-wall cable concealment included</li>
-                    <li>Soundbar alignment + level check</li>
-                    <li>Lifetime workmanship guarantee</li>
-                </ul>
-                <a href="#" class="pricing-card-cta">Book Large <span>›</span></a>
-            </div>
-
-            <div class="pricing-card" data-tier="premium">
-                <div class="pricing-card-name">Premium / 85"+</div>
-                <div class="pricing-card-meta">TVs 75" – 98"</div>
-                <div class="pricing-card-price"><span class="currency">$</span>349</div>
-                <div class="pricing-card-price-note">2-installer job</div>
-                <ul class="pricing-card-features">
-                    <li>Heavy-duty bracket for oversized panels</li>
-                    <li>Structural check into studs or masonry</li>
-                    <li>Two-installer lift &amp; mount</li>
-                    <li>Full cable &amp; power point concealment</li>
-                    <li>Lifetime workmanship guarantee</li>
-                </ul>
-                <a href="#" class="pricing-card-cta">Book Premium <span>›</span></a>
-            </div>
-
-            <div class="pricing-card" data-tier="outdoor">
-                <div class="pricing-card-name">Outdoor &amp; Alfresco</div>
-                <div class="pricing-card-meta">Patios, poolside, BBQ areas</div>
-                <div class="pricing-card-price"><span class="currency">$</span>399</div>
-                <div class="pricing-card-price-note">Queensland-weather rated</div>
-                <ul class="pricing-card-features">
-                    <li>IP-rated outdoor bracket</li>
-                    <li>Weatherproofed cable entry</li>
-                    <li>Wi-Fi / Starlink signal check outside</li>
-                    <li>Glare + sun angle positioning</li>
-                    <li>Lifetime workmanship guarantee</li>
-                </ul>
-                <a href="#" class="pricing-card-cta">Book Outdoor <span>›</span></a>
-            </div>
-        </div>
-        <div class="pricing-footnote">
-            <span class="pricing-footnote-icon" aria-hidden="true">!</span>
-            <h3 class="pricing-footnote-title">Need something beyond a standard TV wall mount?</h3>
-            <p>Our Brisbane installers also handle <strong>soundbar mounting</strong>, <strong>Starlink dish installation</strong>, <strong>digital TV antenna setup</strong>, <strong>in-wall cable concealment</strong>, and <strong>full home theatre builds</strong> — across every Brisbane suburb, from the inner city out to the bay. Every custom job is fixed-price, GST-included, and backed by our lifetime workmanship guarantee.</p>
-            <p class="pricing-footnote-cta"><a href="#">Get a free quote ›</a> &nbsp;·&nbsp; We respond in under 2 hours, Brisbane-wide.</p>
-        </div>
-    </div>
-</section>
-
-<!-- Every Wall, Conquered -->
-<section class="built-section">
-    <div class="built-inner">
-        <div class="built-layout">
-            <div class="built-text">
-                <div class="built-meta">Brisbane Wall Types</div>
-                <h2>TV Mounting for Every<br>Brisbane Wall Type.</h2>
-                <p>Brisbane homes span a century of building techniques — double-brick Queenslanders, Hebel new-builds, old gyprock, timber VJ walls. Here's what we do differently on each surface across Brisbane.</p>
-            </div>
-            <div class="built-scroll-outer">
-            <div class="built-cards-wrapper" id="builtScroll">
-                <div class="built-cards">
-                    <div class="built-card">
-                        <div class="built-img">
-                            <img loading="lazy" decoding="async" width="1200" height="1200"
-                                src="https://cdn.brisbanetvs.com/Brick%20Wall%20Mount-800x800.webp"
-                                srcset="https://cdn.brisbanetvs.com/Brick%20Wall%20Mount-800x800.webp 800w, https://cdn.brisbanetvs.com/Brick%20Wall%20Mount1200x1200.webp 1200w"
-                                sizes="(max-width: 1024px) 180px, 310px"
-                                alt="TV wall-mounted on exposed brick — Brisbane install">
-                        </div>
-                        <h4>Brick</h4>
-                        <p>HEPA dust extraction, brick-face drilling, rated dynabolts — never plastic plugs.</p>
-                    </div>
-                    <div class="built-card">
-                        <div class="built-img">
-                            <img loading="lazy" decoding="async" width="1200" height="1200"
-                                src="https://cdn.brisbanetvs.com/concrete-install800x800.webp"
-                                srcset="https://cdn.brisbanetvs.com/concrete-install800x800.webp 800w, https://cdn.brisbanetvs.com/concrete-install1200x1200.webp 1200w"
-                                sizes="(max-width: 1024px) 180px, 310px"
-                                alt="SDS anchor install on concrete wall — Brisbane TV mount">
-                        </div>
-                        <h4>Concrete</h4>
-                        <p>SDS-plus tooling with sleeve anchors rated well beyond the TV's load.</p>
-                    </div>
-                    <div class="built-card">
-                        <div class="built-img">
-                            <img loading="lazy" decoding="async" width="1200" height="1200"
-                                src="https://cdn.brisbanetvs.com/TV%20Flush%20Mount%20Living%20Room2-800x800.webp"
-                                srcset="https://cdn.brisbanetvs.com/TV%20Flush%20Mount%20Living%20Room2-800x800.webp 800w, https://cdn.brisbanetvs.com/TV%20Flush%20Mount%20Living%20Room2-1200x1200.webp 1200w"
-                                sizes="(max-width: 1024px) 180px, 310px"
-                                alt="Flush TV mount on gyprock living room wall — Brisbane install">
-                        </div>
-                        <h4>Gyprock</h4>
-                        <p>Asbestos-tested pre-1987, stud-caught where possible, Snaptoggle on cavity runs.</p>
-                    </div>
-                    <div class="built-card">
-                        <div class="built-img">
-                            <img loading="lazy" decoding="async" width="1200" height="1200"
-                                src="https://cdn.brisbanetvs.com/Tilt%20Mount%20Bedroom800x800.webp"
-                                srcset="https://cdn.brisbanetvs.com/Tilt%20Mount%20Bedroom800x800.webp 800w, https://cdn.brisbanetvs.com/Tilt%20Mount%20Bedroom1200x1200.webp 1200w"
-                                sizes="(max-width: 1024px) 180px, 310px"
-                                alt="Stud-anchored tilt TV mount in Brisbane bedroom">
-                        </div>
-                        <h4>Timber Stud</h4>
-                        <p>Pilot-drilled dead-centre. Structural #14 lag screws, pull-tested every fixing.</p>
-                    </div>
-                    <div class="built-card">
-                        <div class="built-img">
-                            <img loading="lazy" decoding="async" width="1200" height="1200"
-                                src="https://cdn.brisbanetvs.com/install-ashgrove800x800.webp"
-                                srcset="https://cdn.brisbanetvs.com/install-ashgrove800x800.webp 800w, https://cdn.brisbanetvs.com/install-ashgrove1200x1200.webp 1200w"
-                                sizes="(max-width: 1024px) 180px, 310px"
-                                alt="TV mount on VJ wall in Ashgrove Queenslander">
-                        </div>
-                        <h4>VJ & Weatherboard</h4>
-                        <p>Heritage-safe fixings. Cables routed internal. Zero visible damage.</p>
-                    </div>
-                    <div class="built-card">
-                        <div class="built-img">
-                            <img loading="lazy" decoding="async" width="1200" height="1200"
-                                src="https://cdn.brisbanetvs.com/hebel-aac-wall-install800x800.webp"
-                                srcset="https://cdn.brisbanetvs.com/hebel-aac-wall-install800x800.webp 800w, https://cdn.brisbanetvs.com/hebel-aac-wall-install1200x1200.webp 1200w"
-                                sizes="(max-width: 1024px) 180px, 310px"
-                                alt="Hebel AAC block TV mount install — Brisbane">
-                        </div>
-                        <h4>Hebel / AAC</h4>
-                        <p>Dedicated Hebel sleeves, torqued to spec. Standard anchors crumble this stuff.</p>
-                    </div>
-                    <div class="built-card">
-                        <div class="built-img">
-                            <img loading="lazy" decoding="async" width="1200" height="1200"
-                                src="https://cdn.brisbanetvs.com/double-brick-install800x800.webp"
-                                srcset="https://cdn.brisbanetvs.com/double-brick-install800x800.webp 800w, https://cdn.brisbanetvs.com/double-brick-install1200x1200.webp 1200w"
-                                sizes="(max-width: 1024px) 180px, 310px"
-                                alt="Double-brick cavity wall TV mount install — Brisbane">
-                        </div>
-                        <h4>Double Brick</h4>
-                        <p>Cavity-depth scoped before drilling. Anchors that bite the inner skin.</p>
-                    </div>
-                </div>
-            </div>
-            <button class="scroll-arrow left is-disabled" id="builtScrollLeft" aria-label="Scroll left">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-            </button>
-            <button class="scroll-arrow right" id="builtScrollRight" aria-label="Scroll right">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-            </button>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Second Hero Banner -->
-<section class="hero2-section" aria-label="Featured service">
-    <div class="hero2-slides" id="hero2Slides">
-        <div class="hero2-slide is-active" data-index="0">
-            <img loading="lazy" decoding="async" src="https://cdn.brisbanetvs.com/bannartom-1.1.webp" alt="Brisbane Signature Install — lead installer Tom on site">
-        </div>
-        <div class="hero2-slide" data-index="1">
-            <img loading="lazy" decoding="async" src="https://cdn.brisbanetvs.com/bannar2.webp" alt="Brisbane Signature Install — finished cable-concealed TV mount">
-        </div>
-    </div>
-    <div class="hero2-overlay">
-        <div class="hero2-text">
-            <div class="hero2-meta">NEW SERVICE</div>
-            <h2 class="hero2-title">The Brisbane<br>Signature Install</h2>
-        </div>
-    </div>
-    <button class="hero2-arrow left" id="hero2Prev" aria-label="Previous">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-    </button>
-    <button class="hero2-arrow right" id="hero2Next" aria-label="Next">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-    </button>
-</section>
-
-<!-- Community Gallery -->
-<section class="gallery-section">
-    <div class="gallery-inner">
-        <div class="gallery-header">
-            <span class="gallery-eyebrow">Brisbane-Wide Coverage</span>
-            <h2 class="gallery-title">Service Areas — TV Mounting Across Brisbane</h2>
-            <div class="gallery-rating">
-                <span class="gallery-stars">
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                </span>
-                <span><strong>4.9 average</strong> · <strong>2,000+</strong> Reviews</span>
-            </div>
-            <p class="gallery-sub">Looking for <strong>TV mounting near me</strong>? <strong>Brisbane TV Mounting</strong> covers every corner of the city — from the inner-city terraces of Paddington to the beaches of Wynnum. Tap a suburb below to see a recent install in your area. Can't see yours? <span class="tag">We cover all of Greater Brisbane</span>.</p>
-        </div>
-        <div class="gallery-scroll-outer">
-            <div class="gallery-wrapper" id="galleryScroll">
-                <div class="gallery-track">
-                    <a href="#" class="gallery-item">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/install-kangaroopoint800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/install-kangaroopoint800x800.webp 800w, https://cdn.brisbanetvs.com/install-kangaroopoint1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt="TV wall mount install in Kangaroo Point Brisbane"></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>Kangaroo Point</div>
-                    </a>
-                    <a href="#" class="gallery-item">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/install-new-farm800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/install-new-farm800x800.webp 800w, https://cdn.brisbanetvs.com/install-new-farm1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt="TV mounting and cable concealment in New Farm Brisbane"></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>New Farm</div>
-                    </a>
-                    <a href="#" class="gallery-item">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/install-newstead800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/install-newstead800x800.webp 800w, https://cdn.brisbanetvs.com/install-newstead1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt="Living room TV mount install in Newstead Brisbane"></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>Newstead</div>
-                    </a>
-                    <a href="#" class="gallery-item">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/westend-install800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/westend-install800x800.webp 800w, https://cdn.brisbanetvs.com/westend-install1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt="TV wall mounting in West End Brisbane"></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>West End</div>
-                    </a>
-                    <a href="#" class="gallery-item">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/install-bulimba800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/install-bulimba800x800.webp 800w, https://cdn.brisbanetvs.com/install-bulimba1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt="Cable-concealed TV mount in Bulimba Brisbane"></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>Bulimba</div>
-                    </a>
-                    <a href="#" class="gallery-item">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/install-hamilton800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/install-hamilton800x800.webp 800w, https://cdn.brisbanetvs.com/install-hamilton1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt="Premium TV wall mount install in Hamilton Brisbane"></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>Hamilton</div>
-                    </a>
-                    <a href="#" class="gallery-item">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/install-ashgrove800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/install-ashgrove800x800.webp 800w, https://cdn.brisbanetvs.com/install-ashgrove1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt="TV wall mounting on timber studs in Ashgrove Queenslander"></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>Ashgrove</div>
-                    </a>
-                    <a href="#" class="gallery-item">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/install-indooroopilly800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/install-indooroopilly800x800.webp 800w, https://cdn.brisbanetvs.com/install-indooroopilly1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt="Home theatre TV install in Indooroopilly Brisbane"></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>Indooroopilly</div>
-                    </a>
-                    <a href="#" class="gallery-item">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/install-toowong800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/install-toowong800x800.webp 800w, https://cdn.brisbanetvs.com/install-toowong1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt="TV wall mount install in Toowong Brisbane"></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>Toowong</div>
-                    </a>
-                    <a href="#" class="gallery-item">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/install-chermside800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/install-chermside800x800.webp 800w, https://cdn.brisbanetvs.com/install-chermside1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt="TV wall mount install in Chermside Brisbane North"></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>Chermside</div>
-                    </a>
-                    <a href="#" class="gallery-item">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/wynnum-install800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/wynnum-install800x800.webp 800w, https://cdn.brisbanetvs.com/wynnum-install1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt="TV mounting service in Wynnum Brisbane bayside"></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>Wynnum</div>
-                    </a>
-                    <!-- Duplicate set for seamless infinite marquee loop -->
-                    <a href="#" class="gallery-item" aria-hidden="true">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/install-kangaroopoint800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/install-kangaroopoint800x800.webp 800w, https://cdn.brisbanetvs.com/install-kangaroopoint1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt=""></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>Kangaroo Point</div>
-                    </a>
-                    <a href="#" class="gallery-item" aria-hidden="true">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/install-new-farm800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/install-new-farm800x800.webp 800w, https://cdn.brisbanetvs.com/install-new-farm1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt=""></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>New Farm</div>
-                    </a>
-                    <a href="#" class="gallery-item" aria-hidden="true">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/install-newstead800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/install-newstead800x800.webp 800w, https://cdn.brisbanetvs.com/install-newstead1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt=""></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>Newstead</div>
-                    </a>
-                    <a href="#" class="gallery-item" aria-hidden="true">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/westend-install800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/westend-install800x800.webp 800w, https://cdn.brisbanetvs.com/westend-install1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt=""></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>West End</div>
-                    </a>
-                    <a href="#" class="gallery-item" aria-hidden="true">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/install-bulimba800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/install-bulimba800x800.webp 800w, https://cdn.brisbanetvs.com/install-bulimba1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt=""></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>Bulimba</div>
-                    </a>
-                    <a href="#" class="gallery-item" aria-hidden="true">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/install-hamilton800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/install-hamilton800x800.webp 800w, https://cdn.brisbanetvs.com/install-hamilton1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt=""></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>Hamilton</div>
-                    </a>
-                    <a href="#" class="gallery-item" aria-hidden="true">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/install-ashgrove800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/install-ashgrove800x800.webp 800w, https://cdn.brisbanetvs.com/install-ashgrove1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt=""></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>Ashgrove</div>
-                    </a>
-                    <a href="#" class="gallery-item" aria-hidden="true">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/install-indooroopilly800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/install-indooroopilly800x800.webp 800w, https://cdn.brisbanetvs.com/install-indooroopilly1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt=""></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>Indooroopilly</div>
-                    </a>
-                    <a href="#" class="gallery-item" aria-hidden="true">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/install-toowong800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/install-toowong800x800.webp 800w, https://cdn.brisbanetvs.com/install-toowong1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt=""></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>Toowong</div>
-                    </a>
-                    <a href="#" class="gallery-item" aria-hidden="true">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/install-chermside800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/install-chermside800x800.webp 800w, https://cdn.brisbanetvs.com/install-chermside1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt=""></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>Chermside</div>
-                    </a>
-                    <a href="#" class="gallery-item" aria-hidden="true">
-                        <div class="gallery-img"><img loading="lazy" decoding="async" width="1200" height="1200"
-                            src="https://cdn.brisbanetvs.com/wynnum-install800x800.webp"
-                            srcset="https://cdn.brisbanetvs.com/wynnum-install800x800.webp 800w, https://cdn.brisbanetvs.com/wynnum-install1200x1200.webp 1200w"
-                            sizes="(max-width: 1024px) 50vw, 240px"
-                            alt=""></div>
-                        <div class="gallery-handle"><span class="suburb-meta">Recent Install</span>Wynnum</div>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Our Latest Blog -->
-<section class="blog-section">
-    <div class="blog-inner">
-        <div class="blog-header">
-            <h2 class="blog-title">TV Mounting Brisbane — Latest Guides</h2>
-            <a href="#" class="blog-view-all">View All Posts
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </a>
-        </div>
-        <div class="blog-grid">
-            <!-- Featured Post -->
-            <a href="#" class="blog-featured">
-                <div class="blog-featured-img">
-                    <img src="https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?auto=format&fit=crop&w=1400&q=80" alt="In-wall cable concealment for a TV mount in a Brisbane Queenslander">
-                </div>
-                <div class="blog-featured-body">
-                    <div class="blog-featured-title">
-                        <span>How to Hide TV Cables In a Brisbane Queenslander — Without Cutting Timber</span>
-                        <span class="arrow">›</span>
-                    </div>
-                    <p class="blog-featured-excerpt">Hiding TV cables in a Brisbane Queenslander is nothing like mounting on gyprock. VJ boards are 30mm of solid hardwood. Behind them sits a picture rail at about 1.2 metres — enough for two screws, not a full bracket. Drill it wrong and you split century-old timber. Most DIY guides skip this bit.</p>
-                    <div class="blog-featured-divider" aria-hidden="true"></div>
-                    <p class="blog-featured-excerpt">We run cables the way Brisbane sparkies have for decades. On high-set Queenslanders we drop through the floor and come up where you want power, HDMI and surround. On low-sets and flats we fish through the wall cavity into a recessed GPO behind the TV. Same-day wall mount installs across Paddington, Ashgrove, Red Hill, New Farm and Bulimba. No split timber. No visible cables. Bracket included, 5-year warranty.</p>
-                    <span class="blog-featured-meta"><span class="blog-featured-readtime">6 min read</span><span class="blog-featured-readmore">Read the full guide ›</span></span>
-                </div>
-            </a>
-
-            <!-- Three smaller posts -->
-            <div class="blog-list">
-                <a href="#" class="blog-list-item">
-                    <div class="blog-list-img"><img src="https://images.unsplash.com/photo-1593784991095-a205069470b6?auto=format&fit=crop&w=500&q=80" alt="Mounting an 85-inch TV on a Brisbane double brick wall" loading="lazy"></div>
-                    <div class="blog-list-text">
-                        <div class="blog-list-title">Mounting An 85-Inch TV: What Your Wall Actually Needs</div>
-                        <p class="blog-list-excerpt">Oversized TVs are only as stable as what's behind them. Here's how we check studs, anchor into double brick, and spec the right bracket for a screen that heavy.</p>
-                        <span class="blog-list-readmore">Read more ›</span>
-                    </div>
-                </a>
-                <a href="#" class="blog-list-item">
-                    <div class="blog-list-img"><img src="https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=500&q=80" alt="Open sky above a Brisbane rooftop — Starlink installation line-of-sight" loading="lazy"></div>
-                    <div class="blog-list-text">
-                        <div class="blog-list-title">Starlink Install for Brisbane Homes: Positioning For A Clear Sky</div>
-                        <p class="blog-list-excerpt">Jacaranda trees, corrugated iron, and summer storms all mess with your signal. Here's where we mount Starlink dishes in Brisbane — and why the roof isn't always right.</p>
-                        <span class="blog-list-readmore">Read more ›</span>
-                    </div>
-                </a>
-                <a href="#" class="blog-list-item">
-                    <div class="blog-list-img"><img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=500&q=80" alt="Brick versus gyprock wall — Brisbane TV mount surface comparison" loading="lazy"></div>
-                    <div class="blog-list-text">
-                        <div class="blog-list-title">Brick, Gyprock, or Hebel: Which Brisbane Wall Is Hardest to Mount?</div>
-                        <p class="blog-list-excerpt">Every suburb has a different wall. Double-brick in Ashgrove, Hebel in Newstead, old gyprock in Woolloongabba. Here's what each one demands from an installer.</p>
-                        <span class="blog-list-readmore">Read more ›</span>
-                    </div>
-                </a>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Service Areas -->
-<section class="areas-section" id="service-areas">
-    <div class="areas-inner">
-        <div class="areas-header">
-            <span class="areas-eyebrow">Service Areas</span>
-            <h2 class="areas-title">TV Mounting Across Brisbane</h2>
-            <p class="areas-sub">We service every postcode across Greater Brisbane, Ipswich, Logan, Moreton Bay, and the Redlands. Can't see your suburb below? <strong>Call us</strong> — we almost certainly cover it.</p>
-        </div>
-
-        <!-- ===================================================================
-             SUBURB DATA  ─  paste your 2000-line TS document into the
-             BRISBANE_SERVICE_AREAS constant at the bottom of this file.
-             The section will auto-render from that data.
-             =================================================================== -->
-        <div class="areas-regions" id="areasRegions">
-            <!-- Rendered from JS (see bottom of file) -->
-        </div>
-
-        <p class="areas-footnote">
-            <strong>Same-day TV mounting</strong> available in most inner and middle-ring Brisbane suburbs.
-            Outer suburbs may carry a $20–$40 travel fee.
-        </p>
-    </div>
-</section>
-
-<!-- FAQ -->
-<section class="faq-section" id="faq">
-    <div class="faq-inner">
-        <div class="faq-header">
-            <span class="faq-eyebrow">FAQ's</span>
-            <h2 class="faq-title">TV Wall Mounting Brisbane — Frequently Asked Questions</h2>
-            <p class="faq-sub">Stuck on something? Everything you need to know about TV wall mounting in Brisbane — pricing, wall types, same-day service, and more.</p>
-        </div>
-        <div class="faq-grid">
-            <div class="faq-item">
-                <span class="faq-num">01</span>
-                <div>
-                    <span class="faq-cat">Pricing</span>
-                    <h3>How much does TV wall mounting cost in Brisbane?</h3>
-                    <p>Flat-rate TV wall mounting in Brisbane starts at <strong>$149</strong> for TVs up to 55", <strong>$229</strong> for 55–75" screens, and <strong>$349</strong> for 75–98" panels. Every quote includes GST, a correctly-rated wall bracket, and our lifetime workmanship guarantee. In-wall cable concealment is an extra $100–$150 depending on wall type. No call-out fees, no hidden charges — we quote the job, not the hour.</p>
-                </div>
-            </div>
-
-            <div class="faq-item">
-                <span class="faq-num">02</span>
-                <div>
-                    <span class="faq-cat">Coverage</span>
-                    <h3>Is there a TV mounting service near me in Brisbane?</h3>
-                    <p>Yes — Brisbane TVs has mobile installers across 109 suburbs, from inner-city Paddington, New Farm and Teneriffe out to Chermside, Bulimba, Indooroopilly and Wynnum. Most Brisbane postcodes are within a 30-minute drive of an installer, which is why we rank as a top-rated "TV mounting near me" result on Google for homes from West End to the Redlands.</p>
-                </div>
-            </div>
-
-            <div class="faq-item">
-                <span class="faq-num">03</span>
-                <div>
-                    <span class="faq-cat">Same-Day Service</span>
-                    <h3>Do you offer same-day TV mounting in Brisbane?</h3>
-                    <p>Yes — same-day TV installation is available for most inner and middle-ring Brisbane suburbs, Monday to Saturday. Book or call before 10 AM and we'll do our best to have an installer at your address that afternoon. Outer suburbs and pre-booked brick or Hebel wall jobs typically go in the next morning.</p>
-                </div>
-            </div>
-
-            <div class="faq-item">
-                <span class="faq-num">04</span>
-                <div>
-                    <span class="faq-cat">Timing</span>
-                    <h3>How long does a Brisbane TV install take?</h3>
-                    <p>A standard wall-mount TV install in Brisbane takes <strong>60–90 minutes</strong> from knock-on-door to signal test. Brick, Hebel or oversized TVs with in-wall cable runs typically run 90–120 minutes. We book 2-hour arrival windows instead of all-day blocks, so you're not stuck waiting around.</p>
-                </div>
-            </div>
-
-            <div class="faq-item">
-                <span class="faq-num">05</span>
-                <div>
-                    <span class="faq-cat">Wall Types</span>
-                    <h3>Can you mount a TV on brick or Hebel walls in Brisbane?</h3>
-                    <p>Yes — brick, double-brick, concrete and Hebel are our specialty. We use SDS-plus hammer drills, HEPA dust extraction and rated masonry anchors (never plastic plugs). We've mounted hundreds of TVs on Brisbane's brick homes including 1920s Queenslanders in Paddington and post-war inner-city terraces in West End and New Farm.</p>
-                </div>
-            </div>
-
-            <div class="faq-item">
-                <span class="faq-num">06</span>
-                <div>
-                    <span class="faq-cat">Cable Concealment</span>
-                    <h3>Can you hide the cables behind the wall?</h3>
-                    <p>Yes. In-wall cable concealment routes HDMI, power and AV cables through the wall cavity to a hidden GPO behind the TV — fully code-compliant when done with in-wall rated cabling. Pricing is $100–$150 extra depending on wall type. For rentals or brick walls we also offer low-profile surface-mounted cable covers that paint to match.</p>
-                </div>
-            </div>
-
-            <div class="faq-item">
-                <span class="faq-num">07</span>
-                <div>
-                    <span class="faq-cat">Wall Integrity</span>
-                    <h3>Will wall-mounting damage my walls?</h3>
-                    <p>Minimal — we drill 4–8 pencil-sized pilot holes, all concealed behind the TV once mounted. If you ever remove the bracket, they patch and paint in minutes. Stud-finders, laser levels and a two-installer lift on larger TVs avoid the over-drilling that DIY attempts leave behind. Every installer is insured and Brisbane-based.</p>
-                </div>
-            </div>
-
-            <div class="faq-item">
-                <span class="faq-num">08</span>
-                <div>
-                    <span class="faq-cat">TV Sizes</span>
-                    <h3>What size TVs can you wall-mount?</h3>
-                    <p>From 32" bedroom TVs all the way up to 98" commercial panels. Anything over 75" is a two-installer job for safety and wall integrity. We supply the correct bracket for your screen — VESA-matched and load-tested well beyond the TV's weight, covering all major brands including Samsung, LG, Sony, TCL and Hisense.</p>
-                </div>
-            </div>
-
-            <div class="faq-item">
-                <span class="faq-num">09</span>
-                <div>
-                    <span class="faq-cat">Service Areas</span>
-                    <h3>What areas of Brisbane do you service?</h3>
-                    <p>We cover all of Greater Brisbane including North Brisbane, South Brisbane, Bayside, Western Suburbs, Redlands, Ipswich, Logan and Moreton Bay. Same-day wall mounting is typically available for inner and middle-ring suburbs. Outer-metro postcodes may incur a small $20–$40 travel fee — full Brisbane suburb list is in the Service Areas section above.</p>
-                </div>
-            </div>
-
-            <div class="faq-item">
-                <span class="faq-num">10</span>
-                <div>
-                    <span class="faq-cat">Fireplaces</span>
-                    <h3>Can you mount a TV above a fireplace in Brisbane?</h3>
-                    <p>Yes — above-fireplace installs are one of our most-booked jobs. We maintain a minimum 30cm heat-safe clearance above the mantle, fit a tilt or full-motion bracket so the screen drops to eye-level while watching, and route cables out to the nearest GPO for a clean mantle. Gas fireplaces need extra clearance — we'll check your setup on the day.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Our Products -->
-<section class="trusted-section">
-    <div class="trusted-inner">
-        <span class="trusted-label">Our products:</span>
-        <div class="trusted-marquee">
-            <div class="trusted-track">
-                <a href="#" class="trusted-logo">Samsung</a>
-                <a href="#" class="trusted-logo">LG</a>
-                <a href="#" class="trusted-logo serif">Sony</a>
-                <a href="#" class="trusted-logo">TCL</a>
-                <a href="#" class="trusted-logo">Hisense</a>
-                <a href="#" class="trusted-logo">Panasonic</a>
-                <a href="#" class="trusted-logo serif">Bose</a>
-                <a href="#" class="trusted-logo">Sonos</a>
-                <a href="#" class="trusted-logo">Sanus</a>
-                <a href="#" class="trusted-logo">Echogear</a>
-                <a href="#" class="trusted-logo serif">Starlink</a>
-                <a href="#" class="trusted-logo">Harman Kardon</a>
-                <a href="#" class="trusted-logo">Denon</a>
-                <a href="#" class="trusted-logo serif">Philips</a>
-                <!-- Duplicate set for seamless loop -->
-                <a href="#" class="trusted-logo" aria-hidden="true">Samsung</a>
-                <a href="#" class="trusted-logo" aria-hidden="true">LG</a>
-                <a href="#" class="trusted-logo serif" aria-hidden="true">Sony</a>
-                <a href="#" class="trusted-logo" aria-hidden="true">TCL</a>
-                <a href="#" class="trusted-logo" aria-hidden="true">Hisense</a>
-                <a href="#" class="trusted-logo" aria-hidden="true">Panasonic</a>
-                <a href="#" class="trusted-logo serif" aria-hidden="true">Bose</a>
-                <a href="#" class="trusted-logo" aria-hidden="true">Sonos</a>
-                <a href="#" class="trusted-logo" aria-hidden="true">Sanus</a>
-                <a href="#" class="trusted-logo" aria-hidden="true">Echogear</a>
-                <a href="#" class="trusted-logo serif" aria-hidden="true">Starlink</a>
-                <a href="#" class="trusted-logo" aria-hidden="true">Harman Kardon</a>
-                <a href="#" class="trusted-logo" aria-hidden="true">Denon</a>
-                <a href="#" class="trusted-logo serif" aria-hidden="true">Philips</a>
-            </div>
-        </div>
-    </div>
-</section>
+</main>
 
 <!-- AI Chat Icon -->
 <div class="ai-badge-wrapper" id="aiBadge" role="button" tabindex="0" aria-label="Chat with AI assistant">
@@ -4919,14 +4205,14 @@
     <a href="#">Pricing</a>
     <a href="#">Gallery</a>
     <a href="#">Blog</a>
-    <a href="about.html">About</a>
+    <a href="../about.html">About</a>
 
     <div class="mobile-menu-cta">
         <a href="tel:1300312271" class="mobile-menu-call" aria-label="Call Brisbane TVs">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
             Call
         </a>
-        <a href="book.html" class="mobile-menu-book">Book Now</a>
+        <a href="../book.html" class="mobile-menu-book">Book Now</a>
     </div>
 
     <div class="mobile-menu-footer">
@@ -5168,6 +4454,7 @@
         const grid = document.getElementById('popularGrid');
         const cta = document.getElementById('popularCta');
         const tabs = document.getElementById('popularTabs');
+        if (!grid || !tabs) return; // Section absent (e.g. blank template)
 
         function renderTab(key) {
             const data = popularData[key];
@@ -5194,7 +4481,7 @@
                         '</div>' +
                         '<div class="card-info">' +
                             '<div class="text"><h3>' + c.title + '</h3><p>' + (c.caption || '') + ' · <strong>' + c.price + '</strong></p></div>' +
-                            '<a href="book.html" class="arrow-btn" aria-label="Book ' + c.title + '">' + arrowSvg + '</a>' +
+                            '<a href="../book.html" class="arrow-btn" aria-label="Book ' + c.title + '">' + arrowSvg + '</a>' +
                         '</div>' +
                     '</div>'
                 );
