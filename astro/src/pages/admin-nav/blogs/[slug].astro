@@ -1,0 +1,342 @@
+---
+import AdminShell from "~/layouts/AdminShell.astro";
+import { getCollection } from "astro:content";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog");
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+
+const liveUrl = `/blog/${post.slug}/`;
+const editUrl = `/admin/#/collections/blog/entries/${post.slug}`;
+---
+<AdminShell title={post.data.title} active="blogs" description={post.data.description}>
+  <div slot="actions">
+    <a class="btn" href="/admin-nav/blogs/">← All posts</a>
+    <a class="btn" href={liveUrl} target="_blank" rel="noopener">Open live ↗</a>
+    <a class="btn btn-primary" href={editUrl} target="_blank" rel="noopener">Edit in CMS ↗</a>
+  </div>
+
+  {/* data-collapsed is toggled by the sidebar button */}
+  <div class="post-detail" data-collapsed="false">
+    <aside class="meta">
+      {/* Collapse button lives inside the sidebar when expanded */}
+      <button type="button" class="meta-toggle" data-toggle-sidebar aria-label="Collapse sidebar">
+        <span class="meta-toggle-label">Hide details</span>
+        <span class="meta-toggle-icon" aria-hidden="true">‹</span>
+      </button>
+
+      <h3>{post.data.title}</h3>
+      <dl>
+        <dt>Status</dt>
+        <dd>
+          {post.data.draft
+            ? <span class="badge badge-draft">Draft</span>
+            : <span class="badge badge-ok">Live</span>}
+        </dd>
+        <dt>Slug</dt>
+        <dd><code>/blog/{post.slug}/</code></dd>
+        <dt>Style</dt>
+        <dd>
+          <span class="badge badge-muted">{post.data.style}</span>
+          <a href="/admin-nav/styles/" style="font-size: 0.78rem; margin-left: 0.5rem;">Change →</a>
+        </dd>
+        <dt>Published</dt>
+        <dd>{new Date(post.data.publishDate).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}</dd>
+        {post.data.updatedDate && (
+          <Fragment>
+            <dt>Updated</dt>
+            <dd>{new Date(post.data.updatedDate).toLocaleDateString("en-AU")}</dd>
+          </Fragment>
+        )}
+        <dt>Author</dt>
+        <dd>{post.data.author}</dd>
+        {post.data.readTime && (
+          <Fragment>
+            <dt>Read time</dt>
+            <dd>{post.data.readTime} min</dd>
+          </Fragment>
+        )}
+        {post.data.suburb && (
+          <Fragment>
+            <dt>Suburb</dt>
+            <dd>{post.data.suburb}</dd>
+          </Fragment>
+        )}
+        {post.data.service && (
+          <Fragment>
+            <dt>Service</dt>
+            <dd>{post.data.service}</dd>
+          </Fragment>
+        )}
+        <dt>Hero image</dt>
+        <dd><code style="word-break: break-all;">{post.data.heroImage}</code></dd>
+        <dt>Tags</dt>
+        <dd>
+          {post.data.tags.length === 0
+            ? <span style="color: var(--muted);">none</span>
+            : post.data.tags.map((t) => <span class="tag">{t}</span>)}
+        </dd>
+        <dt>File</dt>
+        <dd><code>src/content/blog/{post.id}</code></dd>
+      </dl>
+    </aside>
+
+    {/* Rail that peeks out when sidebar is collapsed, letting users re-open it */}
+    <button type="button" class="meta-rail" data-toggle-sidebar aria-label="Show post details">
+      <span class="meta-rail-icon" aria-hidden="true">›</span>
+      <span class="meta-rail-label">Details</span>
+    </button>
+
+    <section class="viewport">
+      <div class="tabs" role="tablist">
+        <button class="tab active" role="tab" aria-selected="true" data-tab="preview">Live preview</button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="edit">Edit in CMS</button>
+        <div class="tab-spacer"></div>
+        <span class="tab-hint" data-hint-for="preview">What visitors see at <code>{liveUrl}</code></span>
+        <span class="tab-hint" data-hint-for="edit" style="display: none;">Form editor — saves straight to the <code>.md</code> file</span>
+        <a class="btn tab-edit-btn" href={editUrl} target="_blank" rel="noopener" title="Open the CMS editor in a new tab">
+          Open in new tab ↗
+        </a>
+      </div>
+
+      <div class="frames">
+        <iframe
+          class="frame-preview"
+          src={liveUrl}
+          title={`Live preview of ${post.data.title}`}
+          loading="eager"
+          sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+        ></iframe>
+        <iframe
+          class="frame-edit"
+          data-src={editUrl}
+          title={`CMS editor for ${post.data.title}`}
+          loading="lazy"
+          sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads"
+          style="display: none;"
+        ></iframe>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // Sidebar collapse/expand toggle — persists across reloads via localStorage
+    const root = document.querySelector<HTMLElement>(".post-detail");
+    if (root) {
+      const KEY = "admin.blogDetail.sidebarCollapsed";
+      const stored = window.localStorage?.getItem(KEY);
+      if (stored === "true") root.setAttribute("data-collapsed", "true");
+
+      document.querySelectorAll<HTMLButtonElement>("[data-toggle-sidebar]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const now = root.getAttribute("data-collapsed") === "true";
+          root.setAttribute("data-collapsed", now ? "false" : "true");
+          try { window.localStorage?.setItem(KEY, String(!now)); } catch {}
+        });
+      });
+    }
+
+    // Tab switching between Live preview and Edit in CMS (iframed Decap).
+    // We lazy-load the edit iframe on first click so Decap doesn't spin up
+    // for every post page the user merely scrolls through.
+    const tabs = document.querySelectorAll<HTMLButtonElement>(".tab[data-tab]");
+    const framePreview = document.querySelector<HTMLIFrameElement>(".frame-preview");
+    const frameEdit = document.querySelector<HTMLIFrameElement>(".frame-edit");
+    const hints = document.querySelectorAll<HTMLElement>(".tab-hint[data-hint-for]");
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        const which = tab.dataset.tab; // "preview" | "edit"
+        if (!which || !framePreview || !frameEdit) return;
+
+        tabs.forEach((t) => {
+          const active = t.dataset.tab === which;
+          t.classList.toggle("active", active);
+          t.setAttribute("aria-selected", active ? "true" : "false");
+        });
+
+        hints.forEach((h) => {
+          h.style.display = h.dataset.hintFor === which ? "" : "none";
+        });
+
+        if (which === "preview") {
+          framePreview.style.display = "";
+          frameEdit.style.display = "none";
+        } else {
+          // Lazy-load the edit iframe the first time it's shown
+          if (!frameEdit.src && frameEdit.dataset.src) {
+            frameEdit.src = frameEdit.dataset.src;
+          }
+          framePreview.style.display = "none";
+          frameEdit.style.display = "";
+        }
+      });
+    });
+  </script>
+
+  <style>
+    .post-detail {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      flex: 1;
+      min-height: 0;
+      background: var(--panel-bg);
+      border-top: 1px solid var(--panel-line);
+      transition: grid-template-columns 0.25s ease;
+      position: relative;
+    }
+
+    /* === Meta sidebar === */
+    .meta {
+      padding: 1.25rem;
+      border-right: 1px solid var(--panel-line);
+      background: #fafbfc;
+      overflow-y: auto;
+      max-height: calc(100vh - 65px);
+      position: relative;
+    }
+    .meta h3 { margin: 0 0 1rem; font-size: 0.95rem; font-weight: 600; line-height: 1.3; }
+    .meta dl {
+      margin: 0;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.35rem 0.75rem;
+    }
+    .meta dt {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      margin-top: 0.4rem;
+    }
+    .meta dd { margin: 0; font-size: 0.85rem; }
+    .meta .tag {
+      display: inline-block;
+      padding: 0.12rem 0.5rem;
+      border-radius: 999px;
+      background: #eef0f4;
+      color: var(--ink-soft);
+      font-size: 0.72rem;
+      margin-right: 0.25rem;
+      margin-bottom: 0.25rem;
+    }
+
+    /* --- Collapse button inside sidebar --- */
+    .meta-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      width: fit-content;
+      margin: 0 0 0.9rem auto;
+      padding: 0.35rem 0.65rem;
+      background: #fff;
+      border: 1px solid var(--panel-line);
+      border-radius: 6px;
+      color: var(--ink-soft);
+      font-size: 0.76rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+    }
+    .meta-toggle:hover { background: #f1f3f7; border-color: #d7dae1; color: var(--ink); }
+    .meta-toggle-icon { font-size: 0.95rem; line-height: 1; transform: translateY(-1px); }
+
+    /* --- Rail that appears when sidebar is collapsed --- */
+    .meta-rail {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 0;
+      border: none;
+      border-right: 1px solid var(--panel-line);
+      background: #fafbfc;
+      padding: 0;
+      cursor: pointer;
+      font-family: inherit;
+      color: var(--ink-soft);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: 1rem;
+      gap: 0.5rem;
+      transition: background 0.12s, color 0.12s;
+      z-index: 2;
+    }
+    .meta-rail:hover { background: #f1f3f7; color: var(--ink); }
+    .meta-rail-icon { font-size: 1.1rem; line-height: 1; }
+    .meta-rail-label {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    /* --- Collapsed state --- */
+    .post-detail[data-collapsed="true"] {
+      grid-template-columns: 36px 1fr;
+    }
+    .post-detail[data-collapsed="true"] .meta { display: none; }
+    .post-detail[data-collapsed="true"] .meta-rail {
+      display: flex;
+      width: 36px;
+      position: static;
+    }
+
+    /* === Viewport === */
+    .viewport { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+    .tabs {
+      display: flex;
+      align-items: center;
+      padding: 0 1.25rem;
+      border-bottom: 1px solid var(--panel-line);
+      background: var(--panel-bg);
+      gap: 0.75rem;
+      min-height: 42px;
+    }
+    .tab {
+      padding: 0.7rem 0.1rem;
+      color: var(--ink-soft);
+      font-size: 0.88rem;
+      border: 0;
+      background: transparent;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      font-family: inherit;
+      cursor: pointer;
+      transition: color 0.12s;
+    }
+    .tab:hover { color: var(--ink); }
+    .tab.active { color: var(--sidebar-accent); border-bottom-color: var(--sidebar-accent); font-weight: 500; }
+    .tab + .tab { margin-left: 1rem; }
+    .tab-spacer { flex: 1; }
+    .tab-hint { font-size: 0.78rem; color: var(--muted); }
+    .tab-hint code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.74rem; color: var(--ink-soft); background: #eef0f4; padding: 0.1rem 0.4rem; border-radius: 3px; }
+    .tab-edit-btn { font-size: 0.78rem; padding: 0.35rem 0.75rem; }
+
+    .frames { flex: 1; display: flex; min-height: 0; position: relative; }
+    .frames iframe {
+      flex: 1;
+      width: 100%;
+      border: 0;
+      background: #fff;
+      min-height: calc(100vh - 65px - 42px);
+    }
+
+    @media (max-width: 960px) {
+      .post-detail { grid-template-columns: 1fr; }
+      .post-detail[data-collapsed="true"] { grid-template-columns: 1fr; }
+      .meta { border-right: 0; border-bottom: 1px solid var(--panel-line); max-height: none; }
+      .meta-rail { display: none !important; }
+      .tab-hint { display: none; }
+    }
+  </style>
+</AdminShell>

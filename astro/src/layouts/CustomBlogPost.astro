@@ -1,0 +1,1175 @@
+---
+/**
+ * CustomBlogPost.astro
+ * -----------------------------------------------------------------
+ * Magazine-style blog layout. Design references:
+ *   - NYT Magazine long-form (drop cap, figure captions, pull quotes)
+ *   - The Atlantic (full-bleed hero, narrow column, sans pull quotes)
+ *   - Stripe Press (generous whitespace, elegant figures)
+ *   - Substack / Medium (reading-progress bar, author card, subscribe CTA)
+ *
+ * This is the ONE layout to iterate on.
+ * -----------------------------------------------------------------
+ */
+import BaseLayout from "~/layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+interface Props {
+  frontmatter: {
+    title: string;
+    description: string;
+    heroImage: string;
+    heroAlt: string;
+    publishDate: Date;
+    updatedDate?: Date;
+    author: string;
+    tags: string[];
+    readTime?: number;
+    suburb?: string;
+    service?: string;
+  };
+}
+
+const { frontmatter } = Astro.props;
+const currentSlug = Astro.url.pathname.replace(/\/$/, "").split("/").pop();
+
+const published = new Date(frontmatter.publishDate).toLocaleDateString(
+  "en-AU",
+  { day: "numeric", month: "long", year: "numeric" }
+);
+const updated = frontmatter.updatedDate
+  ? new Date(frontmatter.updatedDate).toLocaleDateString("en-AU", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    })
+  : null;
+
+// Eyebrow: prefer service > suburb > "Feature"
+const eyebrow = frontmatter.service ?? frontmatter.suburb ?? "Feature";
+const category = frontmatter.service
+  ? "Services"
+  : frontmatter.suburb
+  ? "Locations"
+  : "Articles";
+
+// Related posts — same layout, shared tag, exclude current
+const all = await getCollection("blog", ({ data }) => !data.draft);
+const related = all
+  .filter((p) => p.slug !== currentSlug)
+  .map((p) => ({
+    post: p,
+    overlap: p.data.tags.filter((t) => frontmatter.tags.includes(t)).length,
+  }))
+  .sort((a, b) => b.overlap - a.overlap || b.post.data.publishDate.valueOf() - a.post.data.publishDate.valueOf())
+  .slice(0, 3)
+  .map((x) => x.post);
+
+// Author initials for avatar
+const initials = frontmatter.author
+  .split(" ")
+  .map((n) => n[0])
+  .slice(0, 2)
+  .join("");
+---
+<BaseLayout
+  title={frontmatter.title}
+  description={frontmatter.description}
+  image={frontmatter.heroImage}
+>
+  {/* Reading progress bar — fills as the user scrolls the article */}
+  <div class="cp-progress" aria-hidden="true">
+    <div class="cp-progress-fill" id="cp-progress-fill"></div>
+  </div>
+
+  <article class="custom-post">
+    {/* === HERO === */}
+    <header class="cp-hero">
+      <img
+        class="cp-hero-img"
+        src={frontmatter.heroImage}
+        alt={frontmatter.heroAlt}
+        loading="eager"
+        fetchpriority="high"
+      />
+      <div class="cp-hero-veil"></div>
+      <div class="cp-hero-inner">
+        <nav class="cp-crumbs" aria-label="Breadcrumb">
+          <a href="/">Home</a>
+          <span aria-hidden="true">›</span>
+          <a href="/blog/">Blog</a>
+          <span aria-hidden="true">›</span>
+          <span class="cp-crumb-current">{category}</span>
+        </nav>
+        <p class="cp-eyebrow">{eyebrow}</p>
+        <h1 class="cp-title">{frontmatter.title}</h1>
+        <p class="cp-dek">{frontmatter.description}</p>
+        <div class="cp-byline">
+          <span class="cp-avatar" aria-hidden="true">{initials}</span>
+          <div class="cp-byline-text">
+            <span class="cp-byline-name">{frontmatter.author}</span>
+            <span class="cp-byline-meta">
+              <time datetime={frontmatter.publishDate.toISOString?.() ?? String(frontmatter.publishDate)}>
+                {published}
+              </time>
+              {frontmatter.readTime && (
+                <>
+                  <span class="cp-dot">·</span>
+                  <span>{frontmatter.readTime} min read</span>
+                </>
+              )}
+            </span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    {/* === BODY === */}
+    <div class="cp-body">
+      {/* Sticky sidebar: TOC, share, CTA.
+          Sidebar stays visible on every post (short or long) so the design
+          is consistent. The TOC section inside it hides only when the post
+          has no ## headings — Share + CTA always show. */}
+      <aside class="cp-toc" aria-label="Article sidebar">
+        <div class="cp-toc-section" id="cp-toc-section">
+          <p class="cp-toc-label">On this page</p>
+          <nav id="cp-toc-nav"></nav>
+        </div>
+
+        <div class="cp-share">
+          <p class="cp-toc-label">Share</p>
+          <div class="cp-share-row">
+            <a href="#" data-share="twitter" aria-label="Share on Twitter / X">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2H21l-6.52 7.446L22 22h-6.828l-4.49-5.87L5.44 22H2.68l6.987-7.98L2 2h6.98l4.06 5.378L18.244 2zm-1.197 18.188h1.88L7.05 3.72H5.04l12.007 16.468z"/></svg>
+            </a>
+            <a href="#" data-share="facebook" aria-label="Share on Facebook">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg>
+            </a>
+            <a href="#" data-share="linkedin" aria-label="Share on LinkedIn">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43c-1.14 0-2.06-.93-2.06-2.07 0-1.14.92-2.06 2.06-2.06 1.14 0 2.07.92 2.07 2.06 0 1.14-.93 2.07-2.07 2.07zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.8 0 0 .77 0 1.73v20.54C0 23.23.8 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>
+            </a>
+            <a href="#" data-share="copy" aria-label="Copy link">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <a class="cp-cta-card" href="/book/">
+          <p class="cp-cta-eyebrow">Need this done?</p>
+          <p class="cp-cta-title">Book a same-day Brisbane TV install</p>
+          <span class="cp-cta-arrow">→</span>
+        </a>
+      </aside>
+
+      <div class="cp-article" id="cp-article">
+        {/* Hero caption — sits visually over the hero border */}
+        <figcaption class="cp-hero-caption">
+          <strong>Above:</strong> {frontmatter.heroAlt} · Photo: Brisbane&nbsp;TVs
+        </figcaption>
+
+        {/* Post content — markdown renders here */}
+        <slot />
+
+        {/* === POST FOOTER === */}
+        <footer class="cp-post-foot">
+          {frontmatter.tags.length > 0 && (
+            <div class="cp-tags" aria-label="Tags">
+              {frontmatter.tags.map((t) => (
+                <a class="cp-tag" href={`/blog/?tag=${encodeURIComponent(t)}`}>#{t}</a>
+              ))}
+            </div>
+          )}
+          {updated && (
+            <p class="cp-updated">Last updated {updated}</p>
+          )}
+
+          {/* Author card — bio + social */}
+          <section class="cp-author-card">
+            <p class="cp-author-label">Written by</p>
+            <div class="cp-author-main">
+              <span class="cp-author-avatar" aria-hidden="true">{initials}</span>
+              <div class="cp-author-body">
+                <p class="cp-author-name">{frontmatter.author}</p>
+                <p class="cp-author-bio">
+                  The Brisbane TVs field team installs TVs, soundbars, and home theatres across 109 Brisbane suburbs. If you've got a question about your space, call <a href="tel:1300312271">1300 312 271</a> — the installers answer the phone.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          {/* Newsletter card */}
+          <section class="cp-newsletter">
+            <div class="cp-newsletter-text">
+              <p class="cp-newsletter-eyebrow">Brisbane-only TV install tips</p>
+              <p class="cp-newsletter-title">One short email a month.</p>
+              <p class="cp-newsletter-copy">New install guides, pricing updates and mount-compatibility breakdowns. No spam — unsubscribe any time.</p>
+            </div>
+            <form class="cp-newsletter-form" onsubmit="event.preventDefault(); this.querySelector('button').textContent='Subscribed ✓';" aria-label="Newsletter signup">
+              <input type="email" placeholder="you@email.com" aria-label="Email address" required />
+              <button type="submit">Subscribe</button>
+            </form>
+          </section>
+
+          {/* Final CTA */}
+          <div class="cp-endcard">
+            <div>
+              <p class="cp-endcard-eyebrow">Ready to book?</p>
+              <p class="cp-endcard-title">Same-day TV mounting from $179</p>
+              <p class="cp-endcard-copy">
+                Brisbane's highest-rated installers. 5-year warranty. Covering 109 suburbs across Greater Brisbane.
+              </p>
+            </div>
+            <a class="cp-endcard-btn" href="/book/">Book now →</a>
+          </div>
+        </footer>
+      </div>
+    </div>
+
+    {/* === RELATED POSTS === */}
+    {related.length > 0 && (
+      <section class="cp-related">
+        <div class="cp-related-inner">
+          <header class="cp-related-head">
+            <p class="cp-related-eyebrow">Keep reading</p>
+            <h2 class="cp-related-title">More from the Brisbane TVs blog</h2>
+          </header>
+          <div class="cp-related-grid">
+            {related.map((p) => (
+              <a class="cp-related-card" href={`/blog/${p.slug}/`}>
+                <div class="cp-related-img-wrap">
+                  <img src={p.data.heroImage} alt={p.data.heroAlt} loading="lazy" />
+                </div>
+                <div class="cp-related-body">
+                  <p class="cp-related-eyebrow-sm">
+                    {p.data.service ?? p.data.suburb ?? "Article"}
+                  </p>
+                  <h3 class="cp-related-h3">{p.data.title}</h3>
+                  <p class="cp-related-dek">{p.data.description}</p>
+                  <p class="cp-related-meta">
+                    {new Date(p.data.publishDate).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}
+                    {p.data.readTime && <> · {p.data.readTime} min read</>}
+                  </p>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    )}
+  </article>
+
+  {/* Interactive wiring: progress bar, TOC, share, copy-link */}
+  <script>
+    (function () {
+      const article = document.getElementById("cp-article");
+      const nav = document.getElementById("cp-toc-nav");
+      const progressFill = document.getElementById("cp-progress-fill");
+      if (!article) return;
+
+      // --- Reading progress bar ---
+      if (progressFill) {
+        const onScroll = () => {
+          const rect = article.getBoundingClientRect();
+          const scrolled = Math.max(0, -rect.top);
+          const total = Math.max(1, rect.height - window.innerHeight);
+          const pct = Math.min(100, (scrolled / total) * 100);
+          (progressFill as HTMLElement).style.width = pct + "%";
+        };
+        window.addEventListener("scroll", onScroll, { passive: true });
+        window.addEventListener("resize", onScroll);
+        onScroll();
+      }
+
+      // --- Auto-wrap first-paragraph drop cap ---
+      // Only apply the oversized drop cap when the first paragraph has enough
+      // text to carry it. A 4-char body like "test" turns into a huge "t"
+      // with 3 orphan letters wrapping awkwardly around it, which looks
+      // broken rather than editorial.
+      const firstP = article.querySelector<HTMLElement>("p");
+      if (firstP && (firstP.textContent || "").trim().length >= 40) {
+        firstP.classList.add("cp-lede");
+      }
+
+      // --- Wrap markdown images as figures with captions from alt text ---
+      article.querySelectorAll<HTMLImageElement>("p > img:only-child").forEach((img) => {
+        const p = img.parentElement;
+        if (!p) return;
+        const fig = document.createElement("figure");
+        fig.className = "cp-figure";
+        const imgClone = img.cloneNode(true) as HTMLImageElement;
+        fig.appendChild(imgClone);
+        if (img.alt) {
+          const cap = document.createElement("figcaption");
+          cap.textContent = img.alt;
+          fig.appendChild(cap);
+        }
+        p.replaceWith(fig);
+      });
+
+      // --- Build TOC from h2s ---
+      if (nav) {
+        const headings = article.querySelectorAll<HTMLElement>("h2");
+        if (headings.length === 0) {
+          // No headings → hide only the TOC section. Share + CTA stay visible
+          // so the sidebar still anchors the layout and every post looks
+          // consistent, short or long.
+          const tocSection = document.getElementById("cp-toc-section");
+          if (tocSection) tocSection.style.display = "none";
+        } else {
+          const ul = document.createElement("ul");
+          ul.className = "cp-toc-list";
+          headings.forEach((h, i) => {
+            if (!h.id) {
+              h.id =
+                "s-" +
+                (h.textContent || "section-" + i)
+                  .toLowerCase()
+                  .replace(/[^a-z0-9]+/g, "-")
+                  .replace(/^-+|-+$/g, "");
+            }
+            const li = document.createElement("li");
+            const a = document.createElement("a");
+            a.href = "#" + h.id;
+            a.textContent = h.textContent || "";
+            li.appendChild(a);
+            ul.appendChild(li);
+          });
+          nav.appendChild(ul);
+
+          const links = nav.querySelectorAll<HTMLAnchorElement>("a");
+          const obs = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((e) => {
+                if (e.isIntersecting) {
+                  links.forEach((l) => l.classList.remove("is-active"));
+                  const active = nav.querySelector<HTMLAnchorElement>(
+                    `a[href="#${e.target.id}"]`
+                  );
+                  if (active) active.classList.add("is-active");
+                }
+              });
+            },
+            { rootMargin: "-20% 0px -70% 0px" }
+          );
+          headings.forEach((h) => obs.observe(h));
+        }
+      }
+
+      // --- Share buttons ---
+      document.querySelectorAll<HTMLAnchorElement>("[data-share]").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+          const kind = btn.dataset.share;
+          const url = encodeURIComponent(location.href);
+          const title = encodeURIComponent(document.title);
+          if (kind === "twitter") {
+            window.open(`https://twitter.com/intent/tweet?url=${url}&text=${title}`, "_blank", "noopener");
+          } else if (kind === "facebook") {
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}`, "_blank", "noopener");
+          } else if (kind === "linkedin") {
+            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, "_blank", "noopener");
+          } else if (kind === "copy") {
+            navigator.clipboard?.writeText(location.href);
+            const orig = btn.getAttribute("aria-label");
+            btn.setAttribute("aria-label", "Link copied!");
+            setTimeout(() => btn.setAttribute("aria-label", orig || ""), 1500);
+          }
+        });
+      });
+    })();
+  </script>
+
+  <style is:global>
+    /* ============================================================
+       CustomBlogPost — magazine-style blog article
+       Tokens follow the Brisbane TVs palette.
+       ============================================================ */
+    .custom-post {
+      --cp-ink: #131619;
+      --cp-ink-soft: #4a5056;
+      --cp-muted: #7c848c;
+      --cp-line: #e5e7ea;
+      --cp-bg-soft: #f7f7f5;
+      --cp-accent: #d4a44a;
+      --cp-accent-deep: #b8872f;
+      --cp-highlight: #fff7e1;
+      --cp-serif: "Noto Serif", Georgia, "Times New Roman", serif;
+      --cp-sans: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--cp-ink);
+      font-family: var(--cp-sans);
+      background: #fff;
+    }
+
+    /* ---- Reading progress bar ---- */
+    .cp-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: transparent;
+      z-index: 100;
+      pointer-events: none;
+    }
+    .cp-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--cp-accent, #d4a44a);
+      transition: width 0.08s linear;
+    }
+
+    /* ---- HERO ---- */
+    .custom-post .cp-hero {
+      position: relative;
+      min-height: clamp(480px, 70vh, 720px);
+      color: #fff;
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+    }
+    .custom-post .cp-hero-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+    }
+    .custom-post .cp-hero-veil {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 45%, rgba(0,0,0,0.85) 100%);
+      z-index: 1;
+    }
+    .custom-post .cp-hero-inner {
+      position: relative;
+      z-index: 2;
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 8rem 1.5rem 3.5rem;
+      width: 100%;
+    }
+    .custom-post .cp-crumbs {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.78rem;
+      color: rgba(255, 255, 255, 0.75);
+      margin-bottom: 1.25rem;
+      letter-spacing: 0.04em;
+    }
+    .custom-post .cp-crumbs a {
+      color: rgba(255, 255, 255, 0.85);
+      transition: color 0.15s;
+    }
+    .custom-post .cp-crumbs a:hover {
+      color: #fff;
+    }
+    .custom-post .cp-crumb-current {
+      color: #fff;
+      font-weight: 500;
+    }
+    .custom-post .cp-eyebrow {
+      font-family: var(--cp-sans);
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--cp-accent);
+      margin: 0 0 1rem;
+      font-weight: 600;
+    }
+    .custom-post .cp-title {
+      font-family: var(--cp-serif);
+      font-weight: 600;
+      font-size: clamp(2rem, 5vw, 3.8rem);
+      line-height: 1.08;
+      letter-spacing: -0.015em;
+      margin: 0 0 1.25rem;
+      color: #fff;
+      max-width: 900px;
+    }
+    .custom-post .cp-dek {
+      font-family: var(--cp-serif);
+      font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+      line-height: 1.55;
+      color: rgba(255, 255, 255, 0.92);
+      max-width: 680px;
+      margin: 0 0 2rem;
+      font-style: italic;
+    }
+    .custom-post .cp-byline {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .custom-post .cp-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--cp-accent);
+      color: #131619;
+      display: inline-grid;
+      place-items: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .custom-post .cp-byline-text {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+    .custom-post .cp-byline-name {
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.92rem;
+    }
+    .custom-post .cp-byline-meta {
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 0.82rem;
+    }
+    .custom-post .cp-dot {
+      margin: 0 0.4rem;
+      opacity: 0.5;
+    }
+
+    /* ---- BODY 2-col grid ---- */
+    .custom-post .cp-body {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 4rem 1.5rem 5rem;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 4rem;
+      align-items: start;
+    }
+
+    /* ---- TOC rail ---- */
+    .custom-post .cp-toc {
+      position: sticky;
+      top: 5.5rem;
+      font-size: 0.88rem;
+    }
+    .custom-post .cp-toc-label {
+      font-family: var(--cp-sans);
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--cp-muted);
+      margin: 0 0 0.9rem;
+      font-weight: 600;
+    }
+    .custom-post .cp-toc-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 2rem;
+      border-left: 1px solid var(--cp-line);
+    }
+    .custom-post .cp-toc-list li { margin: 0; }
+    .custom-post .cp-toc-list a {
+      display: block;
+      padding: 0.4rem 0 0.4rem 0.9rem;
+      color: var(--cp-ink-soft);
+      font-size: 0.85rem;
+      border-left: 2px solid transparent;
+      margin-left: -1px;
+      line-height: 1.4;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .custom-post .cp-toc-list a:hover { color: var(--cp-ink); }
+    .custom-post .cp-toc-list a.is-active {
+      color: var(--cp-ink);
+      border-left-color: var(--cp-accent);
+      font-weight: 500;
+    }
+
+    .custom-post .cp-share { margin: 0 0 2rem; }
+    .custom-post .cp-share-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .custom-post .cp-share-row a {
+      width: 34px;
+      height: 34px;
+      border: 1px solid var(--cp-line);
+      border-radius: 50%;
+      display: inline-grid;
+      place-items: center;
+      color: var(--cp-ink-soft);
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .custom-post .cp-share-row a:hover {
+      background: var(--cp-ink);
+      color: #fff;
+      border-color: var(--cp-ink);
+    }
+    .custom-post .cp-share-row svg { width: 15px; height: 15px; }
+
+    .custom-post .cp-cta-card {
+      display: block;
+      position: relative;
+      background: var(--cp-bg-soft);
+      border: 1px solid var(--cp-line);
+      padding: 1rem 2.25rem 1rem 1rem;
+      border-radius: 8px;
+      color: var(--cp-ink);
+      transition: border-color 0.15s, background 0.15s, transform 0.15s;
+    }
+    .custom-post .cp-cta-card:hover {
+      border-color: var(--cp-accent);
+      background: #fff;
+      transform: translateY(-1px);
+    }
+    .custom-post .cp-cta-eyebrow {
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--cp-accent-deep);
+      margin: 0 0 0.3rem;
+      font-weight: 700;
+    }
+    .custom-post .cp-cta-title {
+      margin: 0;
+      font-size: 0.9rem;
+      font-weight: 500;
+      line-height: 1.35;
+    }
+    .custom-post .cp-cta-arrow {
+      position: absolute;
+      right: 0.95rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--cp-accent);
+      font-size: 1.15rem;
+    }
+
+    /* ---- ARTICLE body typography ---- */
+    .custom-post .cp-article {
+      font-family: var(--cp-serif);
+      font-size: 1.14rem;
+      line-height: 1.8;
+      color: var(--cp-ink);
+      max-width: 720px;
+    }
+
+    /* Hero caption */
+    .custom-post .cp-hero-caption {
+      font-family: var(--cp-sans);
+      font-size: 0.82rem;
+      color: var(--cp-muted);
+      border-top: 1px solid var(--cp-line);
+      border-bottom: 1px solid var(--cp-line);
+      padding: 0.85rem 0;
+      margin-bottom: 2.25rem;
+    }
+    .custom-post .cp-hero-caption strong {
+      color: var(--cp-ink);
+      font-weight: 600;
+      margin-right: 0.2rem;
+    }
+
+    /* Drop cap — first paragraph */
+    .custom-post .cp-article p.cp-lede {
+      font-size: 1.22rem;
+      line-height: 1.7;
+    }
+    .custom-post .cp-article p.cp-lede::first-letter {
+      font-family: var(--cp-serif);
+      font-size: 4.8rem;
+      float: left;
+      line-height: 0.85;
+      padding: 0.55rem 0.65rem 0 0;
+      font-weight: 600;
+      color: var(--cp-ink);
+    }
+
+    .custom-post .cp-article p { margin: 0 0 1.4rem; }
+
+    .custom-post .cp-article h2 {
+      font-family: var(--cp-serif);
+      font-size: 1.95rem;
+      font-weight: 600;
+      line-height: 1.2;
+      margin: 3.25rem 0 1rem;
+      letter-spacing: -0.01em;
+      scroll-margin-top: 5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--cp-line);
+    }
+    .custom-post .cp-article h2:first-of-type {
+      border-top: none;
+      padding-top: 0;
+    }
+    .custom-post .cp-article h3 {
+      font-family: var(--cp-serif);
+      font-size: 1.38rem;
+      font-weight: 600;
+      margin: 2.5rem 0 0.8rem;
+      line-height: 1.3;
+    }
+    .custom-post .cp-article h4 {
+      font-family: var(--cp-sans);
+      font-size: 0.92rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--cp-ink-soft);
+      margin: 2rem 0 0.5rem;
+      font-weight: 600;
+    }
+    .custom-post .cp-article a {
+      color: var(--cp-accent-deep);
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+      transition: color 0.15s;
+    }
+    .custom-post .cp-article a:hover { color: var(--cp-ink); }
+    .custom-post .cp-article strong { font-weight: 700; color: var(--cp-ink); }
+    .custom-post .cp-article em { font-style: italic; }
+
+    .custom-post .cp-article ul,
+    .custom-post .cp-article ol {
+      margin: 0 0 1.5rem 1.5rem;
+      padding: 0;
+    }
+    .custom-post .cp-article ul li,
+    .custom-post .cp-article ol li {
+      margin-bottom: 0.6rem;
+      padding-left: 0.25rem;
+      list-style-position: outside;
+    }
+    .custom-post .cp-article ul li { list-style-type: disc; }
+    .custom-post .cp-article ol li { list-style-type: decimal; }
+
+    /* Pull-quote (blockquote) — Atlantic-style sans-serif, gold rule */
+    .custom-post .cp-article blockquote {
+      margin: 2.5rem -1rem;
+      padding: 1.25rem 0 1.25rem 1.5rem;
+      border-left: 3px solid var(--cp-accent);
+      font-family: var(--cp-sans);
+      font-size: 1.45rem;
+      line-height: 1.4;
+      font-weight: 500;
+      color: var(--cp-ink);
+      font-style: normal;
+    }
+    .custom-post .cp-article blockquote p { margin: 0; }
+    .custom-post .cp-article blockquote p:last-child { margin-bottom: 0; }
+
+    .custom-post .cp-article code {
+      font-family: "SF Mono", Menlo, Consolas, monospace;
+      background: var(--cp-bg-soft);
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.88em;
+    }
+    .custom-post .cp-article pre {
+      background: #1a1f24;
+      color: #e6e9ec;
+      padding: 1.25rem 1.5rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 1.75rem 0;
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+    .custom-post .cp-article pre code { background: none; padding: 0; color: inherit; }
+
+    /* Figures (images get auto-wrapped client-side; caption = alt text) */
+    .custom-post .cp-article .cp-figure,
+    .custom-post .cp-article figure {
+      margin: 2.25rem 0;
+    }
+    .custom-post .cp-article .cp-figure img,
+    .custom-post .cp-article figure img,
+    .custom-post .cp-article p > img {
+      width: 100%;
+      border-radius: 6px;
+      display: block;
+    }
+    .custom-post .cp-article .cp-figure figcaption,
+    .custom-post .cp-article figure figcaption {
+      font-family: var(--cp-sans);
+      font-size: 0.82rem;
+      color: var(--cp-muted);
+      padding: 0.7rem 0.2rem 0;
+      line-height: 1.5;
+      border-top: 0;
+    }
+
+    .custom-post .cp-article hr {
+      border: none;
+      height: 1px;
+      background: var(--cp-line);
+      margin: 3rem 0;
+    }
+
+    /* ---- Post footer ---- */
+    .custom-post .cp-post-foot {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 2px solid var(--cp-ink);
+    }
+    .custom-post .cp-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+    }
+    .custom-post .cp-tag {
+      font-family: var(--cp-sans);
+      font-size: 0.78rem;
+      padding: 0.28rem 0.7rem;
+      border-radius: 999px;
+      background: var(--cp-bg-soft);
+      color: var(--cp-ink-soft);
+      text-decoration: none;
+      transition: background 0.15s, color 0.15s;
+    }
+    .custom-post .cp-tag:hover {
+      background: var(--cp-ink);
+      color: #fff;
+    }
+    .custom-post .cp-updated {
+      font-family: var(--cp-sans);
+      font-size: 0.82rem;
+      color: var(--cp-muted);
+      margin: 0 0 2.5rem;
+    }
+
+    /* Author card */
+    .custom-post .cp-author-card {
+      display: block;
+      padding: 2rem;
+      background: var(--cp-bg-soft);
+      border-radius: 10px;
+      margin-bottom: 2.5rem;
+    }
+    .custom-post .cp-author-main {
+      display: flex;
+      gap: 1.25rem;
+      align-items: flex-start;
+    }
+    .custom-post .cp-author-avatar {
+      flex-shrink: 0;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--cp-ink);
+      color: var(--cp-accent);
+      display: inline-grid;
+      place-items: center;
+      font-family: var(--cp-sans);
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: 0.04em;
+    }
+    .custom-post .cp-author-body { flex: 1; min-width: 0; }
+    .custom-post .cp-author-label {
+      font-family: var(--cp-sans);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--cp-muted);
+      margin: 0 0 1rem;
+      font-weight: 600;
+    }
+    .custom-post .cp-author-name {
+      font-family: var(--cp-serif);
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin: 0 0 0.5rem;
+    }
+    .custom-post .cp-author-bio {
+      font-family: var(--cp-sans);
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: var(--cp-ink-soft);
+      margin: 0;
+    }
+    .custom-post .cp-author-bio a {
+      color: var(--cp-accent-deep);
+      font-weight: 500;
+    }
+
+    /* Newsletter */
+    .custom-post .cp-newsletter {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1.5rem;
+      align-items: center;
+      padding: 1.75rem 2rem;
+      border: 1px solid var(--cp-line);
+      border-radius: 10px;
+      margin-bottom: 2rem;
+    }
+    .custom-post .cp-newsletter-eyebrow {
+      font-family: var(--cp-sans);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--cp-accent-deep);
+      margin: 0 0 0.35rem;
+      font-weight: 600;
+    }
+    .custom-post .cp-newsletter-title {
+      font-family: var(--cp-serif);
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin: 0 0 0.3rem;
+    }
+    .custom-post .cp-newsletter-copy {
+      font-family: var(--cp-sans);
+      font-size: 0.88rem;
+      color: var(--cp-ink-soft);
+      margin: 0;
+      line-height: 1.5;
+    }
+    .custom-post .cp-newsletter-form {
+      display: flex;
+      gap: 0.5rem;
+      font-family: var(--cp-sans);
+    }
+    .custom-post .cp-newsletter-form input {
+      width: 220px;
+      padding: 0.7rem 0.9rem;
+      border: 1px solid var(--cp-line);
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      color: var(--cp-ink);
+    }
+    .custom-post .cp-newsletter-form input:focus {
+      outline: 2px solid var(--cp-accent);
+      outline-offset: 1px;
+      border-color: var(--cp-accent);
+    }
+    .custom-post .cp-newsletter-form button {
+      padding: 0.7rem 1.1rem;
+      background: var(--cp-ink);
+      color: #fff;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      font-family: inherit;
+      cursor: pointer;
+      border: 1px solid var(--cp-ink);
+      transition: background 0.15s;
+    }
+    .custom-post .cp-newsletter-form button:hover { background: #000; }
+
+    /* End-of-post CTA */
+    .custom-post .cp-endcard {
+      margin-top: 2rem;
+      padding: 2.25rem;
+      background: linear-gradient(135deg, #1a1f24 0%, #0f1316 100%);
+      color: #fff;
+      border-radius: 10px;
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .custom-post .cp-endcard-eyebrow {
+      font-family: var(--cp-sans);
+      font-size: 0.7rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--cp-accent);
+      margin: 0 0 0.4rem;
+      font-weight: 600;
+    }
+    .custom-post .cp-endcard-title {
+      font-family: var(--cp-serif);
+      font-size: 1.6rem;
+      font-weight: 600;
+      margin: 0 0 0.35rem;
+      line-height: 1.2;
+    }
+    .custom-post .cp-endcard-copy {
+      font-family: var(--cp-sans);
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.75);
+      margin: 0;
+      max-width: 440px;
+    }
+    .custom-post .cp-article a.cp-endcard-btn,
+    .custom-post a.cp-endcard-btn {
+      background: var(--cp-accent);
+      color: #131619;
+      font-family: var(--cp-sans);
+      font-weight: 700;
+      padding: 0.95rem 1.6rem;
+      border-radius: 6px;
+      white-space: nowrap;
+      text-decoration: none;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .custom-post .cp-article a.cp-endcard-btn:hover,
+    .custom-post .cp-article a.cp-endcard-btn:focus,
+    .custom-post .cp-article a.cp-endcard-btn:visited,
+    .custom-post a.cp-endcard-btn:hover,
+    .custom-post a.cp-endcard-btn:focus,
+    .custom-post a.cp-endcard-btn:visited {
+      color: #131619;
+      text-decoration: none;
+    }
+    .custom-post .cp-endcard-btn:hover {
+      background: #e9b857;
+      transform: translateY(-1px);
+    }
+
+    /* ---- Related posts ---- */
+    .cp-related {
+      background: var(--cp-bg-soft, #f7f7f5);
+      border-top: 1px solid var(--cp-line, #e5e7ea);
+      padding: 4rem 1.5rem 5rem;
+    }
+    .cp-related-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+    .cp-related-head {
+      max-width: 880px;
+      margin-bottom: 2.5rem;
+    }
+    .cp-related-eyebrow {
+      font-family: "Inter", sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #b8872f;
+      margin: 0 0 0.5rem;
+      font-weight: 700;
+    }
+    .cp-related-title {
+      font-family: "Noto Serif", serif;
+      font-size: 1.85rem;
+      font-weight: 600;
+      margin: 0;
+      line-height: 1.2;
+    }
+    .cp-related-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .cp-related-card {
+      display: block;
+      background: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      text-decoration: none;
+      color: #131619;
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 1px solid rgba(0, 0, 0, 0.04);
+    }
+    .cp-related-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+    }
+    .cp-related-img-wrap {
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      background: #eaeaea;
+    }
+    .cp-related-img-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .cp-related-body {
+      padding: 1.25rem 1.5rem 1.5rem;
+    }
+    .cp-related-eyebrow-sm {
+      font-family: "Inter", sans-serif;
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #7c848c;
+      margin: 0 0 0.5rem;
+      font-weight: 600;
+    }
+    .cp-related-h3 {
+      font-family: "Noto Serif", serif;
+      font-size: 1.15rem;
+      font-weight: 600;
+      line-height: 1.3;
+      margin: 0 0 0.55rem;
+    }
+    .cp-related-dek {
+      font-family: "Inter", sans-serif;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: #4a5056;
+      margin: 0 0 0.75rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .cp-related-meta {
+      font-family: "Inter", sans-serif;
+      font-size: 0.76rem;
+      color: #7c848c;
+      margin: 0;
+    }
+
+    /* ---- Responsive ---- */
+    @media (max-width: 1100px) {
+      .cp-related-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 960px) {
+      .custom-post .cp-body {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding: 2.5rem 1.25rem 3.5rem;
+      }
+      .custom-post .cp-toc {
+        position: static;
+        order: 2;
+        padding-top: 2rem;
+        border-top: 1px solid var(--cp-line);
+      }
+      .custom-post .cp-article {
+        order: 1;
+        max-width: 100%;
+        font-size: 1.08rem;
+        line-height: 1.7;
+      }
+      .custom-post .cp-article p.cp-lede {
+        font-size: 1.14rem;
+      }
+      .custom-post .cp-article p.cp-lede::first-letter {
+        font-size: 3.6rem;
+      }
+      .custom-post .cp-hero-inner {
+        padding: 6rem 1.25rem 2.25rem;
+      }
+      .custom-post .cp-article blockquote {
+        font-size: 1.2rem;
+        margin: 2rem 0;
+      }
+      .custom-post .cp-newsletter {
+        grid-template-columns: 1fr;
+      }
+      .custom-post .cp-newsletter-form { flex-direction: column; }
+      .custom-post .cp-newsletter-form input { width: 100%; }
+    }
+    @media (max-width: 700px) {
+      .cp-related-grid { grid-template-columns: 1fr; }
+      .cp-related { padding: 3rem 1.25rem 3.5rem; }
+    }
+    @media (max-width: 600px) {
+      .custom-post .cp-endcard { padding: 1.75rem; }
+      .custom-post .cp-endcard-btn { width: 100%; text-align: center; }
+      .custom-post .cp-author-card {
+        flex-direction: column;
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</BaseLayout>

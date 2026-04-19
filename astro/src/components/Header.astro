@@ -1,0 +1,390 @@
+---
+// Real Brisbane TVs site header — ported wholesale from the homepage/blog template.
+// Renders the top-bar, main header with logo, nav (with hover mega-menus), search,
+// call button + hamburger. Mega-menu supporting CSS lives in global.css.
+---
+<div class="page-header-wrapper">
+    <div class="site-header">
+        <!-- Top Bar: Support | trust items | Areas + Search -->
+        <div class="top-bar">
+            <div class="container">
+                <div class="top-left">
+                    <a href="#">Support</a>
+                    <a href="#">Reviews</a>
+                    <a href="#">Careers</a>
+                </div>
+                <div class="top-center">
+                    <div class="item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+                        <span>5-Year Warranty</span>
+                    </div>
+                    <div class="item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                        <span>Same-Day Availability</span>
+                    </div>
+                    <div class="item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="11" width="18" height="10" rx="1"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                        <span>$20M Insured</span>
+                    </div>
+                </div>
+                <div class="top-right">
+                    <a href="#">Referral</a>
+                    <div class="search-bar-sm">
+                        <input type="text" placeholder="What can we help you find?">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Header: Logo | Nav (centered) | Phone + Book Now -->
+        <header class="main-header">
+            <div class="container">
+                <a href="../index.html" class="logo">
+                    <img src="https://cdn.brisbanetvs.com/brisbanetvs-logo-white.png" alt="Brisbane TVs">
+                </a>
+
+                <nav class="main-nav">
+                    <div class="nav-item" data-menu="services">
+                        <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Services <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                    </div>
+                    <div class="nav-item" data-menu="locations">
+                        <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Locations <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                    </div>
+                    <div class="nav-item" data-menu="products">
+                        <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Products <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                    </div>
+                    <div class="nav-item" data-menu="mounts">
+                        <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Mounts <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                    </div>
+                    <a href="#">Pricing</a>
+                    <a href="#">Gallery</a>
+                    <a href="#">Blog</a>
+                    <a href="../about.html">About</a>
+                </nav>
+
+                <div class="header-right">
+                    <a href="tel:1300312271" class="header-phone">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                        1300 312 271
+                    </a>
+                    <a href="../book.html" class="header-book-btn">BOOK NOW</a>
+                </div>
+
+                <button class="hamburger" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+
+            <!-- Mega Menu Panels -->
+            <div class="mega-panels">
+
+                <!-- SERVICES -->
+                <div class="mega-menu" data-menu="services">
+                    <div class="mega-inner">
+                        <div class="mega-col">
+                            <h4>Browse by Category</h4>
+                            <div class="mega-links mega-links-sm mega-links-2col">
+                                <a href="#">Residential Installation</a>
+                                <a href="#">Commercial &amp; Fit-Out</a>
+                                <a href="#">New Builds &amp; Renos</a>
+                                <a href="#">Real Estate Styling</a>
+                                <a href="#">Rental &amp; Move-In</a>
+                                <a href="#">Retail &amp; Hospitality</a>
+                                <a href="#">Schools &amp; Clinics</a>
+                                <a href="#">Warranty Call-Outs</a>
+                            </div>
+                            <a href="../services.html" class="mega-view-all">View All Services →</a>
+                        </div>
+
+                        <div class="mega-col">
+                            <h4>Popular Services</h4>
+                            <div class="mega-links mega-links-2col">
+                                <a href="#">TV Wall Mounting</a>
+                                <a href="#">Cable Concealment</a>
+                                <a href="#">Soundbar Install</a>
+                                <a href="#">Starlink Install</a>
+                                <a href="#">Outdoor TV Install</a>
+                                <a href="#">Home Theatre Setup</a>
+                                <a href="#">TV Antenna Install</a>
+                                <a href="#">Fireplace Mounting</a>
+                            </div>
+                        </div>
+
+                        <div class="mega-col">
+                            <div class="mega-featured">
+                                <div class="mega-featured-img">
+                                    <img loading="lazy" decoding="async" width="800" height="800"
+                                         src="https://cdn.brisbanetvs.com/install-newstead800x800.webp"
+                                         alt="Brisbane media-room TV install — mounted with concealed cabling">
+                                </div>
+                                <div class="mega-featured-text">
+                                    <span class="mega-featured-eyebrow">Most Booked Package</span>
+                                    <h5>Complete Media Room Install</h5>
+                                    <p>TV mount, soundbar, in-wall cable run and full home-theatre calibration — one visit, from $549.</p>
+                                    <a href="#" class="mega-featured-cta">Book Package →</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LOCATIONS -->
+                <div class="mega-menu" data-menu="locations">
+                    <div class="mega-inner">
+                        <div class="mega-col">
+                            <h4>Greater Brisbane Regions</h4>
+                            <div class="mega-links mega-links-sm mega-links-2col">
+                                <a href="#">Brisbane CBD</a>
+                                <a href="#">Inner Brisbane</a>
+                                <a href="#">North Brisbane</a>
+                                <a href="#">South Brisbane</a>
+                                <a href="#">East &amp; Bayside</a>
+                                <a href="#">West Brisbane</a>
+                                <a href="#">Moreton Bay</a>
+                                <a href="#">Redland City</a>
+                            </div>
+                            <a href="#" class="mega-view-all">View All 100+ Suburbs →</a>
+                        </div>
+
+                        <div class="mega-col">
+                            <h4>Popular Suburbs</h4>
+                            <div class="mega-links mega-links-2col">
+                                <a href="#">New Farm</a>
+                                <a href="#">Paddington</a>
+                                <a href="#">Indooroopilly</a>
+                                <a href="#">Chermside</a>
+                                <a href="#">Carindale</a>
+                                <a href="#">Wynnum &amp; Manly</a>
+                                <a href="#">Springfield</a>
+                                <a href="#">Kenmore</a>
+                            </div>
+                        </div>
+
+                        <div class="mega-col">
+                            <div class="mega-featured">
+                                <div class="mega-featured-img">
+                                    <img loading="lazy" decoding="async" width="800" height="800"
+                                         src="https://cdn.brisbanetvs.com/install-kangaroopoint800x800.webp"
+                                         alt="Kangaroo Point Brisbane TV install — same-day service">
+                                </div>
+                                <div class="mega-featured-text">
+                                    <span class="mega-featured-eyebrow">Same-Day, Brisbane-Wide</span>
+                                    <h5>Serving 100+ Brisbane Suburbs</h5>
+                                    <p>From New Farm apartments to Samford acreage — on-site the same day you book.</p>
+                                    <a href="#" class="mega-featured-cta">Check Your Suburb →</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PRODUCTS -->
+                <div class="mega-menu" data-menu="products">
+                    <div class="mega-inner">
+                        <div class="mega-col">
+                            <h4>Shop by Type</h4>
+                            <div class="mega-links mega-links-sm mega-links-2col">
+                                <a href="#">TV Brackets</a>
+                                <a href="#">Soundbars</a>
+                                <a href="#">HDMI Cables</a>
+                                <a href="#">Cable Kits</a>
+                                <a href="#">Starlink Hardware</a>
+                                <a href="#">Outdoor Enclosures</a>
+                                <a href="#">Universal Remotes</a>
+                                <a href="#">Surge Protection</a>
+                            </div>
+                            <a href="#" class="mega-view-all">View All Products →</a>
+                        </div>
+
+                        <div class="mega-col">
+                            <h4>Customer Favourites</h4>
+                            <div class="mega-links mega-links-2col">
+                                <a href="#">Full-Motion Mounts</a>
+                                <a href="#">Heavy-Duty Brackets</a>
+                                <a href="#">Soundbar + Sub Kits</a>
+                                <a href="#">In-Wall HDMI Kits</a>
+                                <a href="#">Weatherproof Cases</a>
+                                <a href="#">Starlink Mount Kits</a>
+                            </div>
+                        </div>
+
+                        <div class="mega-col">
+                            <div class="mega-featured">
+                                <div class="mega-featured-img">
+                                    <img loading="lazy" decoding="async" width="800" height="800"
+                                         src="https://cdn.brisbanetvs.com/TV%20Flush%20Mount%20Living%20Room2-800x800.webp"
+                                         alt="Flush TV wall mount with VESA-rated bracket install">
+                                </div>
+                                <div class="mega-featured-text">
+                                    <span class="mega-featured-eyebrow">Supply + Install Bundle</span>
+                                    <h5>Premium Mount + Install — From $259</h5>
+                                    <p>VESA-rated bracket, fixings, cable tidy and lifetime workmanship warranty.</p>
+                                    <a href="#" class="mega-featured-cta">See Bundles →</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MOUNTS -->
+                <div class="mega-menu" data-menu="mounts">
+                    <div class="mega-inner">
+                        <div class="mega-col">
+                            <h4>By Mount Style</h4>
+                            <div class="mega-links mega-links-sm mega-links-2col">
+                                <a href="#">Flat / Fixed</a>
+                                <a href="#">Tilt Mounts</a>
+                                <a href="#">Full-Motion Swivel</a>
+                                <a href="#">Ceiling Mounts</a>
+                                <a href="#">Outdoor / Weatherproof</a>
+                                <a href="#">Pull-Down Fireplace</a>
+                                <a href="#">Rotating Portrait</a>
+                            </div>
+                            <a href="#" class="mega-view-all">View All Mounts →</a>
+                        </div>
+
+                        <div class="mega-col">
+                            <h4>By TV Size</h4>
+                            <div class="mega-links mega-links-2col">
+                                <a href="#">Small 32″–43″</a>
+                                <a href="#">Medium 50″–65″</a>
+                                <a href="#">Large 75″–85″</a>
+                                <a href="#">Extra-Large 85″–98″</a>
+                                <a href="#">Samsung Frame</a>
+                                <a href="#">LG OLED Gallery</a>
+                            </div>
+                        </div>
+
+                        <div class="mega-col">
+                            <div class="mega-featured">
+                                <div class="mega-featured-img">
+                                    <img loading="lazy" decoding="async" width="800" height="800"
+                                         src="https://cdn.brisbanetvs.com/85_%20Samsung%20Cinema%20Setup800x800.webp"
+                                         alt="85-inch Samsung TV wall mount install — Brisbane">
+                                </div>
+                                <div class="mega-featured-text">
+                                    <span class="mega-featured-eyebrow">Most Installed</span>
+                                    <h5>Large TV Mount — 75″ to 98″</h5>
+                                    <p>Heavy-gauge, stud-anchored, VESA 800×600. The same mount we install on 85″ Samsungs across Brisbane.</p>
+                                    <a href="#" class="mega-featured-cta">See Large Mounts →</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </header>
+    </div>
+
+    <!-- Mega Menu Backdrop -->
+    <div class="mega-backdrop"></div>
+
+</div>  <!-- /.page-header-wrapper -->
+
+<script is:inline>
+    // ===== Mega Menu — hover with open/close delay =====
+    (function () {
+        const OPEN_DELAY = 150;
+        const CLOSE_DELAY = 200;
+
+        const siteHeader = document.querySelector('.site-header');
+        const backdrop = document.querySelector('.mega-backdrop');
+        const navItems = document.querySelectorAll('.nav-item[data-menu]');
+        const panels = document.querySelectorAll('.mega-menu[data-menu]');
+        if (!siteHeader || navItems.length === 0) return;
+
+        let openTimer = null;
+        let closeTimer = null;
+        let currentMenu = null;
+
+        const panelFor = (key) => document.querySelector(`.mega-menu[data-menu="${key}"]`);
+        const itemFor = (key) => document.querySelector(`.nav-item[data-menu="${key}"]`);
+
+        function openMenu(key) {
+            if (currentMenu === key) return;
+
+            panels.forEach(p => p.classList.remove('is-active'));
+            navItems.forEach(n => {
+                n.classList.remove('is-active');
+                const btn = n.querySelector('.nav-dropdown-trigger');
+                if (btn) btn.setAttribute('aria-expanded', 'false');
+            });
+
+            const panel = panelFor(key);
+            const item = itemFor(key);
+            if (panel) panel.classList.add('is-active');
+            if (item) {
+                item.classList.add('is-active');
+                const btn = item.querySelector('.nav-dropdown-trigger');
+                if (btn) btn.setAttribute('aria-expanded', 'true');
+            }
+
+            siteHeader.classList.add('is-menu-open');
+            if (backdrop) backdrop.classList.add('is-active');
+            currentMenu = key;
+        }
+
+        function closeMenu() {
+            panels.forEach(p => p.classList.remove('is-active'));
+            navItems.forEach(n => {
+                n.classList.remove('is-active');
+                const btn = n.querySelector('.nav-dropdown-trigger');
+                if (btn) btn.setAttribute('aria-expanded', 'false');
+            });
+            siteHeader.classList.remove('is-menu-open');
+            if (backdrop) backdrop.classList.remove('is-active');
+            currentMenu = null;
+        }
+
+        function scheduleOpen(key) {
+            clearTimeout(closeTimer);
+            closeTimer = null;
+            if (currentMenu === key) return;
+            clearTimeout(openTimer);
+            openTimer = setTimeout(() => openMenu(key), OPEN_DELAY);
+        }
+
+        function scheduleClose() {
+            clearTimeout(openTimer);
+            openTimer = null;
+            clearTimeout(closeTimer);
+            closeTimer = setTimeout(closeMenu, CLOSE_DELAY);
+        }
+
+        // Hover on triggers
+        navItems.forEach(item => {
+            const key = item.getAttribute('data-menu');
+            item.addEventListener('mouseenter', () => scheduleOpen(key));
+            item.addEventListener('mouseleave', scheduleClose);
+            // Click toggles (keyboard / tap fallback)
+            const btn = item.querySelector('.nav-dropdown-trigger');
+            if (btn) {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    if (currentMenu === key) closeMenu();
+                    else openMenu(key);
+                });
+            }
+        });
+
+        // Hover on panels keeps them open
+        panels.forEach(panel => {
+            panel.addEventListener('mouseenter', () => {
+                clearTimeout(closeTimer);
+                closeTimer = null;
+            });
+            panel.addEventListener('mouseleave', scheduleClose);
+        });
+
+        // Close when mouse leaves header area entirely
+        siteHeader.addEventListener('mouseleave', scheduleClose);
+
+        // Close on backdrop click / Escape
+        if (backdrop) backdrop.addEventListener('click', closeMenu);
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && currentMenu) closeMenu();
+        });
+    })();
+</script>

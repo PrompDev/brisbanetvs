@@ -1,0 +1,111 @@
+---
+import AdminShell from "~/layouts/AdminShell.astro";
+import { getCollection } from "astro:content";
+
+/**
+ * /admin-nav/products/ — admin list for the products collection.
+ *
+ * First row is the public /products/ landing page. Subsequent rows list
+ * every product entry sorted by price descending (flagship first).
+ */
+const products = (await getCollection("products")).sort(
+  (a, b) => b.data.priceAud - a.data.priceAud
+);
+const published = products.filter((p) => !p.data.draft).length;
+const drafts = products.filter((p) => p.data.draft).length;
+---
+<AdminShell title="Products" active="products" description="TV and AV product pages.">
+  <div slot="actions">
+    <a class="btn btn-primary" href="/admin/#/collections/products/new" target="_blank" rel="noopener">
+      + New product
+    </a>
+  </div>
+
+  <div class="content">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Products<span class="counter">({products.length} entries · {published} live · {drafts} draft)</span></h2>
+        <div class="panel-actions">
+          <a class="btn" href="/products/" target="_blank" rel="noopener">View hub</a>
+          <a class="btn" href="/admin/#/collections/products" target="_blank" rel="noopener">Manage in CMS</a>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Slug</th>
+              <th>Brand</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th style="width: 1%;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="row-index">
+              <td class="cell-title">
+                <strong><a href="/products/" target="_blank" rel="noopener" style="color: inherit;">Products landing page</a></strong>
+                <span>Public hub grouping products by category — <code>/products/index.html</code></span>
+              </td>
+              <td>
+                <a href="/products/" target="_blank" rel="noopener" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; color: var(--sidebar-accent); text-decoration: none;">
+                  /products/
+                </a>
+              </td>
+              <td style="color: var(--muted);">—</td>
+              <td style="color: var(--muted);">—</td>
+              <td style="color: var(--muted);">—</td>
+              <td><span class="badge badge-ok">Live</span></td>
+              <td>
+                <div class="actions">
+                  <a class="btn" href="/products/" target="_blank" rel="noopener">View</a>
+                </div>
+              </td>
+            </tr>
+
+            {products.length === 0 ? (
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 2rem; color: var(--ink-soft);">
+                  No products yet. Hit <strong>+ New product</strong> or drop a <code>.md</code> file into <code>src/content/products/</code>.
+                </td>
+              </tr>
+            ) : (
+              products.map((p) => (
+                <tr>
+                  <td class="cell-title">
+                    <strong><a href={`/products/${p.slug}/`} target="_blank" rel="noopener" style="color: inherit;">{p.data.title}</a></strong>
+                    <span>{p.data.description}</span>
+                  </td>
+                  <td>
+                    <a href={`/products/${p.slug}/`} target="_blank" rel="noopener" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; color: var(--sidebar-accent); text-decoration: none;">
+                      /{p.slug}
+                    </a>
+                  </td>
+                  <td>{p.data.brand}</td>
+                  <td><span class="badge badge-muted">{p.data.category}</span></td>
+                  <td>${p.data.priceAud.toLocaleString()}</td>
+                  <td>{p.data.draft ? <span class="badge badge-draft">Draft</span> : <span class="badge badge-ok">Live</span>}</td>
+                  <td>
+                    <div class="actions">
+                      <a class="btn" href={`/products/${p.slug}/`} target="_blank" rel="noopener">View</a>
+                      <a class="btn btn-primary" href={`/admin/#/collections/products/entries/${p.slug}`} target="_blank" rel="noopener">Edit</a>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <style is:global>
+    .row-index td { background: #fafbff; }
+    .row-index td:first-child { border-left: 3px solid var(--sidebar-accent); }
+    .row-index .cell-title strong { color: var(--sidebar-accent); }
+  </style>
+</AdminShell>

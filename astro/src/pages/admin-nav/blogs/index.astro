@@ -1,0 +1,1903 @@
+---
+import AdminShell from "~/layouts/AdminShell.astro";
+import { getCollection } from "astro:content";
+
+const posts = (await getCollection("blog")).sort(
+  (a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf()
+);
+const published = posts.filter((p) => !p.data.draft).length;
+const drafts = posts.filter((p) => p.data.draft).length;
+---
+<AdminShell title="Blogs" active="blogs" description="All blog posts.">
+  <div slot="actions">
+    <div class="np-dropdown" data-np-root>
+      <button type="button" class="btn btn-primary" data-np-toggle aria-haspopup="true" aria-expanded="false">
+        + New blog post <span class="np-caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="np-menu" data-np-menu hidden role="menu">
+        <a class="np-item" href="/admin/#/collections/blog/new" target="_blank" rel="noopener" role="menuitem">
+          <span class="np-item-title">Single post</span>
+          <span class="np-item-sub">Open the CMS editor</span>
+        </a>
+        <button type="button" class="np-item" data-bulk-open role="menuitem">
+          <span class="np-item-title">Bulk upload .md files</span>
+          <span class="np-item-sub">Drag up to 50 files at once</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Blog posts<span class="counter">({posts.length} total · {published} live · {drafts} draft)</span></h2>
+        <div class="panel-actions">
+          <a class="btn" href="/templates/blog-post-template.md" download>Download .md template</a>
+          <a class="btn" href="/admin/#/collections/blog" target="_blank" rel="noopener">Manage in CMS</a>
+        </div>
+      </div>
+      {posts.length === 0 ? (
+        <div class="empty">
+          <h3>No posts yet</h3>
+          <p>Hit <strong>+ New blog post</strong> above or drop a <code>.md</code> file into <code>src/content/blog/</code>.</p>
+        </div>
+      ) : (
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Slug</th>
+                <th>Published</th>
+                <th>Style</th>
+                <th>Status</th>
+                <th>Tags</th>
+                <th style="width: 1%;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {/* Collection landing page row — surfaces the public /blog/ index
+                  so the dashboard doubles as a site-map. Sits at the top so
+                  it's the first thing the user sees when they open the list. */}
+              <tr class="row-index">
+                <td class="cell-title">
+                  <strong><a href="/blog/" target="_blank" rel="noopener" style="color: inherit;">Blog landing page</a></strong>
+                  <span>Public hub listing every post — <code>/blog/index.html</code></span>
+                </td>
+                <td>
+                  <a href="/blog/" target="_blank" rel="noopener" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; color: var(--sidebar-accent); text-decoration: none;">
+                    /blog/
+                  </a>
+                </td>
+                <td style="color: var(--muted);">—</td>
+                <td><span class="badge badge-muted">index</span></td>
+                <td><span class="badge badge-ok">Live</span></td>
+                <td style="color: var(--muted);">—</td>
+                <td>
+                  <div class="actions">
+                    <a class="btn" href="/blog/" target="_blank" rel="noopener">View</a>
+                  </div>
+                </td>
+              </tr>
+              {posts.map((post) => (
+                <tr>
+                  <td class="cell-title">
+                    <strong><a href={`/admin-nav/blogs/${post.slug}/`} style="color: inherit;">{post.data.title}</a></strong>
+                    <span>{post.data.description}</span>
+                  </td>
+                  <td>
+                    <a href={`/admin-nav/blogs/${post.slug}/`} style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; color: var(--sidebar-accent); text-decoration: none;">
+                      /{post.slug}
+                    </a>
+                  </td>
+                  <td>{new Date(post.data.publishDate).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}</td>
+                  <td><span class="badge badge-muted">{post.data.style}</span></td>
+                  <td>{post.data.draft ? <span class="badge badge-draft">Draft</span> : <span class="badge badge-ok">Live</span>}</td>
+                  <td style="color: var(--ink-soft); font-size: 0.82rem;">
+                    {post.data.tags.length > 0 ? post.data.tags.join(", ") : <span style="color: var(--muted);">—</span>}
+                  </td>
+                  <td>
+                    <div class="actions">
+                      <a class="btn" href={`/admin-nav/blogs/${post.slug}/`}>Open</a>
+                      <a class="btn btn-primary" href={`/admin/#/collections/blog/entries/${post.slug}`} target="_blank" rel="noopener">Edit</a>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  </div>
+
+  {/* === BULK UPLOAD MODAL === */}
+  <div class="bulk-overlay" data-bulk-overlay hidden>
+    <div class="bulk-modal" role="dialog" aria-labelledby="bulk-title" aria-modal="true">
+      <header class="bulk-head">
+        <div>
+          <h3 id="bulk-title">Bulk upload blog posts</h3>
+          <p>Drop <code>.md</code> files, then click through each post and pick an image for every <code>IMAGE:</code> slot.</p>
+        </div>
+        <button type="button" class="bulk-close" data-bulk-close aria-label="Close">×</button>
+      </header>
+
+      {/* Connection banner — shows whether we can talk to the CMS proxy */}
+      <div class="bulk-conn" data-bulk-conn>
+        <span class="bulk-conn-dot" data-bulk-conn-dot></span>
+        <span data-bulk-conn-label>Checking CMS connection…</span>
+        <button type="button" class="bulk-conn-btn" data-bulk-root hidden>Pick folder manually…</button>
+      </div>
+
+      <div class="bulk-drop" data-bulk-drop tabindex="0">
+        <p class="bulk-drop-main">Drag <strong>.md</strong> files here or <button type="button" class="bulk-browse" data-bulk-browse>browse…</button></p>
+        <input type="file" accept=".md,text/markdown" multiple hidden data-bulk-input />
+      </div>
+
+      {/* Dot rail + prev/next stepper — only shows once files are added */}
+      <nav class="bulk-strip" data-bulk-strip hidden aria-label="Posts">
+        <button type="button" class="bulk-nav" data-bulk-prev aria-label="Previous post (left arrow)">‹</button>
+        <span class="bulk-strip-count" data-bulk-strip-count>1 / 1</span>
+        <div class="bulk-dots" data-bulk-dots role="tablist"></div>
+        <span class="bulk-strip-error" data-bulk-strip-error hidden title="">Invalid template</span>
+        <button type="button" class="bulk-nav" data-bulk-next aria-label="Next post (right arrow)">›</button>
+      </nav>
+
+      {/* Single-post focus view */}
+      <section class="bulk-focus" data-bulk-focus hidden aria-live="polite"></section>
+
+      <footer class="bulk-foot">
+        <div class="bulk-summary" data-bulk-summary>No files yet.</div>
+        <div class="bulk-actions">
+          <button type="button" class="btn" data-bulk-clear disabled>Clear</button>
+          <button type="button" class="btn btn-primary" data-bulk-save disabled>Save all</button>
+        </div>
+      </footer>
+
+      <p class="bulk-hint">
+        Tip: use <kbd>←</kbd> <kbd>→</kbd> to jump between posts, <kbd>Enter</kbd> to open the picker on the focused slot.
+      </p>
+    </div>
+  </div>
+
+<style is:global>
+  /* ===== Dropdown ===== */
+  .np-dropdown { position: relative; display: inline-block; }
+  .np-caret { font-size: 0.75rem; margin-left: 0.1rem; transition: transform 0.15s; }
+  .np-dropdown[data-open="true"] .np-caret { transform: rotate(180deg); }
+
+  .np-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 240px;
+    background: #fff;
+    border: 1px solid var(--panel-line, #e5e7eb);
+    border-radius: 8px;
+    box-shadow: 0 12px 28px rgba(15, 22, 36, 0.12);
+    padding: 0.35rem;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+  }
+  .np-menu[hidden] { display: none; }
+
+  .np-item {
+    all: unset;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--ink, #131619);
+  }
+  .np-item:hover,
+  .np-item:focus-visible { background: #f1f3f7; outline: none; }
+  .np-item-title { font-size: 0.88rem; font-weight: 600; }
+  .np-item-sub { font-size: 0.76rem; color: var(--ink-soft, #5a6271); }
+
+  /* ===== Bulk upload modal ===== */
+  .bulk-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 22, 36, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+    z-index: 80;
+  }
+  .bulk-overlay[hidden] { display: none; }
+  /* Defensive [hidden] reset — our class rules set display: flex/inline-flex
+     which would otherwise override the attribute's default display: none. */
+  .bulk-strip[hidden],
+  .bulk-focus[hidden],
+  .bulk-strip-error[hidden] { display: none !important; }
+
+  .bulk-modal {
+    width: min(640px, 100%);
+    max-height: calc(100vh - 3rem);
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .bulk-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.1rem 1.25rem 0.9rem;
+    border-bottom: 1px solid var(--panel-line, #e5e7eb);
+  }
+  .bulk-head h3 { margin: 0 0 0.25rem; font-size: 1.02rem; font-weight: 600; }
+  .bulk-head p { margin: 0; font-size: 0.82rem; color: var(--ink-soft, #5a6271); line-height: 1.4; }
+  .bulk-head code { font-size: 0.78rem; background: #f1f3f7; padding: 0.05rem 0.3rem; border-radius: 4px; }
+
+  .bulk-close {
+    border: 0;
+    background: transparent;
+    color: var(--ink-soft, #5a6271);
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0.1rem 0.35rem;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .bulk-close:hover { background: #f1f3f7; color: var(--ink, #131619); }
+
+  .bulk-drop {
+    margin: 1rem 1.25rem;
+    padding: 2rem 1rem;
+    border: 2px dashed var(--panel-line, #d7dae1);
+    border-radius: 10px;
+    text-align: center;
+    color: var(--ink-soft, #5a6271);
+    transition: background 0.12s, border-color 0.12s;
+    cursor: pointer;
+  }
+  .bulk-drop.is-dragover { background: #f5f3eb; border-color: #c5a14a; color: var(--ink, #131619); }
+  .bulk-drop svg { color: var(--ink-soft, #5a6271); margin-bottom: 0.5rem; }
+  .bulk-drop-main { margin: 0 0 0.25rem; font-size: 0.95rem; color: var(--ink, #131619); }
+  .bulk-drop-sub { margin: 0; font-size: 0.82rem; }
+
+  .bulk-browse {
+    border: 0; background: transparent; padding: 0;
+    color: var(--sidebar-accent, #4f46e5);
+    text-decoration: underline;
+    font: inherit; cursor: pointer;
+  }
+
+  /* ===== Connection banner (full-width, flush to modal edges) ===== */
+  .bulk-conn {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    margin: 0;
+    padding: 0.55rem 1.25rem;
+    border-radius: 0;
+    background: #f6f7fa;
+    border: 0;
+    border-bottom: 1px solid var(--panel-line, #e5e7eb);
+    font-size: 0.8rem;
+    color: var(--ink-soft, #5a6271);
+  }
+  .bulk-conn.is-online  { background: #ecfaf1; border-bottom-color: #b9e6ce; color: #17633a; }
+  .bulk-conn.is-offline { background: #fff7e8; border-bottom-color: #f1d99b; color: #7a5507; }
+  .bulk-conn.is-folder  { background: #edf1fd; border-bottom-color: #c2cef0; color: #1e40af; }
+  .bulk-conn-dot {
+    width: 0.5rem; height: 0.5rem; border-radius: 50%;
+    background: #b6bdc9; flex-shrink: 0;
+  }
+  .bulk-conn.is-online  .bulk-conn-dot { background: #1e9a58; box-shadow: 0 0 0 3px #1e9a5830; }
+  .bulk-conn.is-offline .bulk-conn-dot { background: #c88b22; }
+  .bulk-conn.is-folder  .bulk-conn-dot { background: #1e40af; }
+  .bulk-conn-btn {
+    margin-left: auto;
+    border: 1px solid currentColor;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 0.74rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0.85;
+  }
+  .bulk-conn-btn:hover { opacity: 1; background: rgba(0,0,0,0.05); }
+
+  /* ===== Dot rail + stepper (clear card, never looks empty) ===== */
+  .bulk-strip {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1rem 1.25rem 0;
+    padding: 0.45rem 0.55rem;
+    background: #fafbfc;
+    border: 1px solid var(--panel-line, #e5e7eb);
+    border-radius: 8px;
+  }
+  .bulk-strip-count {
+    flex-shrink: 0;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--ink-soft, #5a6271);
+    padding: 0 0.4rem;
+    min-width: 3.5rem;
+    text-align: center;
+  }
+  .bulk-nav {
+    border: 1px solid var(--panel-line, #d7dae1);
+    background: #fff;
+    width: 2rem; height: 2rem;
+    border-radius: 50%;
+    font-size: 1.1rem; line-height: 1;
+    cursor: pointer;
+    color: var(--ink, #131619);
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .bulk-nav:hover:not(:disabled) { background: #f5f3eb; border-color: #c5a14a; }
+  .bulk-nav:disabled { opacity: 0.35; cursor: not-allowed; }
+  .bulk-dots {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 0.15rem 0.25rem;
+    justify-content: flex-start;
+    min-height: 1.5rem;
+  }
+  .bulk-dots::-webkit-scrollbar { height: 4px; }
+  .bulk-dots::-webkit-scrollbar-thumb { background: #d7dae1; border-radius: 2px; }
+  .bulk-dot {
+    width: 0.85rem; height: 0.85rem;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    padding: 0;
+    cursor: pointer;
+    background: #c9cdd4;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 1px #c9cdd4;
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .bulk-dot:hover { transform: scale(1.2); }
+  .bulk-dot.is-current {
+    transform: scale(1.25);
+    box-shadow: 0 0 0 2px var(--ink, #131619);
+  }
+  .bulk-dot.is-ready { background: #1e9a58; box-shadow: 0 0 0 1px #1e9a58; }
+  .bulk-dot.is-needs { background: #d4a94a; box-shadow: 0 0 0 1px #d4a94a; }
+  .bulk-dot.is-error {
+    background: #c62828;
+    box-shadow: 0 0 0 1px #c62828;
+    /* Inner "!" mark so red dots read as warnings even at a glance */
+    position: relative;
+  }
+  .bulk-dot.is-error::before {
+    content: "!";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.6rem;
+    font-weight: 900;
+    line-height: 1;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+  }
+  .bulk-dot.is-saved { background: #1e40af; box-shadow: 0 0 0 1px #1e40af; }
+  .bulk-dot.is-current.is-ready { box-shadow: 0 0 0 2px var(--ink, #131619); }
+  .bulk-dot.is-current.is-needs { box-shadow: 0 0 0 2px var(--ink, #131619); }
+  .bulk-dot.is-current.is-error { box-shadow: 0 0 0 2px #c62828; animation: bulk-dot-pulse 1.4s ease-in-out infinite; }
+  .bulk-dot.is-current.is-saved { box-shadow: 0 0 0 2px var(--ink, #131619); }
+  @keyframes bulk-dot-pulse {
+    0%, 100% { box-shadow: 0 0 0 2px #c62828, 0 0 0 4px #c6282800; }
+    50%      { box-shadow: 0 0 0 2px #c62828, 0 0 0 5px #c6282855; }
+  }
+
+  /* Small red pill shown in the stepper when any entry fails validation */
+  .bulk-strip-error {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #fff;
+    background: #c62828;
+    padding: 0.2rem 0.55rem 0.22rem;
+    border-radius: 999px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .bulk-strip-error::before {
+    content: "!";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 0.85rem; height: 0.85rem;
+    border-radius: 50%;
+    background: #fff;
+    color: #c62828;
+    font-weight: 900;
+    font-size: 0.65rem;
+  }
+
+  /* ===== Single-post focus view (card container) ===== */
+  .bulk-focus {
+    margin: 0.75rem 1.25rem 0;
+    padding: 0;
+    background: transparent;
+    max-height: 54vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+
+  /* Metadata card — slug + core fields at the top */
+  .bf-meta-card {
+    background: #fff;
+    border: 1px solid var(--panel-line, #e5e7eb);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    box-shadow: 0 1px 2px rgba(15, 22, 36, 0.03);
+  }
+  .bf-meta-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    margin-bottom: 0.7rem;
+    padding-bottom: 0.65rem;
+    border-bottom: 1px solid var(--panel-line, #eef0f4);
+  }
+  .bf-meta-main { flex: 1; min-width: 0; }
+  .bf-pos {
+    font-size: 0.7rem;
+    color: var(--ink-soft, #5a6271);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+  }
+  .bf-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ink, #131619);
+    line-height: 1.3;
+    margin: 0 0 0.25rem;
+    word-break: break-word;
+  }
+  .bf-slug-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.75rem;
+    background: #f5f3eb;
+    border: 1px solid #eadfb8;
+    color: #5e4a15;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .bf-slug-row .bf-slug-prefix { opacity: 0.6; }
+  .bf-file {
+    display: block;
+    margin-top: 0.35rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.7rem;
+    color: var(--ink-soft, #5a6271);
+  }
+  .bf-status { font-size: 0.72rem; padding: 0.15rem 0.55rem; border-radius: 999px; font-weight: 600; flex-shrink: 0; align-self: center; }
+  .bf-status.ready { background: #dcf5e5; color: #17633a; }
+  .bf-status.needs { background: #fff1cf; color: #7a5507; }
+  .bf-status.error { background: #fde1e1; color: #8a1c1c; }
+  .bf-status.saved { background: #d6e2ff; color: #1e40af; }
+  .bf-remove {
+    border: 0; background: transparent; cursor: pointer;
+    color: var(--ink-soft, #5a6271);
+    font-size: 1.1rem; line-height: 1;
+    padding: 0.15rem 0.35rem; border-radius: 4px;
+    flex-shrink: 0;
+    align-self: flex-start;
+  }
+  .bf-remove:hover { background: #f1f3f7; color: #b33; }
+
+  /* Core info grid — editable author/date/style fields */
+  .bf-fields {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.85rem 1rem;
+    padding-top: 0.35rem;
+  }
+  @media (max-width: 560px) {
+    .bf-fields { grid-template-columns: 1fr 1fr; }
+  }
+  .bf-field { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; }
+  .bf-field label {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft, #5a6271);
+    font-weight: 600;
+    line-height: 1;
+    margin: 0;
+  }
+  .bf-field input,
+  .bf-field select {
+    font: inherit;
+    font-size: 0.85rem;
+    color: var(--ink, #131619);
+    background: #fff;
+    border: 1px solid var(--panel-line, #d7dae1);
+    border-radius: 6px;
+    padding: 0.5rem 0.65rem;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    line-height: 1.3;
+  }
+  .bf-field input:hover,
+  .bf-field select:hover { border-color: #b2b7c2; }
+  .bf-field input:focus,
+  .bf-field select:focus {
+    outline: none;
+    border-color: #c5a14a;
+    box-shadow: 0 0 0 2px #c5a14a33;
+  }
+
+  .bf-errors {
+    margin: 0;
+    padding: 0.55rem 0.7rem;
+    background: #fdf4f4;
+    border: 1px solid #f3c8c8;
+    border-left: 3px solid #b33;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    color: #8a1c1c;
+  }
+
+  /* Images card — wraps all slot cards */
+  .bf-images-card {
+    background: #fff;
+    border: 1px solid var(--panel-line, #e5e7eb);
+    border-radius: 10px;
+    padding: 0.75rem 0.85rem 0.85rem;
+    box-shadow: 0 1px 2px rgba(15, 22, 36, 0.03);
+  }
+  .bf-images-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.6rem;
+    padding-bottom: 0.55rem;
+    border-bottom: 1px solid var(--panel-line, #eef0f4);
+  }
+  .bf-images-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--ink, #131619);
+  }
+  .bf-images-count {
+    font-size: 0.72rem;
+    color: var(--ink-soft, #5a6271);
+    font-weight: 500;
+  }
+
+  .bf-empty-state {
+    padding: 1rem;
+    text-align: center;
+    color: var(--ink-soft, #5a6271);
+    font-size: 0.85rem;
+    background: #fff;
+    border: 1px dashed var(--panel-line, #d7dae1);
+    border-radius: 8px;
+  }
+
+  .bf-slots { display: flex; flex-direction: column; gap: 0.45rem; }
+  .bf-slot {
+    border: 1px solid var(--panel-line, #e5e7eb);
+    border-left: 3px solid #d4a94a;
+    border-radius: 6px;
+    padding: 0.55rem 0.7rem;
+    outline: none;
+    background: #fff;
+    transition: border-color 0.1s, box-shadow 0.1s;
+  }
+  .bf-slot.is-filled  { border-left-color: #1e9a58; background: #fafefb; }
+  .bf-slot.is-focused { box-shadow: 0 0 0 2px #c5a14a80; border-color: #c5a14a; }
+  .bf-slot-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    justify-content: space-between;
+  }
+  .bf-slot-tag {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.76rem;
+    background: #f5f3eb;
+    padding: 0.08rem 0.4rem;
+    border-radius: 4px;
+    color: #5e4a15;
+    font-weight: 600;
+  }
+  .bf-slot.is-filled .bf-slot-tag { background: #e1f3e8; color: #17633a; }
+  .bf-slot-flag {
+    font-size: 0.72rem;
+    color: #b33;
+    font-weight: 700;
+  }
+  .bf-slot.is-filled .bf-slot-flag { color: #17633a; font-weight: 600; }
+  .bf-slot-desc {
+    margin: 0.25rem 0 0;
+    font-size: 0.8rem;
+    color: var(--ink, #131619);
+    line-height: 1.4;
+  }
+  .bf-slot-alt {
+    margin: 0.2rem 0 0;
+    font-size: 0.74rem;
+    color: var(--ink, #131619);
+    font-weight: 700;
+  }
+  .bf-slot-picker {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.55rem;
+    flex-wrap: wrap;
+  }
+  .btn-slot {
+    background: var(--ink, #131619);
+    color: #fff;
+    border: 0;
+    padding: 0.4rem 0.9rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-family: inherit;
+    font-weight: 600;
+  }
+  .btn-slot:hover { background: #2a2f3a; }
+  .bf-slot.is-filled .btn-slot {
+    background: #fff;
+    color: var(--ink, #131619);
+    border: 1px solid var(--panel-line, #d7dae1);
+    font-weight: 500;
+  }
+  .bf-slot.is-filled .btn-slot:hover { background: #f5f3eb; border-color: #c5a14a; }
+  .bf-filename {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.74rem;
+    color: #1e633a;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .bf-slot-clear {
+    border: 0; background: transparent;
+    color: var(--ink-soft, #5a6271);
+    cursor: pointer;
+    font-size: 1rem; line-height: 1;
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+  }
+  .bf-slot-clear:hover { background: #f1f3f7; color: var(--ink, #131619); }
+
+  .bulk-hint kbd {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.72rem;
+    background: #fff;
+    border: 1px solid var(--panel-line, #d7dae1);
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    padding: 0.05rem 0.35rem;
+    color: var(--ink, #131619);
+    margin: 0 0.1rem;
+  }
+
+  .bulk-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--panel-line, #e5e7eb);
+    flex-wrap: wrap;
+  }
+  .bulk-summary { font-size: 0.82rem; color: var(--ink-soft, #5a6271); }
+  .bulk-actions { display: flex; gap: 0.5rem; }
+
+  .bulk-hint {
+    margin: 0;
+    padding: 0.75rem 1.25rem 1rem;
+    font-size: 0.76rem;
+    color: var(--ink-soft, #5a6271);
+    background: #fafbfc;
+    border-top: 1px solid var(--panel-line, #eef0f4);
+  }
+  .bulk-hint code { font-size: 0.74rem; background: #fff; padding: 0.05rem 0.3rem; border-radius: 3px; border: 1px solid var(--panel-line, #e5e7eb); }
+</style>
+
+<script is:inline>
+  (function () {
+    // ---------- Dropdown ----------
+    const dropdown = document.querySelector("[data-np-root]");
+    if (!dropdown) return;
+    const toggle = dropdown.querySelector("[data-np-toggle]");
+    const menu = dropdown.querySelector("[data-np-menu]");
+    const DECAP_URL = "http://localhost:8081/api/v1";
+    const DECAP_BRANCH = "main";
+
+    function openMenu() {
+      menu.hidden = false;
+      dropdown.setAttribute("data-open", "true");
+      toggle.setAttribute("aria-expanded", "true");
+    }
+    function closeMenu() {
+      menu.hidden = true;
+      dropdown.removeAttribute("data-open");
+      toggle.setAttribute("aria-expanded", "false");
+    }
+    toggle.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (menu.hidden) openMenu();
+      else closeMenu();
+    });
+    document.addEventListener("click", (e) => {
+      if (!dropdown.contains(e.target)) closeMenu();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeMenu();
+    });
+
+    // ---------- Bulk upload ----------
+    const overlay     = document.querySelector("[data-bulk-overlay]");
+    const openers     = document.querySelectorAll("[data-bulk-open]");
+    const closers     = document.querySelectorAll("[data-bulk-close]");
+    const drop        = document.querySelector("[data-bulk-drop]");
+    const browse      = document.querySelector("[data-bulk-browse]");
+    const input       = document.querySelector("[data-bulk-input]");
+    const focusEl     = document.querySelector("[data-bulk-focus]");
+    const stripEl     = document.querySelector("[data-bulk-strip]");
+    const dotsEl      = document.querySelector("[data-bulk-dots]");
+    const stripCountEl = document.querySelector("[data-bulk-strip-count]");
+    const stripErrEl   = document.querySelector("[data-bulk-strip-error]");
+    const prevBtn     = document.querySelector("[data-bulk-prev]");
+    const nextBtn     = document.querySelector("[data-bulk-next]");
+    const summary     = document.querySelector("[data-bulk-summary]");
+    const saveBtn     = document.querySelector("[data-bulk-save]");
+    const clearBtn    = document.querySelector("[data-bulk-clear]");
+    const rootBtn     = document.querySelector("[data-bulk-root]");
+    const connEl      = document.querySelector("[data-bulk-conn]");
+    const connLabelEl = document.querySelector("[data-bulk-conn-label]");
+
+    const MAX_FILES = 50;
+
+    /**
+     * Entry shape:
+     * {
+     *   file: File, text: string, body: string, raw: string,   // raw frontmatter text
+     *   fm: object, slug: string,
+     *   slots: Array<{name, description, alt, imageFile: File|null, imageName: string}>,
+     *   status: "needs"|"ready"|"error"|"saved",
+     *   msg: string, expanded: boolean,
+     *   _errs: string[]   // validation errors (sticky until file removed)
+     * }
+     */
+    let entries = [];
+    let currentIndex = 0;        // which post is shown in the focus view
+    let focusedSlot = null;       // slot name currently keyboard-focused
+    let rootHandle = null;
+    let decapOnline = false;      // set during detectDecap()
+
+    // ---------- IndexedDB (persist root folder handle) ----------
+    const IDB_NAME = "btv-admin";
+    const IDB_STORE = "handles";
+    const IDB_ROOT_KEY = "brisbaneTvsRoot";
+
+    function idb() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(IDB_NAME, 1);
+        req.onupgradeneeded = () => req.result.createObjectStore(IDB_STORE);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+    async function idbGet(key) {
+      const db = await idb();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(IDB_STORE, "readonly");
+        const req = tx.objectStore(IDB_STORE).get(key);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+    async function idbSet(key, value) {
+      const db = await idb();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(IDB_STORE, "readwrite");
+        tx.objectStore(IDB_STORE).put(value, key);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
+    async function verifyHandle(h) {
+      if (!h || !h.queryPermission) return false;
+      if ((await h.queryPermission({ mode: "readwrite" })) === "granted") return true;
+      return (await h.requestPermission({ mode: "readwrite" })) === "granted";
+    }
+
+    async function loadSavedRoot() {
+      try {
+        const h = await idbGet(IDB_ROOT_KEY);
+        if (!h) return;
+        rootHandle = h;
+      } catch (_) {}
+    }
+
+    async function pickRoot() {
+      if (!window.showDirectoryPicker) {
+        alert("Your browser can't pick folders directly. Use Chrome or Edge.");
+        return;
+      }
+      try {
+        const h = await window.showDirectoryPicker({ mode: "readwrite" });
+        if (await verifyHandle(h)) {
+          rootHandle = h;
+          try { await idbSet(IDB_ROOT_KEY, h); } catch (_) {}
+          updateConnectionBanner();
+        }
+      } catch (err) {
+        if (err && err.name === "AbortError") return;
+        console.error(err);
+        alert("Could not open folder.");
+      }
+    }
+    if (rootBtn) rootBtn.addEventListener("click", pickRoot);
+
+    // ---------- Decap local proxy detection ----------
+    async function detectDecap() {
+      try {
+        const r = await fetch(DECAP_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "info", params: {} }),
+        });
+        if (!r.ok) return false;
+        await r.json();
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    async function updateConnectionBanner() {
+      decapOnline = await detectDecap();
+      connEl.classList.remove("is-online", "is-offline", "is-folder");
+      if (decapOnline) {
+        connEl.classList.add("is-online");
+        connLabelEl.innerHTML = "Connected to CMS — saves go straight to <code>src/content/blog/</code> and <code>public/media/</code>. No folder pick needed.";
+        rootBtn.hidden = true;
+      } else if (rootHandle && rootHandle.name) {
+        connEl.classList.add("is-folder");
+        connLabelEl.innerHTML = `Using local folder <strong>${rootHandle.name}</strong> (CMS proxy not running).`;
+        rootBtn.hidden = false;
+        rootBtn.textContent = "Change folder…";
+      } else {
+        connEl.classList.add("is-offline");
+        connLabelEl.innerHTML = "CMS proxy not running. Start <code>npx decap-server</code> or pick the project folder manually.";
+        rootBtn.hidden = false;
+        rootBtn.textContent = "Pick folder…";
+      }
+    }
+
+    loadSavedRoot().then(updateConnectionBanner);
+
+    // ---------- Overlay open/close ----------
+    function openOverlay() {
+      overlay.hidden = false;
+      closeMenu();
+      document.body.style.overflow = "hidden";
+      updateConnectionBanner(); // re-check each open so start-decap takes effect
+    }
+    function closeOverlay() {
+      overlay.hidden = true;
+      document.body.style.overflow = "";
+    }
+    openers.forEach((b) => b.addEventListener("click", openOverlay));
+    closers.forEach((b) => b.addEventListener("click", closeOverlay));
+    overlay.addEventListener("click", (e) => { if (e.target === overlay) closeOverlay(); });
+
+    // Keyboard: Escape closes; arrows navigate posts; Enter opens focused slot picker.
+    document.addEventListener("keydown", (e) => {
+      if (overlay.hidden) return;
+      if (e.key === "Escape") { closeOverlay(); return; }
+      // Don't hijack keys while typing in an input/textarea
+      const t = e.target;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA")) return;
+      if (entries.length === 0) return;
+      if (e.key === "ArrowLeft")  { e.preventDefault(); goToIndex(currentIndex - 1); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); goToIndex(currentIndex + 1); }
+      else if (e.key === "ArrowUp")   { e.preventDefault(); moveSlotFocus(-1); }
+      else if (e.key === "ArrowDown") { e.preventDefault(); moveSlotFocus(1); }
+      else if (e.key === "Enter" || e.key === " ") {
+        // If a slot is focused, open its picker
+        const cur = entries[currentIndex];
+        if (cur && focusedSlot) {
+          const s = cur.slots.find((x) => x.name === focusedSlot);
+          if (s) { e.preventDefault(); pickImageForSlot(cur, s); }
+        }
+      }
+    });
+
+    // Prev/next buttons
+    prevBtn.addEventListener("click", () => goToIndex(currentIndex - 1));
+    nextBtn.addEventListener("click", () => goToIndex(currentIndex + 1));
+
+    function goToIndex(n) {
+      if (entries.length === 0) return;
+      currentIndex = Math.max(0, Math.min(entries.length - 1, n));
+      // Focus the first empty slot of the new post, otherwise the first slot
+      const e = entries[currentIndex];
+      const empty = e.slots.find((s) => !s.imageFile);
+      focusedSlot = empty ? empty.name : (e.slots[0] ? e.slots[0].name : null);
+      render();
+    }
+
+    function moveSlotFocus(dir) {
+      const e = entries[currentIndex];
+      if (!e || e.slots.length === 0) return;
+      const i = e.slots.findIndex((s) => s.name === focusedSlot);
+      const j = Math.max(0, Math.min(e.slots.length - 1, (i < 0 ? 0 : i) + dir));
+      focusedSlot = e.slots[j].name;
+      render();
+    }
+
+    // After picking an image, advance focus to the next empty slot (or post, or save).
+    function advanceAfterPick() {
+      const e = entries[currentIndex];
+      if (!e) return;
+      // Next empty slot in current post?
+      const nextEmpty = e.slots.find((s) => !s.imageFile);
+      if (nextEmpty) { focusedSlot = nextEmpty.name; render(); return; }
+      // Otherwise jump to next post that still needs images.
+      for (let i = currentIndex + 1; i < entries.length; i++) {
+        const ne = entries[i].slots.find((s) => !s.imageFile);
+        if (ne) { currentIndex = i; focusedSlot = ne.name; render(); return; }
+      }
+      // If nothing earlier filled, loop back to earlier posts that still need images.
+      for (let i = 0; i < currentIndex; i++) {
+        const ne = entries[i].slots.find((s) => !s.imageFile);
+        if (ne) { currentIndex = i; focusedSlot = ne.name; render(); return; }
+      }
+      // All posts ready — focus the Save button.
+      render();
+      if (!saveBtn.disabled) saveBtn.focus();
+    }
+
+    // ---------- Drag & drop ----------
+    ["dragenter", "dragover"].forEach((ev) =>
+      drop.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); drop.classList.add("is-dragover"); })
+    );
+    ["dragleave", "drop"].forEach((ev) =>
+      drop.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); drop.classList.remove("is-dragover"); })
+    );
+    drop.addEventListener("drop", (e) => {
+      const files = e.dataTransfer ? Array.from(e.dataTransfer.files) : [];
+      addFiles(files);
+    });
+    drop.addEventListener("click", () => input.click());
+    drop.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") input.click(); });
+    browse.addEventListener("click", (e) => { e.stopPropagation(); input.click(); });
+    input.addEventListener("change", () => addFiles(Array.from(input.files || [])));
+
+    clearBtn.addEventListener("click", () => {
+      entries = [];
+      currentIndex = 0;
+      focusedSlot = null;
+      // Also reset the file input so re-dropping the same filenames works.
+      if (input) input.value = "";
+      render();
+    });
+    saveBtn.addEventListener("click", saveAll);
+
+    // ---------- Frontmatter parser ----------
+    // Extracts scalar keys for validation AND returns raw fm block so we can
+    // parse imageBriefs as a list-of-objects separately (regex-free YAML lib
+    // would be overkill).
+    function parseFrontmatter(text) {
+      const m = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text);
+      if (!m) return { raw: "", fm: null, body: text };
+      const raw = m[1];
+      const fm = {};
+      const lines = raw.split(/\r?\n/);
+      let i = 0;
+      while (i < lines.length) {
+        const line = lines[i];
+        if (/^\s*#/.test(line) || !line.trim()) { i++; continue; }
+        // Skip nested blocks (imageBriefs:, tags with block form, etc.) —
+        // any key whose value line is empty and the next line is indented.
+        const keyOnly = /^([A-Za-z_][\w]*)\s*:\s*$/.exec(line);
+        if (keyOnly) {
+          i++;
+          while (i < lines.length && /^\s+/.test(lines[i])) i++;
+          continue;
+        }
+        const kv = /^([A-Za-z_][\w]*)\s*:\s*(.*)$/.exec(line);
+        if (!kv) { i++; continue; }
+        const key = kv[1];
+        let val = kv[2].trim().replace(/\s+#.*$/, "");
+        if ((val.startsWith('"') && val.endsWith('"')) ||
+            (val.startsWith("'") && val.endsWith("'"))) {
+          val = val.slice(1, -1);
+        }
+        if (val === "true")  { fm[key] = true;  i++; continue; }
+        if (val === "false") { fm[key] = false; i++; continue; }
+        if (val.startsWith("[") && val.endsWith("]")) {
+          const inner = val.slice(1, -1).trim();
+          fm[key] = inner ? inner.split(",").map((s) => s.trim().replace(/^["']|["']$/g, "")) : [];
+          i++; continue;
+        }
+        fm[key] = val;
+        i++;
+      }
+      return { raw, fm, body: text.slice(m[0].length).replace(/^\r?\n/, "") };
+    }
+
+    // Parse imageBriefs: a list of {slot, description?, alt?} objects.
+    function parseImageBriefs(raw) {
+      const lines = raw.split(/\r?\n/);
+      const briefs = [];
+      let inList = false;
+      let cur = null;
+      for (const line of lines) {
+        if (/^imageBriefs\s*:/.test(line)) { inList = true; continue; }
+        if (!inList) continue;
+        // Dedent back to a top-level key — end of block.
+        if (/^[A-Za-z_]/.test(line)) break;
+        const item = /^\s*-\s+(\w+)\s*:\s*(.*)$/.exec(line);
+        const more = /^\s+(\w+)\s*:\s*(.*)$/.exec(line);
+        if (item) {
+          if (cur) briefs.push(cur);
+          cur = {};
+          let v = item[2].trim().replace(/^["']|["']$/g, "");
+          cur[item[1]] = v;
+        } else if (more && cur) {
+          let v = more[2].trim().replace(/^["']|["']$/g, "");
+          cur[more[1]] = v;
+        }
+      }
+      if (cur) briefs.push(cur);
+      return briefs;
+    }
+
+    // Scan for IMAGE:xxx tokens. Strip YAML comment lines inside the
+    // frontmatter block first so instructional mentions in comments don't
+    // become spurious required slots — the body is scanned as-is because
+    // markdown headings legitimately start with `#`.
+    function extractImageTokens(text) {
+      const fmMatch = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text);
+      let scannable;
+      if (fmMatch) {
+        const fmStripped = fmMatch[1]
+          .split(/\r?\n/)
+          .filter((ln) => !/^\s*#/.test(ln))
+          .join("\n");
+        scannable = fmStripped + "\n" + text.slice(fmMatch[0].length);
+      } else {
+        scannable = text;
+      }
+      const found = [];
+      const seen = new Set();
+      const re = /IMAGE:([\w-]+)/g;
+      let m;
+      while ((m = re.exec(scannable))) {
+        if (!seen.has(m[1])) { seen.add(m[1]); found.push(m[1]); }
+      }
+      return found;
+    }
+
+    // Combine briefs + tokens into an ordered, de-duped list of slots.
+    function buildSlots(rawFm, fullText) {
+      const briefs = parseImageBriefs(rawFm || "");
+      const briefMap = new Map(briefs.map((b) => [b.slot, b]));
+      const tokens = extractImageTokens(fullText);
+      const seen = new Set();
+      const order = [];
+      for (const b of briefs) { if (b.slot && !seen.has(b.slot)) { order.push(b.slot); seen.add(b.slot); } }
+      for (const t of tokens) { if (!seen.has(t)) { order.push(t); seen.add(t); } }
+      return order.map((name) => {
+        const b = briefMap.get(name) || {};
+        return {
+          name,
+          description: b.description || "",
+          alt: b.alt || "",
+          imageFile: null,
+          imageName: "",
+        };
+      });
+    }
+
+    // ---------- Frontmatter in-place editor ----------
+    // YAML-scalar quoting: ISO dates stay bare, booleans stay bare, everything
+    // else gets wrapped in double quotes and escaped. Enough for our schema.
+    function yamlScalar(value) {
+      if (value === true || value === false) return String(value);
+      const s = String(value);
+      if (/^-?\d+(\.\d+)?$/.test(s)) return s;
+      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s)) return s;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+      return `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+    }
+
+    // Replace (or append) a top-level key in the frontmatter block of the
+    // entry. Top-level means the key sits at column 0 inside the fm body.
+    // Also updates entry.fm and entry.raw so subsequent edits round-trip.
+    function setFmField(entry, key, value) {
+      entry.fm[key] = value;
+      const fmMatch = /^(---\r?\n)([\s\S]*?)(\r?\n---)/.exec(entry.text);
+      if (!fmMatch) return;
+      const [full, start, fmBody, end] = fmMatch;
+      const lines = fmBody.split(/\r?\n/);
+      const re = new RegExp(`^${key}\\s*:`);
+      let replaced = false;
+      for (let i = 0; i < lines.length; i++) {
+        if (re.test(lines[i])) {
+          lines[i] = `${key}: ${yamlScalar(value)}`;
+          replaced = true;
+          break;
+        }
+      }
+      if (!replaced) lines.push(`${key}: ${yamlScalar(value)}`);
+      const newBody = lines.join("\n");
+      entry.raw = newBody;
+      entry.text = start + newBody + end + entry.text.slice(full.length);
+    }
+
+    // ---------- Validation ----------
+    const ALLOWED_STYLES = ["standard", "service-guide", "location", "custom"];
+    // Default author roster. A later admin-dashboard section can extend this via
+    // localStorage (key "btv-authors"), so we merge both here.
+    const DEFAULT_AUTHORS = ["Brisbane TVs Team", "Brisbane TVs Installers"];
+    function getAuthors() {
+      let extras = [];
+      try {
+        const raw = localStorage.getItem("btv-authors");
+        if (raw) extras = JSON.parse(raw) || [];
+      } catch (_) {}
+      const all = new Set([...DEFAULT_AUTHORS, ...extras.filter((a) => typeof a === "string" && a.trim())]);
+      return [...all];
+    }
+    function validate(fm) {
+      const errs = [];
+      if (!fm) { errs.push("missing or invalid frontmatter block"); return errs; }
+      if (typeof fm.title !== "string" || fm.title.length < 8 || fm.title.length > 120)
+        errs.push("title must be 8–120 chars");
+      if (typeof fm.description !== "string" || fm.description.length < 40 || fm.description.length > 200)
+        errs.push("description must be 40–200 chars");
+      if (typeof fm.heroImage !== "string" || !fm.heroImage)
+        errs.push("heroImage required");
+      if (typeof fm.heroAlt !== "string" || fm.heroAlt.length < 8)
+        errs.push("heroAlt must be at least 8 chars");
+      if (!fm.publishDate || isNaN(Date.parse(fm.publishDate)))
+        errs.push("publishDate invalid");
+      if (fm.style && !ALLOWED_STYLES.includes(fm.style))
+        errs.push(`style must be one of: ${ALLOWED_STYLES.join(", ")}`);
+      return errs;
+    }
+
+    // ---------- Slug + extension helpers ----------
+    function slugFromFilename(name) {
+      return name.replace(/\.md$/i, "").toLowerCase()
+        .replace(/[^a-z0-9-_]+/g, "-").replace(/^-+|-+$/g, "");
+    }
+    function extOf(name) {
+      const m = /\.([A-Za-z0-9]+)$/.exec(name || "");
+      return m ? m[1].toLowerCase() : "jpg";
+    }
+
+    /**
+     * Re-encode a picked image as WebP via a <canvas>. Runs entirely in the
+     * browser so there's no server round-trip. Defaults are tuned for the
+     * Brisbane TVs site:
+     *   quality 0.85 — visually indistinguishable from source for photos
+     *   maxEdge 2400 — caps retina-era phone exports at a sane size;
+     *                  bigger than any actual breakpoint on the site
+     *
+     * Behaviour notes:
+     *   - Skips files already encoded as WebP (no re-encode loss).
+     *   - Falls back to the original File if `createImageBitmap` can't decode
+     *     the format (rare — covers weird legacy TIFFs etc).
+     *   - Falls back to the original File if `canvas.toBlob` returns null
+     *     (Safari historically returned null for WebP < 16; this keeps
+     *     older browsers from silently breaking uploads).
+     *   - Preserves basename, swaps extension to `.webp`. All downstream
+     *     filename logic (`extOf(imageName)`, frontmatter path rewrite,
+     *     `saveOne`, `saveOneViaDecap`) picks up the new extension for free.
+     */
+    async function toWebp(file, { quality = 0.85, maxEdge = 2400 } = {}) {
+      if (!file || file.type === "image/webp") return file;
+      let bitmap;
+      try {
+        bitmap = await createImageBitmap(file);
+      } catch (err) {
+        console.warn("WebP: couldn't decode, keeping original:", file.name, err);
+        return file;
+      }
+      const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
+      const w = Math.max(1, Math.round(bitmap.width * scale));
+      const h = Math.max(1, Math.round(bitmap.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(bitmap, 0, 0, w, h);
+      const blob = await new Promise((res) => canvas.toBlob(res, "image/webp", quality));
+      if (typeof bitmap.close === "function") bitmap.close();
+      if (!blob) {
+        console.warn("WebP: toBlob returned null, keeping original:", file.name);
+        return file;
+      }
+      const base = (file.name || "image").replace(/\.[^.]+$/, "");
+      return new File([blob], `${base}.webp`, { type: "image/webp" });
+    }
+
+    // ---------- Adding files ----------
+    async function addFiles(files) {
+      const mdFiles = files.filter((f) => /\.md$/i.test(f.name));
+      if (mdFiles.length === 0) {
+        summary.textContent = "No .md files in that selection.";
+        return;
+      }
+      const remaining = MAX_FILES - entries.length;
+      const accept = mdFiles.slice(0, remaining);
+      const rejected = mdFiles.length - accept.length;
+
+      for (const f of accept) {
+        if (entries.some((e) => e.file.name === f.name)) continue; // dedupe
+        const text = await f.text();
+        const { raw, fm, body } = parseFrontmatter(text);
+        const errs = validate(fm);
+        const slug = (fm && typeof fm.slug === "string" && fm.slug) ? fm.slug : slugFromFilename(f.name);
+        const slots = buildSlots(raw, text);
+        entries.push({
+          file: f, text, raw, body,
+          fm: fm || {}, slug, slots,
+          status: "needs", msg: "",
+          expanded: slots.length > 0,
+          _errs: errs,
+        });
+      }
+      if (rejected > 0) summary.textContent = `Added ${accept.length}. Skipped ${rejected} — 50-file limit.`;
+      input.value = "";
+      // Jump focus to the first post that still needs images (or the first post).
+      if (entries.length > 0) {
+        const firstNeedy = entries.findIndex((e) => e.slots.some((s) => !s.imageFile));
+        currentIndex = firstNeedy >= 0 ? firstNeedy : 0;
+        const e = entries[currentIndex];
+        const empty = e.slots.find((s) => !s.imageFile);
+        focusedSlot = empty ? empty.name : (e.slots[0] ? e.slots[0].name : null);
+      }
+      render();
+    }
+
+    function updateEntryStatus(e) {
+      if (e.status === "saved") return;
+      if (e._errs && e._errs.length) {
+        e.status = "error";
+        e.msg = e._errs.join(" · ");
+        return;
+      }
+      if (e.slots.length === 0) {
+        e.status = "ready";
+        e.msg = "No images needed — ready to save.";
+        return;
+      }
+      const filled = e.slots.filter((s) => s.imageFile).length;
+      const missing = e.slots.length - filled;
+      if (missing === 0) {
+        e.status = "ready";
+        e.msg = `All ${e.slots.length} image${e.slots.length === 1 ? "" : "s"} picked.`;
+      } else {
+        e.status = "needs";
+        e.msg = `${missing} image${missing === 1 ? "" : "s"} still to pick.`;
+      }
+    }
+
+    async function pickImageForSlot(entry, slot) {
+      if (!window.showOpenFilePicker) {
+        alert("Your browser can't open file pickers. Use Chrome or Edge.");
+        return;
+      }
+      try {
+        const [h] = await window.showOpenFilePicker({
+          multiple: false,
+          types: [{
+            description: "Images",
+            accept: { "image/*": [".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif"] },
+          }],
+        });
+        const raw = await h.getFile();
+        // Convert the picked image to WebP (quality 0.85, max edge 2400px)
+        // before we store it on the slot. Skips files that are already WebP.
+        // All downstream name/extension logic reads `imageName`, so swapping
+        // both `imageFile` + `imageName` here is all that's needed.
+        const f = await toWebp(raw);
+        slot.imageFile = f;
+        slot.imageName = f.name;
+        focusedSlot = slot.name; // keep focus here until advanceAfterPick re-routes it
+        advanceAfterPick();
+      } catch (err) {
+        if (err && err.name === "AbortError") return;
+        console.error(err);
+        alert("Could not open image.");
+      }
+    }
+
+    // ---------- Render ----------
+    function render() {
+      // Empty state
+      if (entries.length === 0) {
+        stripEl.hidden = true;
+        focusEl.hidden = true;
+        summary.textContent = "No files yet.";
+        saveBtn.disabled = true;
+        clearBtn.disabled = true;
+        return;
+      }
+      // Only show the stepper when there are multiple files — with a single
+      // post, prev/next/dots are pointless noise.
+      stripEl.hidden = entries.length <= 1;
+      focusEl.hidden = false;
+
+      // Update statuses + summary
+      for (const e of entries) updateEntryStatus(e);
+      const ready = entries.filter((e) => e.status === "ready").length;
+      const needs = entries.filter((e) => e.status === "needs").length;
+      const errs  = entries.filter((e) => e.status === "error").length;
+      const saved = entries.filter((e) => e.status === "saved").length;
+      const parts = [`${entries.length} file${entries.length === 1 ? "" : "s"}`];
+      parts.push(`${ready} ready`);
+      if (needs) parts.push(`${needs} need images`);
+      if (errs)  parts.push(`${errs} with errors`);
+      if (saved) parts.push(`${saved} saved`);
+      summary.textContent = parts.join(" · ");
+      saveBtn.disabled = (ready - saved) <= 0;
+      clearBtn.disabled = false;
+
+      // Dot rail
+      dotsEl.innerHTML = "";
+      entries.forEach((e, i) => {
+        const dot = document.createElement("button");
+        dot.type = "button";
+        dot.className = `bulk-dot is-${e.status}` + (i === currentIndex ? " is-current" : "");
+        const titleHead = `${i + 1}. ${e.fm.title || e.file.name}`;
+        if (e.status === "error") {
+          const why = (e._errs && e._errs.length) ? e._errs.join(" · ") : "validation failed";
+          dot.setAttribute("aria-label", `Post ${i + 1}: ${e.fm.title || e.file.name} — INVALID TEMPLATE: ${why}`);
+          dot.title = `${titleHead} — Invalid template / selection\n${why}`;
+        } else {
+          dot.setAttribute("aria-label", `Post ${i + 1}: ${e.fm.title || e.file.name} (${e.status})`);
+          dot.title = `${titleHead} — ${e.status}`;
+        }
+        dot.addEventListener("click", () => goToIndex(i));
+        dotsEl.appendChild(dot);
+      });
+      if (stripCountEl) stripCountEl.textContent = `${currentIndex + 1} / ${entries.length}`;
+
+      // Error pill — visible whenever any entry fails validation. Click to
+      // jump to the first invalid post.
+      if (stripErrEl) {
+        const badEntries = entries
+          .map((e, i) => ({ e, i }))
+          .filter(({ e }) => e.status === "error");
+        if (badEntries.length === 0) {
+          stripErrEl.hidden = true;
+          stripErrEl.onclick = null;
+          stripErrEl.title = "";
+          stripErrEl.textContent = "Invalid template";
+        } else {
+          stripErrEl.hidden = false;
+          stripErrEl.textContent = badEntries.length === 1
+            ? "Invalid template"
+            : `${badEntries.length} invalid`;
+          // Tooltip = full list of reasons for each bad post
+          stripErrEl.title = badEntries
+            .map(({ e, i }) => `#${i + 1} ${e.fm.title || e.file.name}: ${(e._errs || []).join(" · ")}`)
+            .join("\n");
+          stripErrEl.style.cursor = "pointer";
+          stripErrEl.onclick = () => goToIndex(badEntries[0].i);
+        }
+      }
+      prevBtn.disabled = currentIndex <= 0;
+      nextBtn.disabled = currentIndex >= entries.length - 1;
+
+      // Single-post focus view — two cards: metadata + images
+      const e = entries[currentIndex];
+      if (!e) { focusEl.innerHTML = ""; return; }
+      focusEl.innerHTML = "";
+
+      // ----- Metadata card -----
+      const meta = document.createElement("div");
+      meta.className = "bf-meta-card";
+
+      const metaTop = document.createElement("div");
+      metaTop.className = "bf-meta-top";
+      const metaMain = document.createElement("div");
+      metaMain.className = "bf-meta-main";
+
+      const pos = document.createElement("div");
+      pos.className = "bf-pos";
+      const filled = e.slots.filter((s) => s.imageFile).length;
+      pos.textContent = e.slots.length > 0
+        ? `Post ${currentIndex + 1} of ${entries.length} · ${filled}/${e.slots.length} images`
+        : `Post ${currentIndex + 1} of ${entries.length}`;
+      metaMain.appendChild(pos);
+
+      const title = document.createElement("div");
+      title.className = "bf-title";
+      title.textContent = e.fm.title || e.file.name;
+      metaMain.appendChild(title);
+
+      const slugRow = document.createElement("div");
+      slugRow.className = "bf-slug-row";
+      slugRow.title = `Will save to src/content/blog/${e.slug}.md`;
+      const slugPrefix = document.createElement("span");
+      slugPrefix.className = "bf-slug-prefix";
+      slugPrefix.textContent = "/blog/";
+      const slugText = document.createElement("span");
+      slugText.textContent = e.slug;
+      slugRow.appendChild(slugPrefix);
+      slugRow.appendChild(slugText);
+      metaMain.appendChild(slugRow);
+
+      const fileLine = document.createElement("span");
+      fileLine.className = "bf-file";
+      fileLine.textContent = `source: ${e.file.name}`;
+      metaMain.appendChild(fileLine);
+      metaTop.appendChild(metaMain);
+
+      const status = document.createElement("span");
+      status.className = `bf-status ${e.status}`;
+      status.textContent =
+        e.status === "ready" ? "Ready" :
+        e.status === "needs" ? "Needs images" :
+        e.status === "error" ? "Error" :
+        e.status === "saved" ? "Saved" : "";
+      metaTop.appendChild(status);
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "bf-remove";
+      remove.setAttribute("aria-label", `Remove ${e.file.name}`);
+      remove.textContent = "×";
+      remove.addEventListener("click", () => {
+        entries = entries.filter((x) => x !== e);
+        if (currentIndex >= entries.length) currentIndex = Math.max(0, entries.length - 1);
+        focusedSlot = null;
+        render();
+      });
+      metaTop.appendChild(remove);
+      meta.appendChild(metaTop);
+
+      // Editable core-info grid: author / publishDate / style
+      const fields = document.createElement("div");
+      fields.className = "bf-fields";
+
+      // Author (datalist-backed input so user can type new ones)
+      const authorField = document.createElement("div");
+      authorField.className = "bf-field";
+      const authorLabel = document.createElement("label");
+      authorLabel.textContent = "Author";
+      authorLabel.setAttribute("for", `bf-author-${currentIndex}`);
+      const authorInput = document.createElement("input");
+      authorInput.id = `bf-author-${currentIndex}`;
+      authorInput.type = "text";
+      authorInput.setAttribute("list", "bf-authors-dl");
+      authorInput.value = e.fm.author || "";
+      authorInput.placeholder = "Brisbane TVs Team";
+      authorInput.addEventListener("change", () => {
+        setFmField(e, "author", authorInput.value.trim());
+      });
+      authorField.appendChild(authorLabel);
+      authorField.appendChild(authorInput);
+      fields.appendChild(authorField);
+
+      // Datalist is shared across all author inputs
+      let dl = document.getElementById("bf-authors-dl");
+      if (!dl) {
+        dl = document.createElement("datalist");
+        dl.id = "bf-authors-dl";
+        document.body.appendChild(dl);
+      }
+      dl.innerHTML = "";
+      for (const a of getAuthors()) {
+        const opt = document.createElement("option");
+        opt.value = a;
+        dl.appendChild(opt);
+      }
+
+      // Publish date
+      const dateField = document.createElement("div");
+      dateField.className = "bf-field";
+      const dateLabel = document.createElement("label");
+      dateLabel.textContent = "Publish date";
+      dateLabel.setAttribute("for", `bf-date-${currentIndex}`);
+      const dateInput = document.createElement("input");
+      dateInput.id = `bf-date-${currentIndex}`;
+      dateInput.type = "date";
+      // Normalise any ISO-ish string to YYYY-MM-DD for the input
+      const dRaw = e.fm.publishDate;
+      let dIso = "";
+      if (dRaw) {
+        const d = new Date(dRaw);
+        if (!isNaN(d.valueOf())) {
+          dIso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        }
+      }
+      dateInput.value = dIso;
+      dateInput.addEventListener("change", () => {
+        // Preserve whatever time component was in the original if possible;
+        // otherwise default to 09:00 Australian morning.
+        const orig = e.fm.publishDate ? new Date(e.fm.publishDate) : null;
+        const [yy, mm, dd] = dateInput.value.split("-").map((x) => parseInt(x, 10));
+        if (!yy) return;
+        const hh = orig && !isNaN(orig.valueOf()) ? orig.getHours() : 9;
+        const mi = orig && !isNaN(orig.valueOf()) ? orig.getMinutes() : 0;
+        const newD = new Date(yy, mm - 1, dd, hh, mi, 0);
+        // Save as ISO with +10:00 offset (Brisbane), which Astro's date coerce handles
+        const pad = (n) => String(n).padStart(2, "0");
+        const iso = `${newD.getFullYear()}-${pad(newD.getMonth() + 1)}-${pad(newD.getDate())}T${pad(newD.getHours())}:${pad(newD.getMinutes())}:00.000+10:00`;
+        setFmField(e, "publishDate", iso);
+        // Re-validate — a bad date previously counted as an error.
+        e._errs = validate(e.fm);
+        render();
+      });
+      dateField.appendChild(dateLabel);
+      dateField.appendChild(dateInput);
+      fields.appendChild(dateField);
+
+      // Style
+      const styleField = document.createElement("div");
+      styleField.className = "bf-field";
+      const styleLabel = document.createElement("label");
+      styleLabel.textContent = "Layout style";
+      styleLabel.setAttribute("for", `bf-style-${currentIndex}`);
+      const styleSelect = document.createElement("select");
+      styleSelect.id = `bf-style-${currentIndex}`;
+      for (const v of ALLOWED_STYLES) {
+        const opt = document.createElement("option");
+        opt.value = v;
+        opt.textContent = v;
+        if ((e.fm.style || "standard") === v) opt.selected = true;
+        styleSelect.appendChild(opt);
+      }
+      styleSelect.addEventListener("change", () => {
+        setFmField(e, "style", styleSelect.value);
+        e._errs = validate(e.fm);
+        render();
+      });
+      styleField.appendChild(styleLabel);
+      styleField.appendChild(styleSelect);
+      fields.appendChild(styleField);
+
+      meta.appendChild(fields);
+      focusEl.appendChild(meta);
+
+      // Errors callout (if frontmatter validation failed)
+      if (e._errs && e._errs.length) {
+        const errBox = document.createElement("div");
+        errBox.className = "bf-errors";
+        errBox.innerHTML = "<strong>Won't save until fixed:</strong> " + e._errs.join(" · ");
+        focusEl.appendChild(errBox);
+      }
+
+      // ----- Images card -----
+      if (e.slots.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "bf-empty-state";
+        empty.textContent = "No images needed for this post. Press → to move on, or Save all.";
+        focusEl.appendChild(empty);
+      } else {
+        const imgCard = document.createElement("div");
+        imgCard.className = "bf-images-card";
+
+        const imgHead = document.createElement("div");
+        imgHead.className = "bf-images-head";
+        const imgTitle = document.createElement("div");
+        imgTitle.className = "bf-images-title";
+        imgTitle.textContent = "Images";
+        const imgCount = document.createElement("div");
+        imgCount.className = "bf-images-count";
+        imgCount.textContent = `${filled} of ${e.slots.length} picked`;
+        imgHead.appendChild(imgTitle);
+        imgHead.appendChild(imgCount);
+        imgCard.appendChild(imgHead);
+
+        const slotsBox = document.createElement("div");
+        slotsBox.className = "bf-slots";
+        for (const s of e.slots) {
+          const card = document.createElement("div");
+          card.className = "bf-slot" +
+            (s.imageFile ? " is-filled" : "") +
+            (s.name === focusedSlot ? " is-focused" : "");
+          card.tabIndex = -1;
+          card.dataset.slot = s.name;
+          card.addEventListener("click", (ev) => {
+            if (ev.target.closest("button")) return;
+            focusedSlot = s.name;
+            render();
+          });
+
+          const ch = document.createElement("div");
+          ch.className = "bf-slot-head";
+          const tag = document.createElement("span");
+          tag.className = "bf-slot-tag";
+          tag.textContent = `IMAGE:${s.name}`;
+          ch.appendChild(tag);
+          const flag = document.createElement("span");
+          flag.className = "bf-slot-flag";
+          flag.textContent = s.imageFile ? "✓ picked" : "required";
+          ch.appendChild(flag);
+          card.appendChild(ch);
+
+          if (s.description) {
+            const desc = document.createElement("p");
+            desc.className = "bf-slot-desc";
+            desc.textContent = s.description;
+            card.appendChild(desc);
+          }
+          if (s.alt) {
+            const alt = document.createElement("p");
+            alt.className = "bf-slot-alt";
+            alt.textContent = `alt: ${s.alt}`;
+            card.appendChild(alt);
+          }
+
+          const picker = document.createElement("div");
+          picker.className = "bf-slot-picker";
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "btn-slot";
+          btn.textContent = s.imageFile ? "Change image…" : "Pick image…";
+          btn.addEventListener("click", () => pickImageForSlot(e, s));
+          picker.appendChild(btn);
+
+          if (s.imageFile) {
+            const name = document.createElement("span");
+            name.className = "bf-filename";
+            const willSaveAs = `${e.slug}-${s.name}.${extOf(s.imageName)}`;
+            name.textContent = `${s.imageName} → ${willSaveAs}`;
+            name.title = `Will be saved to /media/${willSaveAs}`;
+            picker.appendChild(name);
+
+            const clear = document.createElement("button");
+            clear.type = "button";
+            clear.className = "bf-slot-clear";
+            clear.textContent = "×";
+            clear.setAttribute("aria-label", "Clear image");
+            clear.addEventListener("click", () => {
+              s.imageFile = null; s.imageName = "";
+              focusedSlot = s.name;
+              render();
+            });
+            picker.appendChild(clear);
+          }
+          card.appendChild(picker);
+          slotsBox.appendChild(card);
+        }
+        imgCard.appendChild(slotsBox);
+        focusEl.appendChild(imgCard);
+
+        // Scroll focused slot into view
+        requestAnimationFrame(() => {
+          const node = focusEl.querySelector(".bf-slot.is-focused");
+          if (node) node.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        });
+      }
+    }
+
+    // ---------- Save ----------
+    async function ensureRoot() {
+      if (rootHandle && await verifyHandle(rootHandle)) {
+        if (rootLabel) rootLabel.textContent = rootHandle.name || "Brisbane TVs";
+        return rootHandle;
+      }
+      if (!window.showDirectoryPicker) {
+        alert("Your browser can't pick folders. Use Chrome or Edge.");
+        return null;
+      }
+      try {
+        const h = await window.showDirectoryPicker({ mode: "readwrite" });
+        if (!(await verifyHandle(h))) return null;
+        rootHandle = h;
+        try { await idbSet(IDB_ROOT_KEY, h); } catch (_) {}
+        if (rootLabel) rootLabel.textContent = h.name || "Brisbane TVs";
+        return rootHandle;
+      } catch (err) {
+        if (err && err.name !== "AbortError") { console.error(err); alert("Could not open folder."); }
+        return null;
+      }
+    }
+
+    async function getSubdir(root, parts) {
+      let d = root;
+      for (const p of parts) d = await d.getDirectoryHandle(p, { create: true });
+      return d;
+    }
+
+    // Build the final .md text: replace every IMAGE:xxx, strip imageBriefs.
+    function buildSavedText(entry) {
+      const pathMap = new Map();
+      for (const s of entry.slots) {
+        const filename = `${entry.slug}-${s.name}.${extOf(s.imageName)}`;
+        pathMap.set(s.name, `/media/${filename}`);
+      }
+      let text = entry.text.replace(/IMAGE:([\w-]+)/g, (m, slot) => pathMap.get(slot) || m);
+      // Strip the imageBriefs: block — the line itself plus any immediately
+      // following indented lines. Multiline regex + dotall not needed; we use
+      // [^\n]* and a non-greedy repetition of "newline + indent + content".
+      text = text.replace(/\n[ \t]*imageBriefs\s*:[^\n]*(?:\n[ \t]+[^\n]*)*/g, "");
+      return text;
+    }
+
+    async function saveOne(entry, mediaDir, blogDir) {
+      // Copy each picked image into /public/media/ under the slug-slot name.
+      for (const s of entry.slots) {
+        if (!s.imageFile) continue; // should be impossible for "ready" rows
+        const filename = `${entry.slug}-${s.name}.${extOf(s.imageName)}`;
+        const fh = await mediaDir.getFileHandle(filename, { create: true });
+        const w = await fh.createWritable();
+        await w.write(await s.imageFile.arrayBuffer());
+        await w.close();
+      }
+      // Write the rewritten .md to src/content/blog/<slug>.md
+      const mdName = `${entry.slug}.md`;
+      const fh = await blogDir.getFileHandle(mdName, { create: true });
+      const w = await fh.createWritable();
+      await w.write(buildSavedText(entry));
+      await w.close();
+      return mdName;
+    }
+
+    // File → base64 (for Decap persistMedia)
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => {
+          const s = r.result || "";
+          const comma = s.indexOf(",");
+          resolve(comma >= 0 ? s.slice(comma + 1) : s);
+        };
+        r.onerror = () => reject(r.error);
+        r.readAsDataURL(file);
+      });
+    }
+
+    async function decapCall(action, params) {
+      const r = await fetch(DECAP_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, params }),
+      });
+      if (!r.ok) {
+        let body = "";
+        try { body = await r.text(); } catch (_) {}
+        throw new Error(`Decap ${action} ${r.status}: ${body || r.statusText}`);
+      }
+      return await r.json();
+    }
+
+    async function saveOneViaDecap(entry) {
+      // Upload each image
+      for (const s of entry.slots) {
+        if (!s.imageFile) continue;
+        const filename = `${entry.slug}-${s.name}.${extOf(s.imageName)}`;
+        const content = await fileToBase64(s.imageFile);
+        await decapCall("persistMedia", {
+          branch: DECAP_BRANCH,
+          asset: {
+            path: `public/media/${filename}`,
+            content,
+            encoding: "base64",
+          },
+          options: { commitMessage: `Upload ${filename}` },
+        });
+      }
+      // Persist the .md
+      const raw = buildSavedText(entry);
+      await decapCall("persistEntry", {
+        branch: DECAP_BRANCH,
+        entry: {
+          slug: entry.slug,
+          path: `src/content/blog/${entry.slug}.md`,
+          raw,
+        },
+        assets: [],
+        options: {
+          commitMessage: `Create Blog "${(entry.fm && entry.fm.title) || entry.slug}"`,
+          useWorkflow: false,
+          status: "draft",
+        },
+        cmsLabelPrefix: undefined,
+      });
+      return `${entry.slug}.md`;
+    }
+
+    async function saveAll() {
+      const savable = entries.filter((e) => e.status === "ready");
+      if (savable.length === 0) return;
+
+      // Prefer Decap proxy. If it was offline when the modal opened,
+      // re-check now in case the user just started it.
+      if (!decapOnline) await updateConnectionBanner();
+
+      let useDecap = decapOnline;
+      let blogDir, mediaDir;
+
+      if (!useDecap) {
+        // Folder-picker fallback
+        const root = await ensureRoot();
+        if (!root) return;
+        try {
+          blogDir  = await getSubdir(root, ["astro", "src", "content", "blog"]);
+          mediaDir = await getSubdir(root, ["astro", "public", "media"]);
+        } catch (err) {
+          console.error(err);
+          alert("Couldn't find astro/src/content/blog or astro/public/media inside the folder you picked. Make sure you pick the Brisbane TVs project root (the folder that has astro/ inside it).");
+          return;
+        }
+      }
+
+      let saved = 0, failed = 0;
+      for (const e of savable) {
+        try {
+          let mdName;
+          if (useDecap) {
+            mdName = await saveOneViaDecap(e);
+          } else {
+            mdName = await saveOne(e, mediaDir, blogDir);
+          }
+          e.status = "saved";
+          const imgCount = e.slots.filter((s) => s.imageFile).length;
+          e.msg = imgCount > 0
+            ? `Saved ${mdName} + ${imgCount} image${imgCount === 1 ? "" : "s"}.`
+            : `Saved ${mdName}.`;
+          saved++;
+        } catch (err) {
+          console.error(err);
+          e.status = "error";
+          e._errs = [`Write failed: ${err && err.message ? err.message : err}`];
+          e.msg = e._errs[0];
+          failed++;
+        }
+        render();
+      }
+      if (saved > 0) {
+        const via = useDecap ? "via CMS" : "to folder";
+        summary.textContent = `Saved ${saved} post${saved === 1 ? "" : "s"} ${via}${failed ? ` · ${failed} failed` : ""}. Refresh the Blogs page to see them.`;
+      }
+    }
+  })();
+</script>
+</AdminShell>
+

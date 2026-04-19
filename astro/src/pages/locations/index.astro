@@ -1,0 +1,259 @@
+---
+import BaseLayout from "~/layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+/**
+ * /locations/ — collection landing page for the suburb silo.
+ *
+ * Groups published suburb entries by region so the hub doubles as a
+ * navigable site-map. Reuses the shared `.idx-*` classes from the
+ * services/products/mounts index pages for layout consistency.
+ */
+
+const locations = (
+  await getCollection("locations", ({ data }) => !data.draft)
+).sort((a, b) => a.data.suburb.localeCompare(b.data.suburb));
+
+/**
+ * Group suburbs by region. Entries without an explicit `region` fall
+ * into the "Other Brisbane" bucket — every suburb in Greater Brisbane
+ * gets shown, even before we backfill region data.
+ */
+const GROUP_ORDER = [
+  "Brisbane City",
+  "Inner North",
+  "Inner South",
+  "West",
+  "East / Bayside",
+  "North",
+  "South",
+  "Logan & Redlands",
+  "Other Brisbane",
+];
+const grouped = new Map<string, typeof locations>();
+for (const loc of locations) {
+  const key = loc.data.region ?? "Other Brisbane";
+  if (!grouped.has(key)) grouped.set(key, []);
+  grouped.get(key)!.push(loc);
+}
+const groupedSorted = [...grouped.entries()].sort(([a], [b]) => {
+  const ai = GROUP_ORDER.indexOf(a);
+  const bi = GROUP_ORDER.indexOf(b);
+  if (ai === -1 && bi === -1) return a.localeCompare(b);
+  if (ai === -1) return 1;
+  if (bi === -1) return -1;
+  return ai - bi;
+});
+
+const pageUrl = new URL("/locations/", Astro.site).toString();
+const businessUrl = new URL("/", Astro.site).toString();
+
+const breadcrumbLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: businessUrl },
+    { "@type": "ListItem", position: 2, name: "Locations", item: pageUrl },
+  ],
+};
+
+const collectionLd = {
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "@id": pageUrl,
+  url: pageUrl,
+  name: "Brisbane TV Installation — Suburb Directory",
+  description:
+    "Every suburb we cover across Greater Brisbane. Same-week TV installs, flat-rate pricing, local installers.",
+  hasPart: locations.map((l) => ({
+    "@type": "Place",
+    name: l.data.suburb,
+    url: new URL(`/locations/${l.slug}/`, Astro.site).toString(),
+  })),
+};
+---
+<BaseLayout
+  title="TV Installation Suburbs Across Brisbane"
+  description="Every Brisbane suburb we cover, grouped by region. Same-week bookings, flat-rate pricing, locally based installers across the river city and the bayside."
+  canonical={pageUrl}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(collectionLd)} />
+
+  <section class="idx-banner">
+    <img
+      class="idx-banner-img"
+      src="/media/1280px-al_khazneh.jpg"
+      alt=""
+      aria-hidden="true"
+    />
+    <div class="idx-banner-inner">
+      <p class="idx-banner-title">Locations</p>
+    </div>
+  </section>
+
+  <article class="idx">
+    <div class="idx-split">
+      <div class="idx-split-left">
+        <nav class="idx-crumbs" aria-label="Breadcrumb">
+          <a href="/">Home</a>
+          <span aria-hidden="true">›</span>
+          <span class="idx-crumbs-current">Locations</span>
+        </nav>
+        <header class="idx-hero-copy">
+          <p class="idx-eyebrow">Greater Brisbane · Suburb directory</p>
+          <h1>Locally based installers across every Brisbane suburb.</h1>
+          <p class="idx-lede">
+            From New Farm queenslanders to Redland Bay acreage, we install TVs across
+            every postcode in Greater Brisbane. Pick your suburb for local housing stock
+            notes, travel times from the CBD, and same-week availability.
+          </p>
+          <div class="idx-stats">
+            <div class="idx-stat">
+              <span class="idx-stat-k">Suburbs listed</span>
+              <span class="idx-stat-v">{locations.length}</span>
+            </div>
+            <div class="idx-stat">
+              <span class="idx-stat-k">Regions</span>
+              <span class="idx-stat-v">{groupedSorted.length}</span>
+            </div>
+            <div class="idx-stat">
+              <span class="idx-stat-k">Response</span>
+              <span class="idx-stat-v">Same week</span>
+            </div>
+            <div class="idx-stat">
+              <span class="idx-stat-k">Call-out</span>
+              <span class="idx-stat-v">No charge</span>
+            </div>
+          </div>
+          <div class="idx-cta-row">
+            <a class="idx-btn idx-btn-primary" href="/contact/">Book in your suburb</a>
+            <a class="idx-btn idx-btn-ghost" href="/services/">See all services</a>
+          </div>
+        </header>
+      </div>
+      <div class="idx-split-img-wrap">
+        <img
+          class="idx-split-img"
+          src="/media/mounting-big-tv-on-brick-hero.jpg"
+          alt="Brisbane river bend at dusk with the inner-city skyline and riverside apartments lit up"
+          loading="eager"
+        />
+      </div>
+    </div>
+
+    <hr class="idx-section-divider" />
+
+    <div class="idx-article-grid">
+      <div class="idx-article-main">
+        <section class="idx-list-section" aria-labelledby="idx-loc-h">
+          <h2 id="idx-loc-h">Pick your suburb</h2>
+          <p class="u-muted">
+            Suburbs grouped by region — tap a card for suburb-specific housing notes,
+            local installer FAQs, and nearby suburbs we also cover.
+          </p>
+
+          {locations.length === 0 && (
+            <p class="idx-empty">Suburb pages coming soon. In the meantime, <a href="/contact/">tell us where you are</a> and we'll book you in.</p>
+          )}
+
+          {groupedSorted.map(([region, entries]) => (
+            <div class="idx-region-group">
+              <h3 class="idx-region-title">{region}</h3>
+              <ul class="idx-card-grid">
+                {entries.map((l) => (
+                  <li class="idx-card">
+                    <a class="idx-card-link" href={`/locations/${l.slug}/`}>
+                      <div class="idx-card-img-wrap">
+                        <img
+                          class="idx-card-img"
+                          src={l.data.heroImage}
+                          alt={l.data.heroAlt}
+                          loading="lazy"
+                        />
+                      </div>
+                      <div class="idx-card-body">
+                        <p class="idx-card-eyebrow">
+                          {l.data.postcode ?? "Brisbane"}
+                          {l.data.travelTimeFromCbd && <span class="idx-card-dot"> · </span>}
+                          {l.data.travelTimeFromCbd && <span>{l.data.travelTimeFromCbd} from CBD</span>}
+                        </p>
+                        <h3 class="idx-card-title">{l.data.suburb}</h3>
+                        <p class="idx-card-desc">{l.data.description}</p>
+                        <div class="idx-card-foot">
+                          <span class="idx-card-price">
+                            <span class="idx-card-price-k">Jobs done</span>
+                            <span class="idx-card-price-v">{typeof l.data.jobCount === "number" ? `${l.data.jobCount}+` : "—"}</span>
+                          </span>
+                          <span class="idx-card-arrow" aria-hidden="true">→</span>
+                        </div>
+                      </div>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </section>
+
+        <section class="idx-why" aria-labelledby="idx-coverage-h">
+          <h2 id="idx-coverage-h">How our coverage works</h2>
+          <ul class="idx-why-list">
+            <li>
+              <span class="idx-why-k">No call-out fees</span>
+              <span class="idx-why-v">One flat rate for the whole job, whether you're in the CBD or out on the bay.</span>
+            </li>
+            <li>
+              <span class="idx-why-k">Suburb-aware installers</span>
+              <span class="idx-why-v">Our team knows the housing stock by suburb — queenslanders, riverside highrises, post-war fibro cottages.</span>
+            </li>
+            <li>
+              <span class="idx-why-k">Building-manager coordination</span>
+              <span class="idx-why-v">We handle the lift booking, loading-bay access, and strata paperwork for apartment installs.</span>
+            </li>
+            <li>
+              <span class="idx-why-k">Full insurance cover</span>
+              <span class="idx-why-v">$20M public liability plus workers' comp — body corps and property managers accept us on first contact.</span>
+            </li>
+          </ul>
+        </section>
+      </div>
+
+      <aside class="idx-sidebar" aria-label="Booking sidebar">
+        <div class="idx-book-card">
+          <p class="idx-book-eyebrow">Brisbane TVs · Coverage</p>
+          <h3 class="idx-book-title">Don't see your suburb?</h3>
+          <p class="idx-book-desc">
+            We cover every postcode in Greater Brisbane, not just the ones listed here.
+            Tell us where you are and we'll quote same-day.
+          </p>
+          <ul class="idx-book-list">
+            <li><span class="idx-book-k">Suburbs</span><span>{locations.length} listed</span></li>
+            <li><span class="idx-book-k">Response</span><span>Same week</span></li>
+            <li><span class="idx-book-k">Call-out fee</span><span>$0</span></li>
+          </ul>
+          <a class="idx-book-btn" href="/contact/">Check your suburb →</a>
+          <a class="idx-book-link" href="tel:+61000000000">or call dispatch</a>
+        </div>
+      </aside>
+    </div>
+
+    <aside class="idx-foot-cta">
+      <div>
+        <h2>Covering Greater Brisbane, from riverside to bayside.</h2>
+        <p>CBD, inner north and south, west, east/bayside, Logan, Redlands — if it's on the map, we install there.</p>
+      </div>
+      <a class="idx-btn idx-btn-primary" href="/contact/">Book an installer</a>
+    </aside>
+  </article>
+</BaseLayout>
+
+<style is:global>
+  /* Locations-specific additions on top of the shared .idx-* styles
+     from the services index (loaded globally so every idx page shares
+     the chrome). Region grouping needs a visible section header above
+     each card grid so the geographic clustering is legible. */
+  .idx-region-group { margin-top: 2rem; }
+  .idx-region-group:first-of-type { margin-top: 1.25rem; }
+  .idx-region-title { margin: 0 0 0.75rem; font-size: 1.05rem; font-weight: 600; color: #131619; text-transform: uppercase; letter-spacing: 0.06em; font-size: 0.8rem; color: #8a94a6; }
+</style>

@@ -1,0 +1,183 @@
+---
+import AdminShell from "~/layouts/AdminShell.astro";
+import { getCollection } from "astro:content";
+
+const posts = await getCollection("blog");
+
+// The layouts currently in src/layouts/ that are valid values of
+// the `layout` enum in content/config.ts.
+const styles = [
+  {
+    key: "standard",
+    name: "Standard post",
+    file: "StandardPost.astro",
+    purpose: "Default article — title, hero, body text. Good for generic writing.",
+  },
+  {
+    key: "service-guide",
+    name: "Service guide",
+    file: "ServiceGuide.astro",
+    purpose: "How-to / step-by-step with tools, steps, pricing.",
+  },
+  {
+    key: "location",
+    name: "Location page",
+    file: "LocationPost.astro",
+    purpose: "Suburb landing pages — local info, CTAs, nearby areas.",
+  },
+  {
+    key: "custom",
+    name: "Custom blog (magazine)",
+    file: "CustomBlogPost.astro",
+    purpose: "Full-bleed hero, serif headline, sticky TOC. Built off the template in /blog/. Use for feature posts.",
+  },
+];
+
+// Count usage per style
+const usage: Record<string, number> = {};
+for (const p of posts) {
+  const k = p.data.style ?? "standard";
+  usage[k] = (usage[k] ?? 0) + 1;
+}
+
+// Posts grouped by style for the assignment table
+const postsByStyle: Record<string, typeof posts> = {};
+for (const p of posts) {
+  const k = p.data.style ?? "standard";
+  if (!postsByStyle[k]) postsByStyle[k] = [];
+  postsByStyle[k].push(p);
+}
+---
+<AdminShell title="Page styles" active="styles" description="Manage and assign page designs.">
+  <div slot="actions">
+    <a class="btn" href="/templates/layout-template.astro" download>Download .astro template</a>
+    <button class="btn btn-primary" disabled title="Upload isn't wired yet — see note below">+ Upload design</button>
+  </div>
+
+  <div class="content">
+    <!-- Existing styles -->
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Installed styles<span class="counter">({styles.length})</span></h2>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Layout file</th>
+              <th>Purpose</th>
+              <th>In use by</th>
+              <th style="width: 1%;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {styles.map((s) => (
+              <tr>
+                <td><strong>{s.name}</strong></td>
+                <td><code>src/layouts/{s.file}</code></td>
+                <td style="color: var(--ink-soft);">{s.purpose}</td>
+                <td>
+                  {(usage[s.key] ?? 0) > 0
+                    ? <span class="badge badge-ok">{usage[s.key]} post{usage[s.key] === 1 ? "" : "s"}</span>
+                    : <span style="color: var(--muted); font-size: 0.82rem;">unused</span>}
+                </td>
+                <td>
+                  <div class="actions">
+                    <a class="btn" href={`#assign-${s.key}`}>Assign ↓</a>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Upload + custom design -->
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Upload a custom design</h2>
+      </div>
+      <div class="tile-grid">
+        <div class="tile">
+          <h4>Upload .astro layout</h4>
+          <p>Pick a <code>.astro</code> file from your computer — it'd save to <code>src/layouts/</code> and appear in this table.</p>
+          <div class="tile-foot">
+            <button class="btn" disabled>Upload .astro</button>
+          </div>
+        </div>
+        <div class="tile">
+          <h4>Start from template</h4>
+          <p>Download the blank layout, edit it in your editor (VS Code etc.), drop it into <code>src/layouts/</code>.</p>
+          <div class="tile-foot">
+            <a class="btn btn-primary" href="/templates/layout-template.astro" download>Download template</a>
+          </div>
+        </div>
+        <div class="tile">
+          <h4>Create in-browser</h4>
+          <p>A built-in visual builder would let you pick blocks (hero / text / CTA / gallery) and save as a new style. Needs a small backend to write files.</p>
+          <div class="tile-foot">
+            <button class="btn" disabled>Open builder</button>
+          </div>
+        </div>
+      </div>
+      <div style="padding: 0 1.25rem 1.25rem; color: var(--ink-soft); font-size: 0.85rem;">
+        <strong style="color: var(--ink);">Why these are disabled:</strong> uploading from the browser needs a backend to write files into the repo. Two real options: a Cloudflare Worker that commits via the GitHub API (same trick Decap uses), or we stay dev-mode-only with an Astro endpoint. Either is maybe half a day of work — say the word.
+      </div>
+    </section>
+
+    <!-- Assignment -->
+    <section class="panel" id="assign">
+      <div class="panel-head">
+        <h2>Assign styles to posts</h2>
+      </div>
+      <div style="padding: 0 0 0.5rem; color: var(--ink-soft); font-size: 0.85rem; padding: 1rem 1.25rem 0;">
+        Grouped by current style. Click <strong>Edit in CMS</strong> on any post — Decap has a dropdown on the <code>style</code> field where you can switch.
+      </div>
+      {styles.map((s) => (
+        <div id={`assign-${s.key}`} style="padding: 1rem 1.25rem; border-top: 1px solid var(--panel-line);">
+          <h3 style="margin: 0 0 0.6rem; font-size: 0.92rem; font-weight: 600;">
+            {s.name} <span class="counter">({(postsByStyle[s.key] ?? []).length})</span>
+          </h3>
+          {(postsByStyle[s.key] ?? []).length === 0 ? (
+            <p style="margin: 0; font-size: 0.85rem; color: var(--muted);">No posts using this style.</p>
+          ) : (
+            <div class="table-wrap">
+              <table class="table" style="border: 1px solid var(--panel-line); border-radius: 6px;">
+                <thead>
+                  <tr>
+                    <th>Post</th>
+                    <th>Status</th>
+                    <th style="width: 1%;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(postsByStyle[s.key] ?? []).map((p) => (
+                    <tr>
+                      <td class="cell-title">
+                        <strong>{p.data.title}</strong>
+                        <span>/blog/{p.slug}/</span>
+                      </td>
+                      <td>
+                        {p.data.draft
+                          ? <span class="badge badge-draft">Draft</span>
+                          : <span class="badge badge-ok">Live</span>}
+                      </td>
+                      <td>
+                        <div class="actions">
+                          <a class="btn" href={`/admin-nav/blogs/${p.slug}/`}>Open</a>
+                          <a class="btn btn-primary" href={`/admin/#/collections/blog/entries/${p.slug}`} target="_blank" rel="noopener">Edit in CMS</a>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      ))}
+    </section>
+  </div>
+</AdminShell>

@@ -1,0 +1,120 @@
+---
+import AdminShell from "~/layouts/AdminShell.astro";
+import { getCollection } from "astro:content";
+
+/**
+ * /admin-nav/services/ — admin list for the services collection.
+ *
+ * First row is always the public /services/ landing page so the dashboard
+ * doubles as a site-map. Subsequent rows are every published service entry
+ * from the content collection, sorted by price-from ascending.
+ */
+const services = (await getCollection("services")).sort(
+  (a, b) => a.data.priceFrom - b.data.priceFrom
+);
+const published = services.filter((s) => !s.data.draft).length;
+const drafts = services.filter((s) => s.data.draft).length;
+---
+<AdminShell title="Services" active="services" description="TV mounting services.">
+  <div slot="actions">
+    <a class="btn btn-primary" href="/admin/#/collections/services/new" target="_blank" rel="noopener">
+      + New service
+    </a>
+  </div>
+
+  <div class="content">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Services<span class="counter">({services.length} entries · {published} live · {drafts} draft)</span></h2>
+        <div class="panel-actions">
+          <a class="btn" href="/services/" target="_blank" rel="noopener">View hub</a>
+          <a class="btn" href="/admin/#/collections/services" target="_blank" rel="noopener">Manage in CMS</a>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Slug</th>
+              <th>Price from</th>
+              <th>Duration</th>
+              <th>Status</th>
+              <th>Tags</th>
+              <th style="width: 1%;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* Landing page row — the public /services/ hub. Sits at the top
+                so the first thing visible when you open the list is the
+                collection's own front door. */}
+            <tr class="row-index">
+              <td class="cell-title">
+                <strong><a href="/services/" target="_blank" rel="noopener" style="color: inherit;">Services landing page</a></strong>
+                <span>Public hub listing every service — <code>/services/index.html</code></span>
+              </td>
+              <td>
+                <a href="/services/" target="_blank" rel="noopener" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; color: var(--sidebar-accent); text-decoration: none;">
+                  /services/
+                </a>
+              </td>
+              <td style="color: var(--muted);">—</td>
+              <td style="color: var(--muted);">—</td>
+              <td><span class="badge badge-ok">Live</span></td>
+              <td style="color: var(--muted);">—</td>
+              <td>
+                <div class="actions">
+                  <a class="btn" href="/services/" target="_blank" rel="noopener">View</a>
+                </div>
+              </td>
+            </tr>
+
+            {services.length === 0 ? (
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 2rem; color: var(--ink-soft);">
+                  No services yet. Hit <strong>+ New service</strong> or drop a <code>.md</code> file into <code>src/content/services/</code>.
+                </td>
+              </tr>
+            ) : (
+              services.map((s) => (
+                <tr>
+                  <td class="cell-title">
+                    <strong><a href={`/services/${s.slug}/`} target="_blank" rel="noopener" style="color: inherit;">{s.data.title}</a></strong>
+                    <span>{s.data.description}</span>
+                  </td>
+                  <td>
+                    <a href={`/services/${s.slug}/`} target="_blank" rel="noopener" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; color: var(--sidebar-accent); text-decoration: none;">
+                      /{s.slug}
+                    </a>
+                  </td>
+                  <td>${s.data.priceFrom}{s.data.priceTo ? `–$${s.data.priceTo}` : ""}</td>
+                  <td style="color: var(--ink-soft);">{s.data.duration ?? "—"}</td>
+                  <td>{s.data.draft ? <span class="badge badge-draft">Draft</span> : <span class="badge badge-ok">Live</span>}</td>
+                  <td style="color: var(--ink-soft); font-size: 0.82rem;">
+                    {s.data.tags.length > 0 ? s.data.tags.join(", ") : <span style="color: var(--muted);">—</span>}
+                  </td>
+                  <td>
+                    <div class="actions">
+                      <a class="btn" href={`/services/${s.slug}/`} target="_blank" rel="noopener">View</a>
+                      <a class="btn btn-primary" href={`/admin/#/collections/services/entries/${s.slug}`} target="_blank" rel="noopener">Edit</a>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <style is:global>
+    /* Visually lift the landing-page row so it reads as "this is a whole
+       hub, not a content entry". Subtle left border in the sidebar accent
+       colour flags it without shouting. */
+    .row-index td { background: #fafbff; }
+    .row-index td:first-child { border-left: 3px solid var(--sidebar-accent); }
+    .row-index .cell-title strong { color: var(--sidebar-accent); }
+  </style>
+</AdminShell>

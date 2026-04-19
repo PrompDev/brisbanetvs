@@ -1,0 +1,392 @@
+---
+import BaseLayout from "~/layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+/**
+ * /blog/ — blog hub with a featured post up top and a card grid below.
+ *
+ * Mirrors the approved LocationPage chrome: full-bleed banner, 1720px
+ * container aligned with the header edges, split hero (eyebrow + h1 +
+ * lede on the left, featured post image on the right). Everything lives
+ * inside the `.blog-hub` container so it can't be overridden by the
+ * older `.container` global rules the previous iteration relied on.
+ */
+
+const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.publishDate.valueOf() - a.data.publishDate.valueOf()
+);
+
+const featured = posts[0];
+const rest = posts.slice(1);
+
+const pageUrl = new URL("/blog/", Astro.site).toString();
+const businessUrl = new URL("/", Astro.site).toString();
+
+const breadcrumbLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: businessUrl },
+    { "@type": "ListItem", position: 2, name: "Blog", item: pageUrl },
+  ],
+};
+
+const blogLd = {
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  "@id": pageUrl,
+  url: pageUrl,
+  name: "Brisbane TVs Journal",
+  description:
+    "Installation guides, suburb-by-suburb notes, and practical TV-mounting advice from our Brisbane installers.",
+  blogPost: posts.map((p) => ({
+    "@type": "BlogPosting",
+    headline: p.data.title,
+    url: new URL(`/blog/${p.slug}/`, Astro.site).toString(),
+    datePublished: p.data.publishDate.toISOString(),
+    image: new URL(p.data.heroImage, Astro.site).toString(),
+  })),
+};
+---
+<BaseLayout
+  title="Blog — Brisbane TV Installation Journal"
+  description="Brisbane TVs installation guides, service tips, and suburb-by-suburb advice from our field installers."
+  canonical={pageUrl}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(blogLd)} />
+
+  {/* Full-bleed banner — "Blog" title over a cinematic image so the
+      visitor immediately knows which section they've landed in. Same
+      100vw escape trick as LocationPage. */}
+  <section class="blog-banner">
+    <img
+      class="blog-banner-img"
+      src={featured ? featured.data.heroImage : "/media/1280px-al_khazneh.jpg"}
+      alt=""
+      aria-hidden="true"
+    />
+    <div class="blog-banner-inner">
+      <p class="blog-banner-title">Blog</p>
+    </div>
+  </section>
+
+  <article class="blog-hub">
+    <nav class="blog-crumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span aria-hidden="true">›</span>
+      <span class="blog-crumbs-current">Blog</span>
+    </nav>
+
+    <header class="blog-hero-copy">
+      <p class="blog-eyebrow">Journal</p>
+      <h1>Guides, stories, and local know-how.</h1>
+      <p class="blog-lede">
+        Practical advice for Brisbane homes — how to mount a TV safely, which bracket
+        fits which wall, and what to expect when we come out to your place.
+      </p>
+    </header>
+
+    {/* Featured post — one big split card taking the first post from the
+        sorted list. Image on the left (60% column), copy on the right
+        (40%). Below 860px collapses to a single stacked card. */}
+    {featured && (
+      <section class="blog-featured" aria-labelledby="blog-featured-h">
+        <a class="blog-featured-link" href={`/blog/${featured.slug}/`}>
+          <div class="blog-featured-img-wrap">
+            <img
+              class="blog-featured-img"
+              src={featured.data.heroImage}
+              alt={featured.data.heroAlt}
+              loading="eager"
+            />
+            <span class="blog-featured-flag">Featured</span>
+          </div>
+          <div class="blog-featured-body">
+            {/* Tag row — surfaces the first few tags as pill chips so
+                the visitor can see the post's topic at a glance. */}
+            {featured.data.tags.length > 0 && (
+              <div class="blog-featured-tags">
+                {featured.data.tags.slice(0, 3).map((t) => (
+                  <span class="blog-featured-tag">{t}</span>
+                ))}
+              </div>
+            )}
+
+            <h2 id="blog-featured-h" class="blog-featured-title">{featured.data.title}</h2>
+            <p class="blog-featured-desc">{featured.data.description}</p>
+
+            {/* Meta row — author + date + read time, each with a small
+                SVG icon so the row reads as labelled data rather than
+                three loose strings. Inline SVG keeps it one round-trip
+                and hits every stroke/weight the same as the body copy. */}
+            <div class="blog-featured-meta">
+              <span class="blog-featured-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="8" r="4"/>
+                  <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>
+                </svg>
+                <span>By <strong>{featured.data.author}</strong></span>
+              </span>
+              <span class="blog-featured-meta-sep" aria-hidden="true">·</span>
+              <span class="blog-featured-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="3" y="4" width="18" height="17" rx="2"/>
+                  <path d="M16 2v4M8 2v4M3 10h18"/>
+                </svg>
+                <span>{new Date(featured.data.publishDate).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}</span>
+              </span>
+              {featured.data.readTime && (
+                <>
+                  <span class="blog-featured-meta-sep" aria-hidden="true">·</span>
+                  <span class="blog-featured-meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="12" r="9"/>
+                      <path d="M12 7v5l3 2"/>
+                    </svg>
+                    <span>{featured.data.readTime} min read</span>
+                  </span>
+                </>
+              )}
+            </div>
+
+            <span class="blog-featured-cta">Read the post →</span>
+          </div>
+        </a>
+      </section>
+    )}
+
+    {/* Divider separates the featured card from the rest of the feed. */}
+    {rest.length > 0 && <hr class="blog-section-divider" />}
+
+    {/* Remainder feed — a responsive card grid of the rest of the posts. */}
+    {rest.length > 0 && (
+      <section class="blog-feed" aria-labelledby="blog-feed-h">
+        <h2 id="blog-feed-h" class="blog-feed-title">More from the journal</h2>
+        <div class="blog-grid">
+          {rest.map((post) => (
+            <article class="blog-card">
+              <a href={`/blog/${post.slug}/`}>
+                <div class="blog-card-img-wrap">
+                  <img
+                    class="blog-card-img"
+                    src={post.data.heroImage}
+                    alt={post.data.heroAlt}
+                    loading="lazy"
+                  />
+                </div>
+                <div class="blog-card-body">
+                  <p class="blog-card-meta">
+                    {new Date(post.data.publishDate).toLocaleDateString("en-AU", {
+                      day: "numeric", month: "short", year: "numeric",
+                    })}
+                  </p>
+                  <h3 class="blog-card-title">{post.data.title}</h3>
+                  <p class="blog-card-desc">{post.data.description}</p>
+                </div>
+              </a>
+            </article>
+          ))}
+        </div>
+      </section>
+    )}
+
+    {posts.length === 0 && (
+      <p class="blog-empty">No posts yet — check back soon.</p>
+    )}
+  </article>
+</BaseLayout>
+
+<style is:global>
+  /* ========== Banner ========== */
+  .blog-banner { position: relative; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); width: 100vw; height: clamp(240px, 32vh, 420px); overflow: hidden; background: #131619; }
+  .blog-banner-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+  .blog-banner::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 35%, rgba(0,0,0,0) 70%); pointer-events: none; }
+  .blog-banner-inner { position: relative; z-index: 1; width: 100%; max-width: 1200px; height: 100%; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; }
+  @media (min-width: 1201px) { .blog-banner-inner { width: 90%; max-width: 1720px; padding: 0; } }
+  .blog-banner-title { margin: 0; color: #fff; font-weight: 400; font-size: clamp(2.5rem, 6vw, 5rem); letter-spacing: 0.02em; text-transform: uppercase; line-height: 1; text-shadow: 0 2px 18px rgba(0,0,0,0.35); }
+
+  /* ========== Hub container — aligns with the header edges ========== */
+  /* 1720px / 90% mirrors the site header rule:
+       @media (min-width: 1201px) {
+         .site-header .container, .main-header .container {
+           width: 90%; max-width: 1720px; padding: 0;
+         }
+       }
+     Below 1201px we default to the 1200px container with 24px gutter so
+     the blog hub stays flush with the narrower header on smaller screens. */
+  .blog-hub { width: 100%; max-width: 1200px; margin: 0 auto; padding: 2rem 24px 4rem; }
+  @media (min-width: 1201px) { .blog-hub { width: 90%; max-width: 1720px; padding: 2rem 0 4rem; } }
+
+  .blog-crumbs { font-size: 0.85rem; color: #5a6271; display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0 0 2.5rem; }
+  .blog-crumbs a { color: #5a6271; text-decoration: none; }
+  .blog-crumbs a:hover { color: #131619; text-decoration: underline; }
+  .blog-crumbs-current { color: #131619; font-weight: 500; }
+
+  /* Hero copy — eyebrow + h1 + lede. Intentionally NOT inside the
+     old .post-header + .container combo so we aren't fighting older
+     global rules that center the hero block. The h1 is allowed to
+     stretch to the full hub width so it stays on one line on desktop;
+     the lede is capped at a readable 720px via its own rule below. */
+  .blog-hero-copy { margin-bottom: 2.5rem; }
+  .blog-eyebrow { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.75rem; color: #8a94a6; margin: 0 0 0.5rem; font-weight: 600; }
+  /* Heading scales with viewport but caps at 2.4rem so 36-char
+     titles like "Guides, stories, and local know-how." fit on one
+     line at desktop widths. `white-space: nowrap` on desktop forces
+     the one-line rule; below 960px we let it wrap naturally. */
+  .blog-hero-copy h1 { font-size: clamp(1.8rem, 3vw, 2.4rem); line-height: 1.15; margin: 0 0 0.75rem; }
+  @media (min-width: 961px) { .blog-hero-copy h1 { white-space: nowrap; } }
+  .blog-lede { font-size: 1.05rem; color: #3d4656; line-height: 1.55; margin: 0; max-width: 720px; }
+
+  /* ========== Featured card — the first (most recent) post ========== */
+  /* Stacked layout: cinematic image on top, rich body below. Dropped
+     the 1.3fr/1fr split so the photo gets full editorial width and the
+     body can breathe with proper symmetric padding. */
+  .blog-featured { margin: 0 0 3rem; }
+  .blog-featured-link { display: flex; flex-direction: column; text-decoration: none; color: inherit; border-radius: 14px; overflow: hidden; background: #fff; border: 1px solid #eef0f3; transition: border-color 0.15s, box-shadow 0.15s; }
+  .blog-featured-link:hover { border-color: #131619; box-shadow: 0 6px 28px rgba(15, 22, 36, 0.08); }
+  /* Wide cinematic image — aspect-ratio: 21/9 gives the hero card a
+     "magazine cover" feel now that it's stacked rather than split. */
+  .blog-featured-img-wrap { position: relative; width: 100%; aspect-ratio: 21/9; overflow: hidden; background: #eef0f3; }
+  .blog-featured-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  /* Flag sits 5px off the top-left corner of the image with a 14px
+     border-radius — the same rounding as the image's own top corners
+     so the flag reads as a matching editorial label rather than a
+     random sticker. Offset (not flush) per design brief. */
+  .blog-featured-flag { position: absolute; top: 5px; left: 5px; background: #131619; color: #fff; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; padding: 0.55rem 0.95rem; border-radius: 14px; text-transform: uppercase; }
+  /* Symmetric padding now that the card is stacked — the old
+     2.5rem 2rem 2.5rem 0 was asymmetric to hug the split image on
+     the left. */
+  .blog-featured-body { display: flex; flex-direction: column; padding: 2rem 2.5rem 2.25rem; gap: 0.9rem; }
+
+  /* Tag chips — small pill chips at the top of the body so the post's
+     topic is visible before the title. */
+  .blog-featured-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .blog-featured-tag { display: inline-block; padding: 0.25rem 0.65rem; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; color: #131619; background: #eef0f3; border-radius: 999px; }
+
+  .blog-featured-title { margin: 0; font-size: clamp(1.5rem, 2.6vw, 2.25rem); line-height: 1.2; color: #131619; font-family: 'Noto Serif', serif; font-weight: 700; }
+  .blog-featured-desc { margin: 0; font-size: 1.05rem; color: #3d4656; line-height: 1.55; }
+
+  /* Meta row — labelled inline data with matching SVG icons. Divider
+     dots between items keep it readable without stacking everything. */
+  .blog-featured-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin-top: 0.3rem; padding-top: 0.9rem; border-top: 1px solid #eef0f3; font-size: 0.85rem; color: #5a6271; }
+  .blog-featured-meta-item { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .blog-featured-meta-item svg { width: 15px; height: 15px; color: #8a94a6; flex-shrink: 0; }
+  .blog-featured-meta-item strong { color: #131619; font-weight: 600; }
+  .blog-featured-meta-sep { color: #d7dbe2; font-weight: 700; }
+
+  .blog-featured-cta { margin-top: 0.25rem; font-size: 0.95rem; font-weight: 600; color: #131619; }
+
+  @media (max-width: 860px) {
+    .blog-featured-img-wrap { aspect-ratio: 16/10; }
+    .blog-featured-body { padding: 1.5rem; }
+    .blog-featured-meta { font-size: 0.8rem; }
+  }
+
+  /* ========== Divider ========== */
+  .blog-section-divider { width: 100%; border: 0; border-top: 1px solid #e5e7eb; margin: 0 0 2.5rem; }
+
+  /* ========== Feed — the rest of the posts ========== */
+  .blog-feed-title { margin: 0 0 1.25rem; font-size: 1.3rem; color: #131619; }
+  /* Grid `align-items: stretch` makes every card in a row the exact
+     same height. Each card's anchor is `height: 100%` with a flex
+     column body that grows (`flex: 1`) so the card bottom aligns
+     across the whole row regardless of title/description length. */
+  .blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; align-items: stretch; }
+  .blog-card { display: flex; height: 100%; }
+  /* Using `box-shadow: 0 0 0 1px` instead of `border` means the hairline
+     is drawn OUTSIDE the card's box, so the image inside (clipped by
+     `overflow: hidden` + `border-radius`) can sit flush against the
+     true edge of the card. A `border: 1px` would eat into the box and
+     create a visible 1px ring between the image and the card outline —
+     that's the "double border" effect we're killing here. */
+  /* Card background is the hairline colour, not white. That way any
+     sub-pixel bleed-through at the rounded corners (where the image
+     can't reach the very last anti-aliased pixel) shows the same
+     colour as the box-shadow ring — effectively invisible. The white
+     card fill lives on the body below, not the whole card. */
+  .blog-card a { display: flex; flex-direction: column; width: 100%; height: 100%; background: #eef0f3; border-radius: 10px; text-decoration: none; color: inherit; box-shadow: 0 0 0 1px #eef0f3; transition: box-shadow 0.15s, transform 0.15s; }
+  .blog-card a:hover { box-shadow: 0 0 0 1px #131619, 0 4px 14px rgba(15, 22, 36, 0.06); transform: translateY(-2px); }
+  /* Card grid images: fixed 16:10 frame + `cover` so every card has
+     the exact same photo height and fills it edge-to-edge. Let the
+     card's own overflow:hidden + border-radius do the clipping — no
+     need to round the wrapper corners (that created a second rounded
+     shape with its own anti-aliased edge that the card's white bg
+     was leaking through). */
+  .blog-card-img-wrap { position: relative; width: 100%; aspect-ratio: 16/10; overflow: hidden; background: #eef0f3; }
+  .blog-card-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  /* Body flexes to fill the remaining vertical space, which is what
+     pushes short cards down to match tall cards in the same row. The
+     explicit white background here is what makes the text area pop
+     against the card's hairline-coloured outer frame. */
+  .blog-card-body { display: flex; flex-direction: column; gap: 0.5rem; padding: 1rem 1.1rem 1.2rem; flex: 1 1 auto; background: #fff; }
+  .blog-card-meta { margin: 0; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: #8a94a6; font-weight: 600; }
+  /* Titles clamp to 2 lines so cards with a 4-word title and cards
+     with a 12-word title both occupy the same amount of vertical
+     space. Pairs with the 3-line description clamp below to keep the
+     total card height consistent across the grid. */
+  .blog-card-title { margin: 0; font-size: 1.05rem; line-height: 1.3; color: #131619; font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: calc(1.05rem * 1.3 * 2); }
+  .blog-card-desc { margin: 0; color: #3d4656; font-size: 0.92rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+  .blog-empty { padding: 3rem; background: #fafbfc; border: 1px dashed #d7dbe2; border-radius: 8px; text-align: center; color: #5a6271; }
+
+  /* ========== Mobile optimisation ========== */
+  /* Everything below 768px gets tighter padding, smaller type, and
+     layouts that stack cleanly on a phone. The featured card already
+     has an 860px breakpoint that kicks in earlier for the card's own
+     padding; these rules handle the page chrome around it. */
+  @media (max-width: 768px) {
+    /* Banner — shorter and with a smaller title so it doesn't eat
+       half the viewport on a phone. */
+    .blog-banner { height: clamp(180px, 28vh, 280px); }
+    .blog-banner-inner { padding: 0 16px; }
+    .blog-banner-title { font-size: clamp(2rem, 9vw, 3rem); }
+
+    /* Hub — tighter gutters + less top padding since the banner is
+       also shorter. */
+    .blog-hub { padding: 1.5rem 16px 3rem; }
+
+    /* Crumbs closer to the hero copy to save vertical real estate. */
+    .blog-crumbs { margin: 0 0 1.25rem; font-size: 0.8rem; }
+
+    /* Hero copy — smaller h1 + less bottom margin. */
+    .blog-hero-copy { margin-bottom: 1.75rem; }
+    .blog-hero-copy h1 { font-size: clamp(1.5rem, 6vw, 2rem); }
+    .blog-lede { font-size: 0.98rem; }
+
+    /* Featured card — further tightening beyond the 860px breakpoint.
+       Flag shrinks slightly + slightly tighter inset so it doesn't
+       crowd the thumb-zone. */
+    .blog-featured { margin: 0 0 2rem; }
+    .blog-featured-flag { padding: 0.45rem 0.75rem; font-size: 0.7rem; }
+    .blog-featured-body { padding: 1.25rem; gap: 0.75rem; }
+    .blog-featured-title { font-size: clamp(1.25rem, 5vw, 1.6rem); }
+    .blog-featured-desc { font-size: 0.98rem; }
+    /* Meta row stacks cleanly on phones — flex-wrap already on,
+       just tighten the gap and hide the visual separator dots since
+       wrapped items don't need them. */
+    .blog-featured-meta { gap: 0.75rem 0.9rem; font-size: 0.8rem; }
+    .blog-featured-meta-sep { display: none; }
+
+    /* Divider — less breathing room. */
+    .blog-section-divider { margin: 0 0 1.75rem; }
+
+    /* Feed — single-column grid at narrow widths, tighter heading. */
+    .blog-feed-title { font-size: 1.15rem; margin: 0 0 1rem; }
+    .blog-grid { grid-template-columns: 1fr; gap: 1.25rem; }
+    .blog-card-body { padding: 0.9rem 1rem 1.1rem; }
+    .blog-card-title { font-size: 1rem; }
+    .blog-card-desc { font-size: 0.9rem; }
+  }
+
+  /* Phone-only (≤480px) — final pass for the smallest viewports. */
+  @media (max-width: 480px) {
+    .blog-banner { height: 180px; }
+    .blog-banner-title { font-size: 1.8rem; }
+    .blog-hub { padding: 1.25rem 14px 2.5rem; }
+    .blog-featured-img-wrap { aspect-ratio: 4/3; }
+    .blog-featured-body { padding: 1rem; }
+    .blog-featured-tags { gap: 0.3rem; }
+    .blog-featured-tag { font-size: 0.65rem; padding: 0.2rem 0.55rem; }
+  }
+</style>

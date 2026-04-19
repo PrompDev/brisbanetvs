@@ -1,0 +1,99 @@
+---
+// Shared placeholder for admin sections whose content collection isn't wired
+// up yet. Shows an empty spreadsheet + a roadmap of fields + a CTA.
+
+export interface Props {
+  name: string;        // Display name, e.g. "Services"
+  slug: string;        // Folder slug, e.g. "services"
+  columns: string[];   // Spreadsheet headers
+  fields: Array<{ key: string; type: string; note?: string }>; // Planned Zod shape
+  examples: string[];  // Example titles of real pages
+  publicPath?: string; // Live URL prefix once wired, e.g. "/services/"
+}
+
+const {
+  name,
+  slug,
+  columns,
+  fields,
+  examples,
+  publicPath = `/${slug}/`,
+} = Astro.props;
+---
+<section class="panel">
+  <div class="panel-head">
+    <h2>{name}<span class="counter">(0 — collection not configured)</span></h2>
+    <div class="panel-actions">
+      <button class="btn" disabled>+ New {name.toLowerCase().slice(0, -1) || "item"}</button>
+      <a class="btn" href="/admin-nav/styles/">Assign a style</a>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          {columns.map((c) => <th>{c}</th>)}
+          <th style="width: 1%;">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td colspan={columns.length + 1} style="padding: 2rem 1.5rem; text-align: center; color: var(--ink-soft);">
+            No {name.toLowerCase()} yet — the <code>{slug}</code> collection isn't created.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>What goes in {name}</h2>
+  </div>
+  <div style="padding: 1.25rem;">
+    <p style="margin: 0 0 1rem; color: var(--ink-soft); font-size: 0.9rem;">Examples of pages this would hold:</p>
+    <ul style="margin: 0 0 1.5rem; padding-left: 1.2rem; color: var(--ink-soft); font-size: 0.9rem;">
+      {examples.map((ex) => <li>{ex}</li>)}
+    </ul>
+
+    <h3 style="font-size: 0.95rem; margin: 0 0 0.5rem;">Planned fields</h3>
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Type</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {fields.map((f) => (
+            <tr>
+              <td><code>{f.key}</code></td>
+              <td style="color: var(--ink-soft);">{f.type}</td>
+              <td style="color: var(--ink-soft); font-size: 0.85rem;">{f.note ?? ""}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Wire this up</h2>
+  </div>
+  <div style="padding: 1.25rem; color: var(--ink-soft); font-size: 0.9rem; line-height: 1.6;">
+    <p style="margin-top: 0;">Four small changes and this table fills with real rows:</p>
+    <ol style="padding-left: 1.25rem;">
+      <li>Add <code>{slug}: defineCollection(&#123;...&#125;)</code> to <code>src/content/config.ts</code> with the fields above.</li>
+      <li>Create the folder <code>src/content/{slug}/</code> and drop one <code>.md</code> per page.</li>
+      <li>Create <code>src/pages{publicPath}[slug].astro</code> so each file gets a live URL.</li>
+      <li>Add the collection to <code>public/admin/config.yml</code> so Decap can edit it.</li>
+    </ol>
+    <p>Want me to do all four now? Say <em>"wire up {name.toLowerCase()}"</em> and I will.</p>
+  </div>
+</section>

@@ -1,0 +1,396 @@
+---
+// Shared admin layout — sidebar + top bar wrapping every /admin-nav/* route.
+// Pass `title` for the top bar, `active` to highlight the sidebar entry
+// (one of: "dashboard" | "posts" | "pages" | "designs" | "templates"),
+// and optionally `rightActions` HTML for the top bar via a named slot.
+
+export interface Props {
+  title: string;
+  active?:
+    | "services"
+    | "locations"
+    | "products"
+    | "mounts"
+    | "blogs"
+    | "styles"
+    | "dashboard";
+  description?: string;
+}
+
+const { title, active = "blogs", description } = Astro.props;
+
+// Sidebar: Content collections on top, Design at the bottom, external jumps after.
+const contentNav = [
+  { key: "services",  label: "Services",   href: "/admin-nav/services/" },
+  { key: "locations", label: "Locations",  href: "/admin-nav/locations/" },
+  { key: "products",  label: "Products",   href: "/admin-nav/products/" },
+  { key: "mounts",    label: "Mounts",     href: "/admin-nav/mounts/" },
+  { key: "blogs",     label: "Blogs",      href: "/admin-nav/blogs/" },
+];
+const designNav = [
+  { key: "styles",    label: "Page styles", href: "/admin-nav/styles/" },
+];
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>{title} — Brisbane TVs Admin</title>
+    {description && <meta name="description" content={description} />}
+    <style is:global>
+      :root {
+        --shell-bg: #f4f5f7;
+        --sidebar-bg: #1a2332;
+        --sidebar-ink: #c9d1df;
+        --sidebar-accent: #403ed0;
+        --panel-bg: #ffffff;
+        --panel-line: #e2e4ea;
+        --ink: #1a2332;
+        --ink-soft: #5a6576;
+        --muted: #8a93a4;
+        --ok: #1e7e34;
+        --warn: #c07800;
+        --danger: #c83434;
+        --radius: 10px;
+        --shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        font-family: system-ui, -apple-system, "Segoe UI", Inter, sans-serif;
+        background: var(--shell-bg);
+        color: var(--ink);
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+      }
+      a { color: var(--sidebar-accent); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.85em;
+        background: rgba(0, 0, 0, 0.05);
+        padding: 1px 6px;
+        border-radius: 3px;
+      }
+
+      .admin {
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        background: var(--sidebar-bg);
+        color: var(--sidebar-ink);
+        display: flex;
+        flex-direction: column;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+      }
+      .sidebar-brand {
+        padding: 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        color: #fff;
+        font-weight: 700;
+        font-size: 1.05rem;
+      }
+      .sidebar-brand small {
+        display: block;
+        color: var(--muted);
+        font-weight: 400;
+        font-size: 0.78rem;
+        margin-top: 3px;
+        letter-spacing: 0.02em;
+      }
+      .sidebar nav {
+        padding: 0.75rem 0;
+        flex: 1;
+        overflow-y: auto;
+      }
+      .sidebar nav a {
+        display: block;
+        padding: 0.6rem 1.5rem;
+        color: var(--sidebar-ink);
+        text-decoration: none;
+        font-size: 0.9rem;
+        border-left: 3px solid transparent;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+      }
+      .sidebar nav a:hover {
+        background: rgba(255, 255, 255, 0.04);
+        color: #fff;
+        border-left-color: var(--sidebar-accent);
+        text-decoration: none;
+      }
+      .sidebar nav a.active {
+        background: rgba(64, 62, 208, 0.12);
+        color: #fff;
+        border-left-color: var(--sidebar-accent);
+      }
+      .sidebar nav .label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        padding: 0.75rem 1.5rem 0.25rem;
+      }
+      .sidebar nav .nav-sep {
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        margin: 0.6rem 0;
+      }
+      .sidebar-foot {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        font-size: 0.78rem;
+        color: var(--muted);
+      }
+
+      .main { min-width: 0; display: flex; flex-direction: column; }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 2rem;
+        background: var(--panel-bg);
+        border-bottom: 1px solid var(--panel-line);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        gap: 1rem;
+      }
+      .topbar h1 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 600;
+      }
+      .topbar-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 0.95rem;
+        border: 1px solid var(--panel-line);
+        border-radius: var(--radius);
+        background: var(--panel-bg);
+        color: var(--ink);
+        font: inherit;
+        font-size: 0.88rem;
+        line-height: 1;
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .btn:hover {
+        border-color: var(--sidebar-accent);
+        color: var(--sidebar-accent);
+        text-decoration: none;
+      }
+      .btn-primary {
+        background: var(--sidebar-accent);
+        color: #fff;
+        border-color: var(--sidebar-accent);
+      }
+      .btn-primary:hover { background: #322fb5; color: #fff; border-color: #322fb5; }
+      .btn-danger { color: var(--danger); border-color: rgba(200, 52, 52, 0.3); }
+      .btn-danger:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+      .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+      .content { padding: 1.5rem 2rem 3rem; flex: 1; }
+      .content.flush { padding: 0; }
+
+      .panel {
+        background: var(--panel-bg);
+        border: 1px solid var(--panel-line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+      }
+      .panel-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--panel-line);
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+      .panel-head h2 {
+        margin: 0;
+        font-size: 0.98rem;
+        font-weight: 600;
+      }
+      .counter {
+        color: var(--ink-soft);
+        font-size: 0.82rem;
+        margin-left: 0.4rem;
+        font-weight: 400;
+      }
+      .panel-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+      .table-wrap { overflow-x: auto; }
+      .table { width: 100%; border-collapse: collapse; }
+      .table th, .table td {
+        padding: 0.7rem 1.25rem;
+        text-align: left;
+        font-size: 0.88rem;
+        border-bottom: 1px solid var(--panel-line);
+        vertical-align: middle;
+      }
+      .table th {
+        background: #fafbfc;
+        font-weight: 600;
+        color: var(--ink-soft);
+        font-size: 0.74rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .table tr:last-child td { border-bottom: none; }
+      .table tbody tr:hover td { background: #fafbfc; }
+      .table .cell-title strong { display: block; color: var(--ink); }
+      .table .cell-title span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.8rem;
+        margin-top: 2px;
+      }
+      .table .actions { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+      .table .actions a, .table .actions button {
+        font-size: 0.78rem;
+        padding: 0.3rem 0.6rem;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 0.15rem 0.55rem;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      .badge-ok { background: #e3f5e8; color: var(--ok); }
+      .badge-draft { background: #fef3e2; color: var(--warn); }
+      .badge-muted { background: #eef0f4; color: var(--ink-soft); }
+
+      .empty {
+        padding: 2rem 1.5rem;
+        text-align: center;
+        color: var(--ink-soft);
+      }
+      .empty h3 { color: var(--ink); margin: 0 0 0.5rem; font-size: 1rem; }
+      .empty p { margin: 0.5rem 0; font-size: 0.9rem; }
+
+      .tile-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 0.9rem;
+        padding: 1.25rem;
+      }
+      .tile {
+        border: 1px solid var(--panel-line);
+        border-radius: 8px;
+        padding: 1rem;
+        background: #fafbfc;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .tile h4 { margin: 0; font-size: 0.95rem; }
+      .tile p { margin: 0; font-size: 0.85rem; color: var(--ink-soft); line-height: 1.45; }
+      .tile .tile-foot { margin-top: auto; padding-top: 0.5rem; }
+
+      /* Stat cards for dashboard */
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      .stat {
+        background: var(--panel-bg);
+        border: 1px solid var(--panel-line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 1rem 1.2rem;
+      }
+      .stat .num {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--ink);
+        letter-spacing: -0.02em;
+        line-height: 1;
+      }
+      .stat .lbl {
+        font-size: 0.78rem;
+        color: var(--ink-soft);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-top: 0.5rem;
+      }
+
+      .notice {
+        padding: 0.85rem 2rem;
+        background: #fff7e6;
+        border-bottom: 1px solid #f2e2ba;
+        font-size: 0.85rem;
+        color: #7a5b00;
+      }
+      .notice strong { color: #5a4300; }
+
+      @media (max-width: 820px) {
+        .admin { grid-template-columns: 1fr; }
+        .sidebar { position: static; height: auto; }
+        .sidebar nav { padding: 0.5rem 0; }
+        .topbar { padding: 0.9rem 1rem; }
+        .content { padding: 1rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="admin">
+      <aside class="sidebar">
+        <a href="/admin-nav/" class="sidebar-brand" style="text-decoration: none;">
+          Brisbane TVs
+          <small>Admin dashboard</small>
+        </a>
+        <nav>
+          <div class="label">Content</div>
+          {contentNav.map(n => (
+            <a href={n.href} class={n.key === active ? "active" : ""}>{n.label}</a>
+          ))}
+          <div class="label">Design</div>
+          {designNav.map(n => (
+            <a href={n.href} class={n.key === active ? "active" : ""}>{n.label}</a>
+          ))}
+          <div class="nav-sep"></div>
+          <div class="label">Jump to</div>
+          <a href="/admin/" target="_blank" rel="noopener">Decap CMS →</a>
+          <a href="/blog/" target="_blank" rel="noopener">Live blog →</a>
+        </nav>
+        <div class="sidebar-foot">brisbanetvs.com</div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <h1>{title}</h1>
+          <div class="topbar-actions">
+            <slot name="actions" />
+            <a class="btn" href="/admin/" target="_blank" rel="noopener">Open CMS</a>
+            <a class="btn btn-danger" href="/admin/#/logout">Log out</a>
+          </div>
+        </header>
+        <slot name="banner" />
+        <slot />
+      </main>
+    </div>
+  </body>
+</html>

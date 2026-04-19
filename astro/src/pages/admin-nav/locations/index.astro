@@ -1,0 +1,111 @@
+---
+import AdminShell from "~/layouts/AdminShell.astro";
+import { getCollection } from "astro:content";
+
+/**
+ * /admin-nav/locations/ — admin list for the locations collection.
+ *
+ * First row is the public /locations/ landing page. Subsequent rows list
+ * each suburb entry sorted alphabetically.
+ */
+const locations = (await getCollection("locations")).sort(
+  (a, b) => a.data.suburb.localeCompare(b.data.suburb)
+);
+const published = locations.filter((l) => !l.data.draft).length;
+const drafts = locations.filter((l) => l.data.draft).length;
+---
+<AdminShell title="Locations" active="locations" description="Suburb-level service pages.">
+  <div slot="actions">
+    <a class="btn btn-primary" href="/admin/#/collections/locations/new" target="_blank" rel="noopener">
+      + New suburb
+    </a>
+  </div>
+
+  <div class="content">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Locations<span class="counter">({locations.length} entries · {published} live · {drafts} draft)</span></h2>
+        <div class="panel-actions">
+          <a class="btn" href="/locations/" target="_blank" rel="noopener">View hub</a>
+          <a class="btn" href="/admin/#/collections/locations" target="_blank" rel="noopener">Manage in CMS</a>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Slug</th>
+              <th>Suburb</th>
+              <th>Region</th>
+              <th>Postcode</th>
+              <th>Status</th>
+              <th style="width: 1%;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="row-index">
+              <td class="cell-title">
+                <strong><a href="/locations/" target="_blank" rel="noopener" style="color: inherit;">Locations landing page</a></strong>
+                <span>Public hub grouping suburbs by region — <code>/locations/index.html</code></span>
+              </td>
+              <td>
+                <a href="/locations/" target="_blank" rel="noopener" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; color: var(--sidebar-accent); text-decoration: none;">
+                  /locations/
+                </a>
+              </td>
+              <td style="color: var(--muted);">—</td>
+              <td style="color: var(--muted);">—</td>
+              <td style="color: var(--muted);">—</td>
+              <td><span class="badge badge-ok">Live</span></td>
+              <td>
+                <div class="actions">
+                  <a class="btn" href="/locations/" target="_blank" rel="noopener">View</a>
+                </div>
+              </td>
+            </tr>
+
+            {locations.length === 0 ? (
+              <tr>
+                <td colspan="7" style="text-align: center; padding: 2rem; color: var(--ink-soft);">
+                  No suburbs yet. Hit <strong>+ New suburb</strong> or drop a <code>.md</code> file into <code>src/content/locations/</code>.
+                </td>
+              </tr>
+            ) : (
+              locations.map((l) => (
+                <tr>
+                  <td class="cell-title">
+                    <strong><a href={`/locations/${l.slug}/`} target="_blank" rel="noopener" style="color: inherit;">{l.data.title}</a></strong>
+                    <span>{l.data.description}</span>
+                  </td>
+                  <td>
+                    <a href={`/locations/${l.slug}/`} target="_blank" rel="noopener" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; color: var(--sidebar-accent); text-decoration: none;">
+                      /{l.slug}
+                    </a>
+                  </td>
+                  <td>{l.data.suburb}</td>
+                  <td style="color: var(--ink-soft);">{l.data.region ?? "—"}</td>
+                  <td style="color: var(--ink-soft);">{l.data.postcode ?? "—"}</td>
+                  <td>{l.data.draft ? <span class="badge badge-draft">Draft</span> : <span class="badge badge-ok">Live</span>}</td>
+                  <td>
+                    <div class="actions">
+                      <a class="btn" href={`/locations/${l.slug}/`} target="_blank" rel="noopener">View</a>
+                      <a class="btn btn-primary" href={`/admin/#/collections/locations/entries/${l.slug}`} target="_blank" rel="noopener">Edit</a>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <style is:global>
+    .row-index td { background: #fafbff; }
+    .row-index td:first-child { border-left: 3px solid var(--sidebar-accent); }
+    .row-index .cell-title strong { color: var(--sidebar-accent); }
+  </style>
+</AdminShell>

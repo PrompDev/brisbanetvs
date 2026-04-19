@@ -1,0 +1,29 @@
+---
+import { getCollection } from "astro:content";
+import StandardPost from "~/layouts/StandardPost.astro";
+import ServiceGuide from "~/layouts/ServiceGuide.astro";
+import LocationPost from "~/layouts/LocationPost.astro";
+import CustomBlogPost from "~/layouts/CustomBlogPost.astro";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog", ({ data }) => !data.draft);
+  return posts.map((post) => ({
+    params: { slug: post.slug },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+
+const LayoutByKey = {
+  "standard": StandardPost,
+  "service-guide": ServiceGuide,
+  "location": LocationPost,
+  "custom": CustomBlogPost,
+};
+const Layout = LayoutByKey[post.data.style] ?? StandardPost;
+---
+<Layout frontmatter={post.data}>
+  <Content />
+</Layout>

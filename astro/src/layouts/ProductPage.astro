@@ -1,0 +1,419 @@
+---
+import BaseLayout from "~/layouts/BaseLayout.astro";
+
+/**
+ * ProductPage — TV / AV product detail page for the `products` collection.
+ *
+ * Layout pattern (mirrors LocationPage/New Farm — the canonical design):
+ *   1. Full-bleed banner strip with the model name overlay
+ *   2. 1720px container with a split hero (left: breadcrumbs + copy +
+ *      price card; right: product image stretched to the left's height)
+ *   3. Full-width horizontal rule separator
+ *   4. 70% / 380px article grid with a sticky "Request a quote" sidebar
+ *      following the reader through body sections on the left
+ *   5. Dark foot-CTA strip
+ *
+ * SEO payload (unchanged):
+ *   - schema.org/Product JSON-LD with Offer (price, availability)
+ *   - aggregateRating + reviewCount when present (stars chip in SERPs)
+ *   - additionalProperty list for spec comparison rich results
+ *   - BreadcrumbList JSON-LD
+ */
+
+interface Props {
+  frontmatter: {
+    title: string;
+    description: string;
+    heroImage: string;
+    heroAlt: string;
+    publishDate: Date;
+    updatedDate?: Date;
+    brand: string;
+    model: string;
+    sku?: string;
+    category: "tv" | "soundbar" | "media-box" | "cable" | "accessory";
+    priceAud: number;
+    priceWas?: number;
+    availability: "InStock" | "OutOfStock" | "PreOrder";
+    screenSizeInches?: number;
+    resolution?: string;
+    panelType?: string;
+    refreshRateHz?: number;
+    hdrSupport: string[];
+    vesa?: string;
+    weightKg?: number;
+    pros: string[];
+    cons: string[];
+    rating?: number;
+    reviewCount?: number;
+    affiliateUrl?: string;
+    recommendedMounts: string[];
+    tags: string[];
+  };
+}
+
+const { frontmatter } = Astro.props;
+const pageUrl = new URL(Astro.url.pathname, Astro.site).toString();
+const businessUrl = new URL("/", Astro.site).toString();
+
+// Build specs table + additionalProperty JSON-LD in one pass so the
+// visible table and structured data never drift apart.
+type Spec = { name: string; value: string };
+const specs: Spec[] = [];
+if (frontmatter.screenSizeInches) specs.push({ name: "Screen size", value: `${frontmatter.screenSizeInches}"` });
+if (frontmatter.resolution) specs.push({ name: "Resolution", value: frontmatter.resolution });
+if (frontmatter.panelType) specs.push({ name: "Panel type", value: frontmatter.panelType });
+if (frontmatter.refreshRateHz) specs.push({ name: "Refresh rate", value: `${frontmatter.refreshRateHz} Hz` });
+if (frontmatter.hdrSupport.length > 0) specs.push({ name: "HDR support", value: frontmatter.hdrSupport.join(", ") });
+if (frontmatter.vesa) specs.push({ name: "VESA pattern", value: frontmatter.vesa });
+if (frontmatter.weightKg) specs.push({ name: "Weight", value: `${frontmatter.weightKg} kg` });
+
+const discountPct =
+  frontmatter.priceWas && frontmatter.priceWas > frontmatter.priceAud
+    ? Math.round((1 - frontmatter.priceAud / frontmatter.priceWas) * 100)
+    : null;
+
+const productLd: Record<string, any> = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  name: frontmatter.title,
+  description: frontmatter.description,
+  image: new URL(frontmatter.heroImage, Astro.site).toString(),
+  brand: { "@type": "Brand", name: frontmatter.brand },
+  model: frontmatter.model,
+  ...(frontmatter.sku ? { sku: frontmatter.sku, mpn: frontmatter.sku } : {}),
+  category: frontmatter.category,
+  offers: {
+    "@type": "Offer",
+    price: frontmatter.priceAud,
+    priceCurrency: "AUD",
+    availability: `https://schema.org/${frontmatter.availability}`,
+    url: frontmatter.affiliateUrl ?? pageUrl,
+    seller: { "@type": "Organization", name: "Brisbane TVs" },
+  },
+  ...(typeof frontmatter.rating === "number" && typeof frontmatter.reviewCount === "number" && frontmatter.reviewCount > 0
+    ? {
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: frontmatter.rating,
+          reviewCount: frontmatter.reviewCount,
+          bestRating: 5,
+          worstRating: 0,
+        },
+      }
+    : {}),
+  ...(specs.length > 0
+    ? {
+        additionalProperty: specs.map((s) => ({
+          "@type": "PropertyValue",
+          name: s.name,
+          value: s.value,
+        })),
+      }
+    : {}),
+};
+
+const breadcrumbLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: businessUrl },
+    {
+      "@type": "ListItem",
+      position: 2,
+      name: "Products",
+      item: new URL("/products/", Astro.site).toString(),
+    },
+    { "@type": "ListItem", position: 3, name: frontmatter.title, item: pageUrl },
+  ],
+};
+
+const availLabel = {
+  InStock: "In stock",
+  OutOfStock: "Out of stock",
+  PreOrder: "Pre-order",
+}[frontmatter.availability];
+
+// Banner title — keep it short & punchy so the hero reads cleanly.
+const bannerLabel = `${frontmatter.brand} ${frontmatter.model}`;
+---
+<BaseLayout
+  title={frontmatter.title}
+  description={frontmatter.description}
+  image={frontmatter.heroImage}
+  canonical={pageUrl}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(productLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
+
+  {/* Full-bleed banner strip — brand + model overlay. Same cinematic
+      chrome as Locations / Services so all detail pages feel unified. */}
+  <section class="prod-banner">
+    <img class="prod-banner-img" src="/media/1280px-al_khazneh.jpg" alt="" aria-hidden="true" />
+    <div class="prod-banner-inner">
+      <p class="prod-banner-title">{bannerLabel}</p>
+    </div>
+  </section>
+
+  <article class="prod">
+    {/* Split hero: breadcrumbs + copy + price card on the left; product
+        image stretched to match on the right. */}
+    <div class="prod-split">
+      <div class="prod-split-left">
+        <nav class="prod-crumbs" aria-label="Breadcrumb">
+          <a href="/">Home</a>
+          <span aria-hidden="true">›</span>
+          <a href="/products/">Products</a>
+          <span aria-hidden="true">›</span>
+          <span class="prod-crumbs-current">{frontmatter.brand} {frontmatter.model}</span>
+        </nav>
+        <header class="prod-hero-copy">
+          <p class="prod-brand">{frontmatter.brand}</p>
+          <h1>{frontmatter.title}</h1>
+          <p class="prod-model">Model: {frontmatter.model}{frontmatter.sku && ` · SKU ${frontmatter.sku}`}</p>
+
+          {typeof frontmatter.rating === "number" && typeof frontmatter.reviewCount === "number" && frontmatter.reviewCount > 0 && (
+            <div class="prod-rating" aria-label={`Rated ${frontmatter.rating} out of 5 based on ${frontmatter.reviewCount} reviews`}>
+              <span class="prod-stars" aria-hidden="true">
+                {"★".repeat(Math.round(frontmatter.rating))}{"☆".repeat(5 - Math.round(frontmatter.rating))}
+              </span>
+              <span class="prod-rating-n">{frontmatter.rating.toFixed(1)} ({frontmatter.reviewCount} reviews)</span>
+            </div>
+          )}
+
+          <div class="prod-price-card">
+            <div class="prod-price-row">
+              <span class="prod-price">${frontmatter.priceAud.toLocaleString("en-AU")}</span>
+              {frontmatter.priceWas && frontmatter.priceWas > frontmatter.priceAud && (
+                <span class="prod-price-was">${frontmatter.priceWas.toLocaleString("en-AU")}</span>
+              )}
+              {discountPct && <span class="prod-price-save">Save {discountPct}%</span>}
+            </div>
+            <div class={`prod-avail prod-avail-${frontmatter.availability.toLowerCase()}`}>
+              <span class="prod-avail-dot" aria-hidden="true"></span>
+              {availLabel}
+            </div>
+            <div class="prod-buy-cta">
+              {frontmatter.affiliateUrl ? (
+                <a class="prod-btn prod-btn-primary" href={frontmatter.affiliateUrl} rel="sponsored noopener" target="_blank">
+                  Check latest price
+                </a>
+              ) : (
+                <a class="prod-btn prod-btn-primary" href="/contact/">Enquire now</a>
+              )}
+              <a class="prod-btn prod-btn-ghost" href="/services/tv-wall-mounting/">Get it installed</a>
+            </div>
+          </div>
+
+          <p class="prod-lede">{frontmatter.description}</p>
+        </header>
+      </div>
+      {/* Wrapper owns the grid cell so the image (absolutely-positioned
+          inside it) can't push the row taller than the left column. */}
+      <div class="prod-split-img-wrap">
+        <img class="prod-split-img" src={frontmatter.heroImage} alt={frontmatter.heroAlt} loading="eager" />
+      </div>
+    </div>
+
+    {/* Full-width divider between split hero and article grid. */}
+    <hr class="prod-section-divider" />
+
+    {/* 70% main / 380px sticky-sidebar article grid. */}
+    <div class="prod-article-grid">
+      <div class="prod-article-main">
+        {specs.length > 0 && (
+          <section class="prod-specs" aria-labelledby="prod-specs-h">
+            <h2 id="prod-specs-h">Specifications</h2>
+            <table class="prod-spec-table">
+              <tbody>
+                {specs.map((s) => (
+                  <tr><th scope="row">{s.name}</th><td>{s.value}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        )}
+
+        {(frontmatter.pros.length > 0 || frontmatter.cons.length > 0) && (
+          <section class="prod-review" aria-labelledby="prod-review-h">
+            <h2 id="prod-review-h">Our installer verdict</h2>
+            <div class="prod-proscons">
+              {frontmatter.pros.length > 0 && (
+                <div class="prod-pros">
+                  <h3>Pros</h3>
+                  <ul>{frontmatter.pros.map((p) => (<li>{p}</li>))}</ul>
+                </div>
+              )}
+              {frontmatter.cons.length > 0 && (
+                <div class="prod-cons">
+                  <h3>Cons</h3>
+                  <ul>{frontmatter.cons.map((c) => (<li>{c}</li>))}</ul>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        <section class="prod-body prose">
+          <slot />
+        </section>
+
+        {frontmatter.recommendedMounts.length > 0 && (
+          <section class="prod-mounts" aria-labelledby="prod-mounts-h">
+            <h2 id="prod-mounts-h">Recommended wall mounts for this TV</h2>
+            <ul class="prod-mount-grid">
+              {frontmatter.recommendedMounts.map((m) => (
+                <li>
+                  <a class="prod-mount-card" href={`/mounts/${m}/`}>
+                    <span>{m.replace(/-/g, " ")}</span>
+                    <span aria-hidden="true">→</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </div>
+
+      <aside class="prod-sidebar" aria-label="Quote sidebar">
+        <div class="prod-book-card">
+          <p class="prod-book-eyebrow">Brisbane TVs · Product</p>
+          <h3 class="prod-book-title">Request a quote on this {frontmatter.brand}</h3>
+          <p class="prod-book-desc">Delivery + professional installation across Brisbane. Tell us the room, we'll match you a bracket and installer.</p>
+          <ul class="prod-book-list">
+            <li><span class="prod-book-k">Price</span><span>${frontmatter.priceAud.toLocaleString("en-AU")}</span></li>
+            <li><span class="prod-book-k">Availability</span><span>{availLabel}</span></li>
+            {frontmatter.screenSizeInches && (
+              <li><span class="prod-book-k">Screen</span><span>{frontmatter.screenSizeInches}"</span></li>
+            )}
+          </ul>
+          <a class="prod-book-btn" href="/contact/">Request a quote →</a>
+          <a class="prod-book-link" href="tel:+61700000000">or call our dispatch line</a>
+        </div>
+      </aside>
+    </div>
+
+    <aside class="prod-foot-cta">
+      <div>
+        <h2>Ready to install?</h2>
+        <p>We can deliver, wall-mount and configure this TV anywhere in Brisbane.</p>
+      </div>
+      <a class="prod-btn prod-btn-primary" href="/contact/">Book installation</a>
+    </aside>
+  </article>
+</BaseLayout>
+
+<style is:global>
+  /* Full-bleed banner — escapes any parent container via the 100vw margin
+     trick, same pattern as LocationPage/ServicePage for chrome consistency. */
+  .prod-banner { position: relative; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); width: 100vw; height: clamp(240px, 32vh, 420px); overflow: hidden; background: #131619; }
+  .prod-banner-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
+  .prod-banner::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 35%, rgba(0,0,0,0) 70%); pointer-events: none; }
+  .prod-banner-inner { position: relative; z-index: 1; width: 100%; max-width: 1200px; height: 100%; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; }
+  @media (min-width: 1201px) {
+    .prod-banner-inner { width: 90%; max-width: 1720px; padding: 0; }
+  }
+  .prod-banner-title { margin: 0; color: #fff; font-weight: 400; font-size: clamp(2.5rem, 6vw, 5rem); letter-spacing: 0.02em; text-transform: uppercase; line-height: 1; text-shadow: 0 2px 18px rgba(0,0,0,0.35); }
+
+  /* Outer container mirrors site header (90% / 1720px cap). */
+  .prod { width: 100%; max-width: 1200px; margin: 0 auto; padding: 2rem 24px 4rem; }
+  @media (min-width: 1201px) {
+    .prod { width: 90%; max-width: 1720px; padding: 2rem 0 4rem; }
+  }
+  .prod-crumbs { font-size: 0.85rem; color: #5a6271; display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 3.5rem; }
+  .prod-crumbs a { color: #5a6271; text-decoration: none; }
+  .prod-crumbs a:hover { color: #131619; text-decoration: underline; }
+  .prod-crumbs-current { color: #131619; font-weight: 500; }
+
+  /* Split hero: left column = breadcrumbs + copy + price card;
+     right column = product image stretched (align-items stretch +
+     absolutely positioned image inside a wrapper). */
+  .prod-split { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 2.5rem; align-items: stretch; margin-bottom: 2rem; }
+  .prod-split-left { display: flex; flex-direction: column; min-width: 0; }
+  .prod-split-img-wrap { position: relative; width: 100%; height: 100%; min-height: 0; border-radius: 10px; overflow: hidden; background: #fafbfc; }
+  .prod-split-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  @media (max-width: 820px) {
+    .prod-split { grid-template-columns: 1fr; }
+    .prod-split-img-wrap { position: relative; height: auto; aspect-ratio: 1/1; }
+  }
+  .prod-hero-copy { display: flex; flex-direction: column; justify-content: flex-start; margin-bottom: 4rem; }
+  .prod-brand { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.8rem; color: #8a94a6; margin: 0 0 0.5rem; font-weight: 600; }
+  .prod-hero-copy h1 { font-size: clamp(1.6rem, 2.6vw, 2.2rem); line-height: 1.2; margin: 0 0 0.35rem; }
+  .prod-model { color: #5a6271; font-size: 0.85rem; margin: 0 0 1rem; }
+
+  .prod-rating { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+  .prod-stars { color: #f59e0b; letter-spacing: 0.08em; }
+  .prod-rating-n { color: #5a6271; font-size: 0.85rem; }
+
+  .prod-price-card { background: #fafbfc; border: 1px solid #eef0f3; border-radius: 10px; padding: 1.25rem; margin-bottom: 1.25rem; }
+  .prod-price-row { display: flex; align-items: baseline; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+  .prod-price { font-size: 1.8rem; font-weight: 700; color: #131619; }
+  .prod-price-was { color: #8a94a6; text-decoration: line-through; font-size: 1rem; }
+  .prod-price-save { background: #16a34a; color: #fff; padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+  .prod-avail { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; margin-bottom: 1rem; font-weight: 500; }
+  .prod-avail-dot { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #8a94a6; }
+  .prod-avail-instock .prod-avail-dot { background: #16a34a; }
+  .prod-avail-instock { color: #16a34a; }
+  .prod-avail-outofstock .prod-avail-dot { background: #c62828; }
+  .prod-avail-outofstock { color: #c62828; }
+  .prod-avail-preorder .prod-avail-dot { background: #f59e0b; }
+  .prod-avail-preorder { color: #c07a00; }
+  .prod-buy-cta { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+  .prod-btn { display: inline-flex; align-items: center; padding: 0.7rem 1.3rem; border-radius: 6px; font-weight: 600; text-decoration: none; font-size: 0.95rem; }
+  .prod-btn-primary { background: #131619; color: #fff; }
+  .prod-btn-primary:hover { background: #2a2f35; }
+  .prod-btn-ghost { background: transparent; color: #131619; border: 1px solid #d7dbe2; }
+  .prod-btn-ghost:hover { border-color: #131619; }
+
+  .prod-lede { color: #3d4656; line-height: 1.55; font-size: 1rem; margin: 0; }
+
+  /* Full-width divider between split hero and article grid. */
+  .prod-section-divider { width: 100%; border: 0; border-top: 1px solid #e5e7eb; margin: 3.5rem 0 0; }
+
+  /* Article grid — flexible main column + fixed 380px sticky sidebar. */
+  .prod-article-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; column-gap: 4rem; row-gap: 2rem; align-items: start; margin: 3.5rem 0; }
+  .prod-article-main { min-width: 0; }
+  .prod-article-main > section { margin: 0 0 3.5rem; }
+  .prod-article-main > section:last-child { margin-bottom: 0; }
+
+  .prod-sidebar { position: sticky; top: 6rem; align-self: start; }
+  .prod-book-card { background: #131619; color: #fff; padding: 1.75rem; border-radius: 12px; display: flex; flex-direction: column; gap: 0.85rem; }
+  .prod-book-eyebrow { margin: 0; font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: #8a94a6; font-weight: 600; }
+  .prod-book-title { margin: 0; font-size: 1.25rem; line-height: 1.25; color: #fff; font-family: 'Noto Serif', serif; font-weight: 400; }
+  .prod-book-desc { margin: 0; color: #c5ccd6; font-size: 0.92rem; line-height: 1.55; }
+  .prod-book-list { list-style: none; padding: 0; margin: 0.25rem 0 0; display: flex; flex-direction: column; gap: 0.5rem; border-top: 1px solid #2a2f35; padding-top: 0.9rem; }
+  .prod-book-list li { display: flex; justify-content: space-between; font-size: 0.88rem; color: #eef0f3; }
+  .prod-book-k { color: #8a94a6; }
+  .prod-book-btn { display: inline-flex; justify-content: center; margin-top: 0.6rem; padding: 0.75rem 1rem; background: #fff; color: #131619; font-weight: 600; border-radius: 8px; text-decoration: none; transition: background 0.15s; }
+  .prod-book-btn:hover { background: #eef0f3; }
+  .prod-book-link { color: #8a94a6; font-size: 0.85rem; text-decoration: underline; text-align: center; }
+  .prod-book-link:hover { color: #fff; }
+
+  @media (max-width: 900px) {
+    .prod-article-grid { grid-template-columns: 1fr; gap: 2rem; }
+    .prod-sidebar { position: static; }
+  }
+
+  .prod-specs h2, .prod-review h2, .prod-mounts h2 { font-size: 1.4rem; margin: 0 0 1rem; }
+  .prod-spec-table { width: 100%; border-collapse: collapse; }
+  .prod-spec-table th, .prod-spec-table td { text-align: left; padding: 0.65rem 0.9rem; border-bottom: 1px solid #eef0f3; font-size: 0.95rem; }
+  .prod-spec-table th { color: #5a6271; font-weight: 500; width: 35%; }
+  .prod-spec-table td { color: #131619; }
+
+  .prod-proscons { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  @media (max-width: 640px) { .prod-proscons { grid-template-columns: 1fr; } }
+  .prod-proscons h3 { font-size: 1rem; margin: 0 0 0.5rem; font-weight: 600; }
+  .prod-pros h3 { color: #16a34a; }
+  .prod-cons h3 { color: #c62828; }
+  .prod-proscons ul { padding-left: 1.1rem; margin: 0; line-height: 1.6; color: #3d4656; }
+
+  .prod-mount-grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.6rem; }
+  .prod-mount-card { display: flex; justify-content: space-between; align-items: center; padding: 0.9rem 1rem; background: #fafbfc; border: 1px solid #eef0f3; border-radius: 8px; text-decoration: none; color: #131619; text-transform: capitalize; transition: border-color 0.15s; }
+  .prod-mount-card:hover { border-color: #131619; }
+
+  .prod-foot-cta { margin-top: 3rem; padding: 1.75rem; background: #131619; color: #fff; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
+  .prod-foot-cta h2 { margin: 0 0 0.35rem; font-size: 1.3rem; color: #fff; }
+  .prod-foot-cta p { margin: 0; color: #c5ccd6; }
+  .prod-foot-cta .prod-btn-primary { background: #fff; color: #131619; }
+  .prod-foot-cta .prod-btn-primary:hover { background: #eef0f3; }
+</style>

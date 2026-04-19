@@ -1,0 +1,18 @@
+---
+import { getCollection } from "astro:content";
+import LocationPage from "~/layouts/LocationPage.astro";
+
+export async function getStaticPaths() {
+  const entries = await getCollection("locations", ({ data }) => !data.draft);
+  return entries.map((entry) => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+---
+<LocationPage frontmatter={entry.data}>
+  <Content />
+</LocationPage>

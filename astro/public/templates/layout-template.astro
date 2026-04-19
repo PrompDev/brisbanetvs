@@ -1,0 +1,107 @@
+---
+// ============================================================
+// Brisbane TVs - layout template (.astro)
+// ============================================================
+// A layout is a reusable "shell" that wraps page content.
+// Save this file as: src/layouts/YourLayoutName.astro
+// Then reference it from a blog post's frontmatter:
+//     layout: "your-layout-name"   (lowercase-kebab, matching the enum)
+//
+// NOTE: before a new layout value works, you must also:
+//   1. Add it to the enum in src/content/config.ts:
+//        layout: z.enum(["standard", "service-guide", "location", "your-layout-name"]).default("standard")
+//   2. Wire it into src/pages/blog/[...slug].astro so the router
+//      picks the right layout file based on the frontmatter value.
+// ============================================================
+
+import BaseLayout from "~/layouts/BaseLayout.astro";
+
+// Props are the fields passed in from the page that uses this layout.
+// Keep names matching the Zod schema so nothing breaks.
+export interface Props {
+  title: string;
+  description: string;
+  heroImage: string;
+  heroAlt: string;
+  publishDate: Date;
+  updatedDate?: Date;
+  author?: string;
+  tags?: string[];
+  readTime?: number;
+  // Add layout-specific props below, e.g.:
+  // suburb?: string;
+  // service?: string;
+}
+
+const {
+  title,
+  description,
+  heroImage,
+  heroAlt,
+  publishDate,
+  updatedDate,
+  author = "Brisbane TVs Team",
+  tags = [],
+  readTime,
+} = Astro.props;
+---
+
+<BaseLayout title={title} description={description}>
+  <article class="container post">
+    <header class="post-header">
+      <h1>{title}</h1>
+      <p class="u-muted">
+        By {author} &middot; {publishDate.toLocaleDateString("en-AU", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        })}
+        {readTime && <> &middot; {readTime} min read</>}
+        {updatedDate && (
+          <>
+            <br />
+            <small>Updated {updatedDate.toLocaleDateString("en-AU")}</small>
+          </>
+        )}
+      </p>
+    </header>
+
+    {heroImage && (
+      <figure class="post-hero">
+        <img src={heroImage} alt={heroAlt} loading="eager" />
+      </figure>
+    )}
+
+    <div class="post-body">
+      <!-- This is where the Markdown body of the post gets stamped in. -->
+      <slot />
+    </div>
+
+    {tags.length > 0 && (
+      <footer class="post-tags">
+        {tags.map((tag) => <span class="tag">#{tag}</span>)}
+      </footer>
+    )}
+  </article>
+
+  <style>
+    .post { max-width: 760px; }
+    .post-header { margin: 2rem 0 1.5rem; }
+    .post-header h1 { margin: 0 0 .5rem; }
+    .post-hero img {
+      width: 100%;
+      height: auto;
+      border-radius: var(--btvs-radius);
+      margin-bottom: 1.5rem;
+    }
+    .post-body { font-size: 1.05rem; line-height: 1.7; }
+    .post-tags { margin-top: 2rem; display: flex; gap: .5rem; flex-wrap: wrap; }
+    .tag {
+      padding: .2rem .7rem;
+      border-radius: 999px;
+      background: var(--btvs-bg-soft);
+      color: var(--btvs-ink-soft);
+      font-size: .85rem;
+    }
+  </style>
+</BaseLayout>

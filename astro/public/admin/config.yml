@@ -1,0 +1,88 @@
+backend:
+  name: github
+  repo: your-github-user/brisbane-tvs       # change when the repo is live
+  branch: main
+  base_url: https://cms-auth.brisbanetvs.com   # Cloudflare Worker OAuth proxy
+  auth_endpoint: /auth
+
+# Enables local editing via `npx decap-server` on port 8081.
+# Decap looks for a server on localhost:8081 and, if found, bypasses the
+# GitHub backend entirely — letting us edit files directly on disk during
+# local dev without any OAuth / repo setup.
+local_backend: true
+
+# Note: editorial_workflow requires a git-based backend (GitHub/GitLab/Bitbucket).
+# With local_backend it causes save failures, so we keep it off. Turn it back on
+# when deploying to production with the GitHub backend.
+# publish_mode: editorial_workflow
+
+# Used by Decap's "View on site" button in the editor.
+site_url: http://localhost:4321
+display_url: http://localhost:4321
+
+media_folder: "public/media"
+public_folder: "/media"
+
+collections:
+  - name: "blog"
+    label: "Blog"
+    folder: "src/content/blog"
+    create: true
+    slug: "{{slug}}"
+    extension: "md"
+    format: "frontmatter"
+    # Tells Decap's "View" button to preview posts at /blog/<slug>/
+    preview_path: "blog/{{slug}}"
+    # Field constraints below MUST match the Zod schema in src/content/config.ts.
+    # If any post in the collection fails Zod validation, Astro returns 500 for
+    # ALL posts in that collection (not just the broken one), so the CMS must
+    # block invalid saves up front.
+    fields:
+      - label: "Title"
+        name: "title"
+        widget: "string"
+        hint: "8–120 characters"
+        pattern: ['^.{8,120}$', "Title must be 8–120 characters"]
+      - label: "Description"
+        name: "description"
+        widget: "text"
+        hint: "40–200 characters — this shows in search results and link previews"
+        pattern: ['^[\s\S]{40,200}$', "Description must be 40–200 characters"]
+      - { label: "Hero image",   name: "heroImage",   widget: "image" }
+      - label: "Hero alt"
+        name: "heroAlt"
+        widget: "string"
+        hint: "At least 8 characters — describes the hero image for screen readers"
+        pattern: ['^.{8,}$', "Hero alt text must be at least 8 characters"]
+      - { label: "Publish date", name: "publishDate", widget: "datetime" }
+      - { label: "Updated date", name: "updatedDate", widget: "datetime", required: false }
+      - { label: "Author",       name: "author",      widget: "string", default: "Brisbane TVs Team" }
+      - label: "Style"
+        name: "style"
+        widget: "select"
+        default: "custom"
+        options:
+          - { label: "Custom blog (magazine)",  value: "custom" }
+          - { label: "Standard article",        value: "standard" }
+          - { label: "Service guide",           value: "service-guide" }
+          - { label: "Location post",           value: "location" }
+      - { label: "Suburb",  name: "suburb",  widget: "string", required: false }
+      - { label: "Service", name: "service", widget: "string", required: false }
+      - { label: "Tags",    name: "tags",    widget: "list",   default: [] }
+      - { label: "Draft",   name: "draft",   widget: "boolean", default: false }
+      - { label: "Read time (minutes)", name: "readTime", widget: "number", required: false, value_type: "int" }
+      # imageBriefs — optional drafting aid. One entry per IMAGE:xxx
+      # placeholder in the post. The bulk uploader on /admin-nav/blogs/
+      # strips this block when it rewrites placeholders to real /media/
+      # paths, so posts edited directly in the CMS (without placeholders)
+      # can simply leave the list empty.
+      - label: "Image briefs"
+        name: "imageBriefs"
+        widget: "list"
+        required: false
+        summary: "{{fields.slot}} — {{fields.description}}"
+        fields:
+          - { label: "Slot", name: "slot", widget: "string", hint: "e.g. hero, inline-1, inline-2" }
+          - { label: "Description", name: "description", widget: "text", required: false, hint: "What this photo should show — shown next to the file picker in bulk upload" }
+          - { label: "Alt text", name: "alt", widget: "string", required: false, hint: "Literal description of the image for screen readers" }
+      - { label: "Body",    name: "body",    widget: "markdown" }

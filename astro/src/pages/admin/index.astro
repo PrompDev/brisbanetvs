@@ -1,0 +1,262 @@
+---
+// Decap CMS entry point. We ship this as an Astro page (rather than a static
+// file under `public/admin/`) because Astro v4's dev server doesn't reliably
+// serve `public/<dir>/index.html` at the bare `/dir/` URL — it hits the route
+// resolver first and 404s. Serving it as a real page dodges that.
+//
+// The config.yml still lives at `public/admin/config.yml`, which is fine —
+// Decap fetches it with a relative `./config.yml` request, which resolves
+// to `/admin/config.yml` regardless of how this page was delivered.
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Brisbane TVs · Content admin</title>
+  <style>
+    :root {
+      --ink: #1a2332;
+      --ink-soft: #5a6576;
+      --muted: #8a95a7;
+      --accent: #403ed0;
+      --panel: #ffffff;
+      --bg: #f4f5f7;
+      --line: #e3e6ec;
+      --ok: #16a34a;
+      --warn: #d97706;
+    }
+
+    body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Inter, sans-serif; color: var(--ink); background: var(--bg); }
+
+    /* Splash overlay — shown until Decap successfully loads */
+    #cms-splash {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .splash-card {
+      max-width: 640px;
+      width: 100%;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+      padding: 2rem 2.25rem;
+    }
+
+    .splash-card h1 {
+      margin: 0 0 0.25rem;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .splash-card .sub {
+      margin: 0 0 1.5rem;
+      color: var(--ink-soft);
+      font-size: 0.9rem;
+    }
+
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 0.85rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      margin-bottom: 1.25rem;
+      border: 1px solid var(--line);
+      background: #fafbfc;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+    }
+    .status-dot.checking { background: var(--warn); animation: pulse 1s ease-in-out infinite; }
+    .status-dot.down { background: #dc2626; }
+    .status-dot.up { background: var(--ok); }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    .step {
+      border-left: 2px solid var(--accent);
+      padding: 0.25rem 0 0.25rem 0.9rem;
+      margin-bottom: 1rem;
+    }
+    .step-num {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    .step-title { font-weight: 600; font-size: 0.92rem; margin-bottom: 0.3rem; }
+    .step-body { font-size: 0.88rem; color: var(--ink-soft); line-height: 1.5; }
+    .step-body code {
+      background: #f1f3f7;
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.82rem;
+      color: var(--ink);
+    }
+
+    pre.cmd {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.82rem;
+      margin: 0.35rem 0 0;
+      overflow-x: auto;
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.6rem;
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--line);
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.5rem 0.9rem;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      font-size: 0.85rem;
+      font-family: inherit;
+      cursor: pointer;
+      text-decoration: none;
+    }
+    .btn:hover { background: #f1f3f7; }
+    .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn.primary:hover { background: #322fa8; }
+    .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+    .hint {
+      margin-top: 1.25rem;
+      padding: 0.75rem 0.9rem;
+      background: #fff8e1;
+      border: 1px solid #fde68a;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      color: #713f12;
+    }
+  </style>
+</head>
+<body>
+  <div id="cms-splash">
+    <div class="splash-card">
+      <h1>Brisbane TVs · Content admin</h1>
+      <p class="sub">Decap CMS runs against a local file-editing proxy during development.</p>
+
+      <div class="status-row" id="status">
+        <span class="status-dot checking"></span>
+        <span id="status-text">Checking for decap-server on localhost:8081…</span>
+      </div>
+
+      <div class="step">
+        <div class="step-num">Step 1</div>
+        <div class="step-title">Start the local CMS server</div>
+        <div class="step-body">
+          In a <strong>separate terminal</strong> (keep the Astro dev server running in the other one), run:
+          <pre class="cmd">npx decap-server</pre>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">Step 2</div>
+        <div class="step-title">Reload this page</div>
+        <div class="step-body">
+          Once the server is up, reload — you'll land straight in the CMS editor with no login required. Changes save directly to <code>astro/src/content/blog/</code>.
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">For production</div>
+        <div class="step-title">Switch to the GitHub backend</div>
+        <div class="step-body">
+          When deploying, remove <code>local_backend: true</code> from <code>public/admin/config.yml</code> and update the <code>repo:</code> and <code>base_url:</code> fields to point at your GitHub repo and OAuth proxy.
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn primary" onclick="location.reload()">↻ Reload</button>
+        <a class="btn" href="/admin-nav/">← Back to dashboard</a>
+        <a class="btn" href="https://decapcms.org/docs/working-with-a-local-git-repository/" target="_blank" rel="noopener">Decap docs ↗</a>
+      </div>
+
+      <div class="hint" id="hint" style="display: none;">
+        <strong>Still can't connect?</strong> Make sure nothing else is using port 8081, and that <code>npx decap-server</code> printed <em>"Netlify CMS Proxy Server listening on port 8081"</em>.
+      </div>
+    </div>
+  </div>
+
+  <script is:inline>
+    // Poll the decap-server health endpoint. If it's up, hide the splash
+    // and load the Decap CMS script — which will find the same server and
+    // bypass GitHub auth entirely thanks to `local_backend: true`.
+    const statusEl = document.getElementById("status");
+    const statusDot = statusEl.querySelector(".status-dot");
+    const statusText = document.getElementById("status-text");
+    const splash = document.getElementById("cms-splash");
+    const hint = document.getElementById("hint");
+
+    let attempts = 0;
+    let cmsLoaded = false;
+
+    function loadCMS() {
+      if (cmsLoaded) return;
+      cmsLoaded = true;
+      const s = document.createElement("script");
+      s.src = "https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js";
+      s.onload = () => {
+        // Give Decap a second to initialize, then drop the splash
+        setTimeout(() => { splash.style.display = "none"; }, 800);
+      };
+      document.body.appendChild(s);
+    }
+
+    async function checkServer() {
+      attempts++;
+      try {
+        const res = await fetch("http://localhost:8081/api/v1", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "info" }),
+        });
+        if (res.ok) {
+          statusDot.classList.remove("checking", "down");
+          statusDot.classList.add("up");
+          statusText.textContent = "Connected to decap-server — loading editor…";
+          loadCMS();
+          return;
+        }
+        throw new Error("bad response");
+      } catch (e) {
+        statusDot.classList.remove("checking", "up");
+        statusDot.classList.add("down");
+        statusText.textContent = "decap-server not running on localhost:8081. Follow the steps below.";
+        if (attempts > 1) hint.style.display = "block";
+        // Retry every 3s so the user can just start the server and wait
+        setTimeout(checkServer, 3000);
+      }
+    }
+
+    checkServer();
+  </script>
+</body>
+</html>

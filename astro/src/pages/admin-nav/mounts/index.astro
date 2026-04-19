@@ -1,0 +1,114 @@
+---
+import AdminShell from "~/layouts/AdminShell.astro";
+import { getCollection } from "astro:content";
+
+/**
+ * /admin-nav/mounts/ — admin list for the mounts collection.
+ *
+ * First row is the public /mounts/ landing page. Subsequent rows list
+ * every mount entry sorted by max weight rating descending (heaviest first).
+ */
+const mounts = (await getCollection("mounts")).sort(
+  (a, b) => b.data.maxWeightKg - a.data.maxWeightKg
+);
+const published = mounts.filter((m) => !m.data.draft).length;
+const drafts = mounts.filter((m) => m.data.draft).length;
+---
+<AdminShell title="Mounts" active="mounts" description="TV wall mounts and brackets.">
+  <div slot="actions">
+    <a class="btn btn-primary" href="/admin/#/collections/mounts/new" target="_blank" rel="noopener">
+      + New mount
+    </a>
+  </div>
+
+  <div class="content">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Mounts<span class="counter">({mounts.length} entries · {published} live · {drafts} draft)</span></h2>
+        <div class="panel-actions">
+          <a class="btn" href="/mounts/" target="_blank" rel="noopener">View hub</a>
+          <a class="btn" href="/admin/#/collections/mounts" target="_blank" rel="noopener">Manage in CMS</a>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Slug</th>
+              <th>Brand</th>
+              <th>Type</th>
+              <th>Fits</th>
+              <th>Max kg</th>
+              <th>Status</th>
+              <th style="width: 1%;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="row-index">
+              <td class="cell-title">
+                <strong><a href="/mounts/" target="_blank" rel="noopener" style="color: inherit;">Wall mounts landing page</a></strong>
+                <span>Public hub grouping mounts by type — <code>/mounts/index.html</code></span>
+              </td>
+              <td>
+                <a href="/mounts/" target="_blank" rel="noopener" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; color: var(--sidebar-accent); text-decoration: none;">
+                  /mounts/
+                </a>
+              </td>
+              <td style="color: var(--muted);">—</td>
+              <td style="color: var(--muted);">—</td>
+              <td style="color: var(--muted);">—</td>
+              <td style="color: var(--muted);">—</td>
+              <td><span class="badge badge-ok">Live</span></td>
+              <td>
+                <div class="actions">
+                  <a class="btn" href="/mounts/" target="_blank" rel="noopener">View</a>
+                </div>
+              </td>
+            </tr>
+
+            {mounts.length === 0 ? (
+              <tr>
+                <td colspan="8" style="text-align: center; padding: 2rem; color: var(--ink-soft);">
+                  No mounts yet. Hit <strong>+ New mount</strong> or drop a <code>.md</code> file into <code>src/content/mounts/</code>.
+                </td>
+              </tr>
+            ) : (
+              mounts.map((m) => (
+                <tr>
+                  <td class="cell-title">
+                    <strong><a href={`/mounts/${m.slug}/`} target="_blank" rel="noopener" style="color: inherit;">{m.data.title}</a></strong>
+                    <span>{m.data.description}</span>
+                  </td>
+                  <td>
+                    <a href={`/mounts/${m.slug}/`} target="_blank" rel="noopener" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.78rem; color: var(--sidebar-accent); text-decoration: none;">
+                      /{m.slug}
+                    </a>
+                  </td>
+                  <td>{m.data.brand}</td>
+                  <td><span class="badge badge-muted">{m.data.mountType}</span></td>
+                  <td>{m.data.minScreenInches}–{m.data.maxScreenInches}"</td>
+                  <td>{m.data.maxWeightKg}kg</td>
+                  <td>{m.data.draft ? <span class="badge badge-draft">Draft</span> : <span class="badge badge-ok">Live</span>}</td>
+                  <td>
+                    <div class="actions">
+                      <a class="btn" href={`/mounts/${m.slug}/`} target="_blank" rel="noopener">View</a>
+                      <a class="btn btn-primary" href={`/admin/#/collections/mounts/entries/${m.slug}`} target="_blank" rel="noopener">Edit</a>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <style is:global>
+    .row-index td { background: #fafbff; }
+    .row-index td:first-child { border-left: 3px solid var(--sidebar-accent); }
+    .row-index .cell-title strong { color: var(--sidebar-accent); }
+  </style>
+</AdminShell>
