@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Private admin surfaces — Decap CMS + our admin dashboard. Indexing these
+# would expose the list of entries and trip up search engines trying to
+# crawl an SPA-style editor.
+Disallow: /admin/
+Disallow: /admin-nav/
+Disallow: /templates/
+
+Sitemap: https://brisbanetvs.com/sitemap.xml
