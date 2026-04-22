@@ -448,7 +448,9 @@ const contactLd = {
   .qt-crumbs-current { color: #131619; }
 
   .qt-eyebrow { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #6a7482; margin: 0 0 0.75rem; }
-  .qt-hero h1 { font-size: clamp(2rem, 4vw, 2.75rem); line-height: 1.1; margin: 0 0 1rem; color: #131619; letter-spacing: -0.02em; }
+  /* H1 aligned with the shared .idx-hero-copy / .svc-hero-copy scale
+     so the quote page doesn't tower over the rest of the subpages. */
+  .qt-hero h1 { font-size: clamp(1.8rem, 3.2vw, 2.6rem); line-height: 1.15; margin: 0 0 1rem; color: #131619; letter-spacing: -0.02em; }
   .qt-lede { font-size: 1.1rem; line-height: 1.55; color: #404954; margin: 0 0 1.5rem; }
 
   .qt-hero-cta-row { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }

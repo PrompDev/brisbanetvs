@@ -376,7 +376,10 @@ const bannerLabel = `${frontmatter.brand} ${frontmatter.model}`;
   }
   .mnt-hero-copy { display: flex; flex-direction: column; justify-content: flex-start; margin-bottom: 4rem; }
   .mnt-brand { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.8rem; color: #8a94a6; margin: 0 0 0.5rem; font-weight: 600; }
-  .mnt-hero-copy h1 { font-size: clamp(1.6rem, 2.6vw, 2.2rem); line-height: 1.2; margin: 0 0 0.35rem; }
+  /* H1 scale aligned with the rest of the site family (.idx-hero-copy,
+     .svc-hero-copy, .loc-hero-copy) so mount detail pages don't read
+     visually smaller than their sibling silos. */
+  .mnt-hero-copy h1 { font-size: clamp(1.8rem, 3.2vw, 2.6rem); line-height: 1.15; margin: 0 0 0.35rem; }
   .mnt-model { color: #5a6271; font-size: 0.85rem; margin: 0 0 1rem; }
 
   .mnt-rating { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
