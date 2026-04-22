@@ -160,7 +160,7 @@ const bannerLabel = `${frontmatter.brand} ${frontmatter.model}`;
   {/* Full-bleed banner strip — brand + model overlay. Same cinematic
       chrome as Locations / Services so all detail pages feel unified. */}
   <section class="prod-banner">
-    <img class="prod-banner-img" src="/media/1280px-al_khazneh.jpg" alt="" aria-hidden="true" />
+    <img class="prod-banner-img" src={frontmatter.heroImage} alt="" aria-hidden="true" />
     <div class="prod-banner-inner">
       <p class="prod-banner-title">{bannerLabel}</p>
     </div>

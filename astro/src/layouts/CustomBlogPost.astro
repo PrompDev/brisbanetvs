@@ -71,11 +71,56 @@ const initials = frontmatter.author
   .map((n) => n[0])
   .slice(0, 2)
   .join("");
+
+// ---- SEO JSON-LD (BlogPosting + BreadcrumbList) --------------------------
+// Forwarded to MarketingLayout via the new `jsonLd` prop on BaseLayout. The
+// shell already emits LocalBusiness, so we only add the post-specific
+// schemas here. BlogPosting is the important one for Google Discover / News
+// eligibility; BreadcrumbList helps the SERP render the /blog/ trail.
+const SITE = "https://brisbanetvs.com";
+const postUrl = `${SITE}/blog/${currentSlug}/`;
+const heroUrl = frontmatter.heroImage.startsWith("http")
+  ? frontmatter.heroImage
+  : `${SITE}${frontmatter.heroImage}`;
+const blogPostingLd = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  mainEntityOfPage: { "@type": "WebPage", "@id": postUrl },
+  headline: frontmatter.title,
+  description: frontmatter.description,
+  image: heroUrl,
+  author: { "@type": "Person", name: frontmatter.author },
+  publisher: {
+    "@type": "Organization",
+    name: "Brisbane TVs",
+    logo: {
+      "@type": "ImageObject",
+      url: "https://cdn.brisbanetvs.com/brisbanetvs-logo-white.png",
+    },
+  },
+  datePublished: new Date(frontmatter.publishDate).toISOString(),
+  dateModified: frontmatter.updatedDate
+    ? new Date(frontmatter.updatedDate).toISOString()
+    : new Date(frontmatter.publishDate).toISOString(),
+  keywords: (frontmatter.tags ?? []).join(", "),
+  articleSection: category,
+};
+const breadcrumbLd = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: `${SITE}/` },
+    { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE}/blog/` },
+    { "@type": "ListItem", position: 3, name: frontmatter.title, item: postUrl },
+  ],
+};
 ---
 <BaseLayout
   title={frontmatter.title}
   description={frontmatter.description}
   image={frontmatter.heroImage}
+  canonical={postUrl}
+  jsonLd={[blogPostingLd, breadcrumbLd]}
 >
   {/* Reading progress bar — fills as the user scrolls the article */}
   <div class="cp-progress" aria-hidden="true">

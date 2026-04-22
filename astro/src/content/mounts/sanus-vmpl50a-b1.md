@@ -1,7 +1,7 @@
 ---
 title: "Sanus VMPL50A-B1 Full-Motion TV Wall Mount (32\"–75\")"
 description: "Sanus's heavy-duty full-motion mount for TVs up to 75\" and 56kg. Smooth 180° swivel, 15° tilt, sits just 52mm from the wall when folded. Our most-installed bracket of 2026."
-heroImage: "/media/mount-sanus-vmpl50a-b1-hero.jpg"
+heroImage: "https://cdn.brisbanetvs.com/Full-Motion%20Corner%20Install1200x1200.webp"
 heroAlt: "Sanus VMPL50A-B1 full-motion TV wall mount extended from wall with a 65-inch TV attached, showing the articulating arm"
 publishDate: 2026-04-19T09:00:00.000+10:00
 updatedDate: 2026-04-19T09:00:00.000+10:00

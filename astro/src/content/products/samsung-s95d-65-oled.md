@@ -1,8 +1,8 @@
 ---
 title: "Samsung S95D 65\" QD-OLED TV (2024)"
 description: "Samsung's 2024 flagship QD-OLED with the new glare-free OneConnect finish. 144Hz, HDR10+, and one of the most accurate colour panels you can buy in Brisbane."
-heroImage: "/media/product-samsung-s95d-65-hero.jpg"
-heroAlt: "Samsung S95D 65-inch QD-OLED TV mounted on a minimalist white wall, showing vibrant sunset imagery"
+heroImage: "https://cdn.brisbanetvs.com/install-indooroopilly1200x1200.webp"
+heroAlt: "Samsung S95D 65-inch QD-OLED TV mounted on a minimalist white wall in a Brisbane living room, showing vibrant sunset imagery"
 publishDate: 2026-04-19T09:00:00.000+10:00
 updatedDate: 2026-04-19T09:00:00.000+10:00
 brand: "Samsung"

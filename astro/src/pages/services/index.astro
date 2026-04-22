@@ -1,5 +1,5 @@
 ---
-import BaseLayout from "~/layouts/BaseLayout.astro";
+import MarketingLayout from "~/layouts/MarketingLayout.astro";
 import { getCollection } from "astro:content";
 
 /**
@@ -57,18 +57,19 @@ const collectionLd = {
   })),
 };
 ---
-<BaseLayout
-  title="TV Installation Services in Brisbane"
-  description="Every service we offer across Brisbane: TV wall mounting, cable concealment, soundbar pairing, antenna installs, TV removal. Flat-rate, fully insured, same-week."
+<MarketingLayout
+  title="TV Installation Services Brisbane — Wall Mounting, Cable Concealment, Soundbar & Starlink | Brisbane TVs"
+  description="Every TV install service we offer across Brisbane: wall mounting from $179, in-wall cable concealment, soundbar pairing, Starlink, outdoor, fireplace, commercial fit-out. Flat-rate, insured, same-day."
   canonical={pageUrl}
+  ogImage="https://cdn.brisbanetvs.com/install-newstead1200x1200.webp"
+  keywords="TV installation Brisbane, TV wall mounting Brisbane services, cable concealment Brisbane, soundbar installation, Starlink installer Brisbane, outdoor TV mount"
+  jsonLd={[breadcrumbLd, collectionLd]}
+  bodyClass="page-services-index"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
-  <script type="application/ld+json" set:html={JSON.stringify(collectionLd)} />
-
   <section class="idx-banner">
     <img
       class="idx-banner-img"
-      src="/media/service-tv-wall-mounting-hero.jpg"
+      src="https://cdn.brisbanetvs.com/install-newstead1200x1200.webp"
       alt=""
       aria-hidden="true"
     />
@@ -122,8 +123,8 @@ const collectionLd = {
       <div class="idx-split-img-wrap">
         <img
           class="idx-split-img"
-          src="/media/service-tv-wall-mounting-hero.jpg"
-          alt="A Brisbane TVs installer mounting a 75-inch OLED on a clean white feature wall"
+          src="https://cdn.brisbanetvs.com/foreplacemount1200x1200.webp"
+          alt="A Brisbane TVs installer mounting a TV above a gas fireplace in a feature-wall install"
           loading="eager"
         />
       </div>
@@ -228,7 +229,7 @@ const collectionLd = {
       <a class="idx-btn idx-btn-primary" href="tel:0432145101">Get a free quote</a>
     </aside>
   </article>
-</BaseLayout>
+</MarketingLayout>
 
 <style is:global>
   /* Full-bleed banner — same 100vw escape trick as LocationPage so the

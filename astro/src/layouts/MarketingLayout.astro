@@ -1,0 +1,161 @@
+---
+/**
+ * MarketingLayout.astro
+ * ---------------------
+ * The single shared shell for every public-facing page on brisbanetvs.com.
+ * Gives the whole site the same chrome that ships on the homepage:
+ *
+ *   - Fonts (Noto Serif + Inter)
+ *   - /css/marketing.css — the extracted homepage stylesheet; every site
+ *                          chrome class (top-bar, main-header, mega-menu,
+ *                          hero-section, photo-grid, pricing, footer, chat)
+ *                          resolves out of this one file.
+ *   - <Header /> — top bar + main nav + mega-menu panels (same instance
+ *                  used on the homepage).
+ *   - <MobileMenu /> — slide-in drawer with the same nav tree.
+ *   - <ChatWidget /> — floating AI chat circle + panel + mobile call button.
+ *   - <Footer /> — footer grid + newsletter + payment chips.
+ *
+ * Accepts per-page SEO metadata and an optional JSON-LD block.
+ *
+ * Usage:
+ *   ---
+ *   import MarketingLayout from "~/layouts/MarketingLayout.astro";
+ *   ---
+ *   <MarketingLayout
+ *     title="TV Mounting Paddington — Same-Day Wall Installs"
+ *     description="Local Paddington TV mount specialists. 2000+ 5-star reviews."
+ *     canonical="https://brisbanetvs.com/locations/paddington/"
+ *     ogImage="https://cdn.brisbanetvs.com/install-paddington.webp">
+ *     <slot>...page content...</slot>
+ *   </MarketingLayout>
+ */
+
+import Header from "~/components/Header.astro";
+import MobileMenu from "~/components/MobileMenu.astro";
+import Footer from "~/components/Footer.astro";
+import ChatWidget from "~/components/ChatWidget.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  canonical?: string;
+  ogImage?: string;
+  /** Added as JSON-LD script tag inside <head>. Pass a single object or an array. */
+  jsonLd?: Record<string, any> | Record<string, any>[];
+  /** Set true on admin / preview pages so search engines don't index them. */
+  noindex?: boolean;
+  /**
+   * Optional keywords for the <meta name="keywords"> tag. Google ignores it
+   * but Bing and some local-SEO crawlers still read it. Keep it short.
+   */
+  keywords?: string;
+  /** Per-page body class hook so we can scope tweaks in marketing.css if ever needed. */
+  bodyClass?: string;
+}
+
+const {
+  title,
+  description,
+  canonical,
+  ogImage = "https://cdn.brisbanetvs.com/install-newstead1200x1200.webp",
+  jsonLd,
+  noindex = false,
+  keywords,
+  bodyClass = "",
+} = Astro.props;
+
+const SITE = "https://brisbanetvs.com";
+const pageUrl = canonical ?? new URL(Astro.url.pathname, SITE).toString();
+
+// Always emit a LocalBusiness schema so every page gives Google the core
+// entity info. Extra per-page JSON-LD is appended afterwards.
+const localBusiness = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "Brisbane TVs",
+  "image": "https://cdn.brisbanetvs.com/brisbanetvs-logo-white.png",
+  "@id": SITE + "/#business",
+  "url": SITE,
+  "telephone": "+61-432-145-101",
+  "email": "Admin@brisbanetvs.com",
+  "priceRange": "$$",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Brisbane",
+    "addressRegion": "QLD",
+    "addressCountry": "AU",
+  },
+  "geo": { "@type": "GeoCoordinates", "latitude": -27.4698, "longitude": 153.0251 },
+  "areaServed": "Greater Brisbane, Moreton Bay, Logan, Ipswich",
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.9",
+    "reviewCount": "2000",
+  },
+  "openingHoursSpecification": [{
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+    "opens": "07:00",
+    "closes": "19:00",
+  }],
+  "sameAs": [
+    "https://www.instagram.com/brisbanetvs",
+    "https://www.facebook.com/brisbanetvs",
+    "https://g.page/brisbanetvs",
+  ],
+};
+
+const extraJsonLd = Array.isArray(jsonLd) ? jsonLd : (jsonLd ? [jsonLd] : []);
+---
+<!DOCTYPE html>
+<html lang="en-AU">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {keywords && <meta name="keywords" content={keywords} />}
+    {noindex && <meta name="robots" content="noindex,nofollow" />}
+    <link rel="canonical" href={pageUrl} />
+
+    <meta property="og:site_name" content="Brisbane TVs" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_AU" />
+    <meta property="og:url" content={pageUrl} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <meta name="geo.region" content="AU-QLD" />
+    <meta name="geo.placename" content="Brisbane" />
+    <meta name="geo.position" content="-27.4698;153.0251" />
+    <meta name="ICBM" content="-27.4698, 153.0251" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+    <!-- Homepage design system — same stylesheet used by /index.html so the
+         whole site shares one source of truth for chrome + hero + buttons. -->
+    <link rel="stylesheet" href="/css/marketing.css" />
+
+    <script type="application/ld+json" set:html={JSON.stringify(localBusiness)}></script>
+    {extraJsonLd.map((entry) => (
+      <script type="application/ld+json" set:html={JSON.stringify(entry)}></script>
+    ))}
+  </head>
+  <body class={bodyClass}>
+    <Header />
+    <main class="page-main" role="main">
+      <slot />
+    </main>
+    <Footer />
+    <MobileMenu />
+    <ChatWidget />
+  </body>
+</html>

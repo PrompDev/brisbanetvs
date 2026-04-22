@@ -1,5 +1,5 @@
 ---
-import BaseLayout from "~/layouts/BaseLayout.astro";
+import MarketingLayout from "~/layouts/MarketingLayout.astro";
 import { getCollection } from "astro:content";
 
 /**
@@ -72,18 +72,19 @@ const collectionLd = {
   })),
 };
 ---
-<BaseLayout
-  title="TV Installation Suburbs Across Brisbane"
-  description="Every Brisbane suburb we cover, grouped by region. Same-week bookings, flat-rate pricing, locally based installers across the river city and the bayside."
+<MarketingLayout
+  title="TV Mounting Brisbane Suburbs — 109 Areas Covered Same-Day | Brisbane TVs"
+  description="From New Farm to Wynnum, Paddington to Chermside — 109 Brisbane suburbs covered same-day. Find your area, book a flat-rate TV install with our local crew."
   canonical={pageUrl}
+  ogImage="https://cdn.brisbanetvs.com/install-kangaroopoint1200x1200.webp"
+  keywords="TV mounting near me Brisbane, TV installer Brisbane suburbs, TV mount Paddington, TV mount New Farm, TV mount Chermside, TV mount Wynnum, Brisbane TV install coverage"
+  jsonLd={[breadcrumbLd, collectionLd]}
+  bodyClass="page-locations-index"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
-  <script type="application/ld+json" set:html={JSON.stringify(collectionLd)} />
-
   <section class="idx-banner">
     <img
       class="idx-banner-img"
-      src="/media/1280px-al_khazneh.jpg"
+      src="https://cdn.brisbanetvs.com/install-kangaroopoint1200x1200.webp"
       alt=""
       aria-hidden="true"
     />
@@ -135,8 +136,8 @@ const collectionLd = {
       <div class="idx-split-img-wrap">
         <img
           class="idx-split-img"
-          src="/media/mounting-big-tv-on-brick-hero.jpg"
-          alt="Brisbane river bend at dusk with the inner-city skyline and riverside apartments lit up"
+          src="https://cdn.brisbanetvs.com/westend-install1200x1200.webp"
+          alt="A Brisbane TVs installer fitting a TV in a West End lounge room with exposed-brick detail behind the screen"
           loading="eager"
         />
       </div>
@@ -246,7 +247,7 @@ const collectionLd = {
       <a class="idx-btn idx-btn-primary" href="tel:0432145101">Book an installer</a>
     </aside>
   </article>
-</BaseLayout>
+</MarketingLayout>
 
 <style is:global>
   /* Locations-specific additions on top of the shared .idx-* styles

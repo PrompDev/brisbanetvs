@@ -1,8 +1,292 @@
 ---
-// Floating AI chat badge. On the marketing homepage the real widget is
-// injected via the external script; this placeholder is only rendered on
-// blog pages and keeps the visual continuity.
+/**
+ * Floating AI chat badge + panel + floating call button.
+ *
+ * Ported verbatim from astro/public/index.html (the homepage's inline chat
+ * widget) so every page on the site gets the same "concierge" chat. CSS
+ * lives in astro/public/css/marketing.css (ai-badge-wrapper, ai-chat-panel,
+ * floating-call-btn, ai-typing, ai-suggestions, etc.) — don't duplicate it.
+ *
+ * The widget currently uses a local keyword FAQ fallback. Flip USE_REMOTE
+ * to true once /api/chat is deployed.
+ */
 ---
-<a class="chat-widget" href="#chat" aria-label="Open chat">
-  Chat with us
+<!-- AI Chat Icon -->
+<div class="ai-badge-wrapper" id="aiBadge" role="button" tabindex="0" aria-label="Chat with AI assistant">
+    <div class="ai-badge-inner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </div>
+</div>
+
+<!-- Floating Call Button (tablet/mobile only) — stacked above the AI badge -->
+<a href="tel:+61432145101" class="floating-call-btn" aria-label="Call Brisbane TVs on 0432 145 101">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
 </a>
+
+<!-- AI Chat Panel -->
+<div class="ai-chat-panel" id="aiChatPanel" role="dialog" aria-label="Brisbane TVs AI assistant" aria-hidden="true">
+    <div class="ai-chat-header">
+        <div class="ai-chat-title-wrap">
+            <div class="ai-chat-avatar">
+                <div class="ai-chat-avatar-inner">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                </div>
+            </div>
+            <div>
+                <div class="ai-chat-title">Brisbane TVs Assistant</div>
+                <div class="ai-chat-subtitle">Online · usually replies instantly</div>
+            </div>
+        </div>
+        <button class="ai-chat-close" id="aiChatClose" aria-label="Close chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+    </div>
+    <div class="ai-chat-messages" id="aiChatMessages" aria-live="polite"></div>
+    <div class="ai-chat-input-wrap">
+        <textarea id="aiChatInput" class="ai-chat-input" rows="1" placeholder="Ask a question…" aria-label="Message"></textarea>
+        <button class="ai-chat-send" id="aiChatSend" aria-label="Send message">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+    </div>
+    <div class="ai-chat-foot">AI-powered · Always double-check quotes with our team</div>
+</div>
+
+<script is:inline>
+    // ============================================================================
+    // AI CHAT ASSISTANT — Brisbane TVs
+    // Badge → panel toggle, message stream, AI endpoint call with smart fallback.
+    //
+    //   CHAT_ENDPOINT — point at your serverless function (see /api/chat.js in the
+    //                   workspace folder for a ready-to-deploy Cloudflare Worker).
+    //   USE_REMOTE    — set to true once your endpoint is live; until then the
+    //                   built-in keyword responder handles common booking/pricing
+    //                   questions so the chat "works" out of the box.
+    // ============================================================================
+    (function () {
+        const CHAT_ENDPOINT = '/api/chat';
+        const USE_REMOTE    = false; // ← flip to true when your /api/chat is live
+
+        const badge    = document.getElementById('aiBadge');
+        const panel    = document.getElementById('aiChatPanel');
+        const closeBtn = document.getElementById('aiChatClose');
+        const list     = document.getElementById('aiChatMessages');
+        const input    = document.getElementById('aiChatInput');
+        const sendBtn  = document.getElementById('aiChatSend');
+        if (!badge || !panel || !list || !input || !sendBtn) return;
+
+        const history = [];
+        let busy = false;
+
+        const SYSTEM_PROMPT =
+            "You are the Brisbane TVs booking assistant. Brisbane TVs is a premium TV mounting " +
+            "service covering 100+ Brisbane suburbs with same-day availability, a 5-year " +
+            "workmanship warranty, and $20M public liability insurance. Services: TV wall " +
+            "mounting (from $179), cable concealment, soundbar install, Starlink install, " +
+            "outdoor/alfresco TV, home theatre setup, fireplace mounts, and commercial fit-outs. " +
+            "Coverage includes CBD, New Farm, Paddington, Indooroopilly, Chermside, Carindale, " +
+            "Wynnum, Springfield, Kenmore, Hamilton, Ashgrove, Bulimba, Newstead, Kangaroo Point, " +
+            "West End, Toowong and surrounding areas — plus Moreton Bay, Logan, Ipswich, Gold " +
+            "Coast and Sunshine Coast. Book online via /quote/ or call 0432 145 101. " +
+            "Be concise, friendly, specific to Brisbane, and help the user get booked or " +
+            "understand pricing / scope. Never invent prices you weren't told — direct the " +
+            "user to book for a firm quote if unsure.";
+
+        function push(text, who) {
+            const div = document.createElement('div');
+            div.className = 'ai-msg ' + (who === 'user' ? 'user' : 'bot');
+            div.innerHTML = escapeHtml(text)
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/(https?:\/\/[^\s]+|\/[a-z0-9\-_.\/]*\.html)/gi,
+                    '<a href="$1" target="_blank" rel="noopener">$1</a>')
+                .replace(/\n/g, '<br>');
+            list.appendChild(div);
+            list.scrollTop = list.scrollHeight;
+        }
+        function pushTyping() {
+            const div = document.createElement('div');
+            div.className = 'ai-msg bot';
+            div.id = '__ai_typing__';
+            div.innerHTML = '<span class="ai-typing"><span></span><span></span><span></span></span>';
+            list.appendChild(div);
+            list.scrollTop = list.scrollHeight;
+        }
+        function clearTyping() {
+            const t = document.getElementById('__ai_typing__');
+            if (t) t.remove();
+        }
+        function pushSuggestions(chips) {
+            const wrap = document.createElement('div');
+            wrap.className = 'ai-suggestions';
+            chips.forEach(label => {
+                const b = document.createElement('button');
+                b.className = 'ai-chip';
+                b.textContent = label;
+                b.addEventListener('click', () => {
+                    wrap.remove();
+                    input.value = label;
+                    send();
+                });
+                wrap.appendChild(b);
+            });
+            list.appendChild(wrap);
+            list.scrollTop = list.scrollHeight;
+        }
+        function escapeHtml(s) {
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        async function askAI(userText) {
+            history.push({ role: 'user', content: userText });
+            if (USE_REMOTE) {
+                try {
+                    const res = await fetch(CHAT_ENDPOINT, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ system: SYSTEM_PROMPT, messages: history })
+                    });
+                    if (!res.ok) throw new Error('Endpoint returned ' + res.status);
+                    const data = await res.json();
+                    const reply = (data && (data.reply || data.message || data.content)) || '';
+                    if (!reply) throw new Error('Empty reply');
+                    history.push({ role: 'assistant', content: reply });
+                    return reply;
+                } catch (err) {
+                    console.warn('[aiChat] remote failed, using fallback:', err);
+                    return fallback(userText);
+                }
+            }
+            return fallback(userText);
+        }
+
+        const FAQ = [
+            { match: /\b(price|pricing|cost|quote|how much|charge|fee)\b/i,
+              reply:
+                "Transparent pricing — no surprises:\n" +
+                "• **Standard TV wall mount** from **$179**\n" +
+                "• **Cable concealment (in-wall)** from **$150**\n" +
+                "• **Soundbar install** from **$120**\n" +
+                "• **Large TV (75\"–98\")** from **$349**\n" +
+                "• **Outdoor / alfresco** from **$420**\n" +
+                "• **Starlink install** from **$380**\n\n" +
+                "Every job includes the 5-year workmanship warranty. Want a firm quote? Book online at /quote/ or call 0432 145 101." },
+            { match: /\b(book|appointment|schedule|same day|today|tomorrow)\b/i,
+              reply:
+                "Happy to book you in. Same-day slots often available across Brisbane.\n\n" +
+                "Quickest path: **book online at /quote/** — takes about a minute. You'll get an instant confirmation and an installer assigned the same day. Prefer to talk? Call **0432 145 101**." },
+            { match: /\b(suburb|area|coverage|location|service area|where|cover)\b/i,
+              reply:
+                "We cover **100+ Brisbane suburbs** — inner city (New Farm, Paddington, Newstead, Kangaroo Point, West End), north (Hamilton, Ashgrove, Chermside, Aspley), south (Carindale, Wynnum, Springfield), west (Indooroopilly, Toowong, Kenmore), plus **Moreton Bay, Logan, Ipswich, Gold Coast and Sunshine Coast**. Which suburb are you in? I'll confirm same-day availability." },
+            { match: /\b(starlink)\b/i,
+              reply:
+                "We do **Starlink installs** Brisbane-wide:\n" +
+                "• **Standard eave / fascia mount** — from $380\n" +
+                "• **Roof-mount with flashing + sealant** — from $550\n" +
+                "• **Pole-mount for elevated line of sight** — from $480\n" +
+                "• **Cable routing through roof cavity** — from $150\n\n" +
+                "All done with weatherproof penetrations and cable tidy to your router. Book via /quote/." },
+            { match: /\b(outdoor|alfresco|patio|pool|deck|eave)\b/i,
+              reply:
+                "Outdoor installs are a specialty — weather-rated brackets, IP-rated enclosures, and cable runs protected behind battens or through conduit. Alfresco packages with soundbar start at **$550**. Tell me the wall type (brick, fibre cement, hardwood) and I can give you a tighter range." },
+            { match: /\b(soundbar)\b/i,
+              reply:
+                "Soundbar installs are **from $120** — flush-finished, VESA-matched and cable-tidied. We'll wall-mount it so it sits perfectly aligned with the TV. Usually bundled with the TV install for a cleaner look." },
+            { match: /\b(fireplace|mantle|mantel)\b/i,
+              reply:
+                "**Fireplace mounts** — from $320. Heat-safe bracket, above-mantle placement, and cable run down behind the wall. We scope the heat zone before quoting; some units require a pull-down / articulating mount which is a touch more." },
+            { match: /\b(brick|gyprock|concrete|hebel|double brick|stud|timber|vj|weatherboard)\b/i,
+              reply:
+                "All wall types handled — **brick** (masonry anchors), **double brick** (cavity-scoped bits), **concrete** (SDS + chemset where needed), **Hebel/AAC** (dedicated Hebel sleeves — standard anchors crumble Hebel), **timber stud** (lag bolts into stud centres), **VJ / weatherboard** (heritage-safe backing plate). Which wall do you have?" },
+            { match: /\b(warranty|insurance|insured|guarantee)\b/i,
+              reply:
+                "We carry **$20M public liability insurance** and every install is backed by a **5-year workmanship warranty**. If anything moves, sags, or needs adjustment in that window, we come back and fix it — free." },
+            { match: /\b(size|75|85|98|large|big|huge|oled|frame)\b/i,
+              reply:
+                "Large TVs (75\"–98\") need stud-anchored heavy-gauge brackets — VESA 600×400 up to 800×600. Our large-TV install is **from $349** and covers up to 98\" Samsungs / LG OLED Gallery / Sony Bravia. Extra hand on site included so your TV never touches the floor." },
+            { match: /\b(phone|call|contact|number|speak|talk)\b/i,
+              reply:
+                "Quickest way to reach us: **0432 145 101** — answered during business hours, callback within 15 minutes otherwise. Or message here and I'll try to help." },
+            { match: /\b(cable|conceal|hide|hidden|tidy)\b/i,
+              reply:
+                "**In-wall cable concealment** — from $150. We run HDMI + power behind gyprock through code-compliant recessed outlets. No visible cables, no stick-on covers. Looks factory-clean when we're done." }
+        ];
+
+        function fallback(text) {
+            for (const f of FAQ) {
+                if (f.match.test(text)) {
+                    const reply = f.reply;
+                    history.push({ role: 'assistant', content: reply });
+                    return reply;
+                }
+            }
+            const reply =
+                "I can help with **pricing**, **service areas**, **booking**, or details on any install type " +
+                "(starlink, outdoor, soundbar, fireplace, cable concealment, large TVs). " +
+                "What would you like to know? You can also book directly at /quote/ or call 0432 145 101.";
+            history.push({ role: 'assistant', content: reply });
+            return reply;
+        }
+
+        async function send() {
+            const text = input.value.trim();
+            if (!text || busy) return;
+            busy = true;
+            sendBtn.disabled = true;
+            push(text, 'user');
+            input.value = '';
+            input.style.height = '';
+            pushTyping();
+            await new Promise(r => setTimeout(r, 500 + Math.random() * 400));
+            const reply = await askAI(text);
+            clearTyping();
+            push(reply, 'bot');
+            busy = false;
+            sendBtn.disabled = false;
+            input.focus();
+        }
+
+        sendBtn.addEventListener('click', send);
+        input.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+        });
+        input.addEventListener('input', () => {
+            input.classList.toggle('is-multiline', input.value.length > 0);
+            input.style.height = 'auto';
+            const nextH = Math.min(input.scrollHeight, 120);
+            input.style.height = nextH + 'px';
+            input.style.overflowY = input.scrollHeight > 120 ? 'auto' : 'hidden';
+        });
+
+        let opened = false;
+        function togglePanel() {
+            if (panel.classList.contains('is-open')) { closePanel(); return; }
+            openPanel();
+        }
+        function openPanel() {
+            panel.classList.add('is-open');
+            panel.setAttribute('aria-hidden', 'false');
+            setTimeout(() => input.focus(), 200);
+            if (!opened) {
+                opened = true;
+                push("Hi! I'm the Brisbane TVs assistant. Ask me anything about pricing, coverage, or your install — or I can get you booked in same day.", 'bot');
+                pushSuggestions(['What does it cost?', 'Do you cover my suburb?', 'Book a same-day install', 'Starlink install']);
+            }
+        }
+        function closePanel() {
+            panel.classList.remove('is-open');
+            panel.setAttribute('aria-hidden', 'true');
+        }
+
+        badge.addEventListener('click', togglePanel);
+        badge.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); togglePanel(); }
+        });
+        closeBtn.addEventListener('click', closePanel);
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && panel.classList.contains('is-open')) closePanel();
+        });
+    })();
+</script>

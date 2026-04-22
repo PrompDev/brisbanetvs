@@ -325,3 +325,37 @@
   [+136/-0 lines] [+1115/-0 chars]  astro/src/pages/sitemap.xml.ts 
   [+15/-15 lines] [+278/-0 chars]  index.html 
  
+---------------------------------------- 
+[2026-04-22 18:27] 28 file(s) | commit: 37f94a0 
+---------------------------------------- 
+  Summary:  28 files changed, 4392 insertions(+), 131 deletions(-) 
+ 
+  [+9/-8 lines] [+67/-0 chars]  6 
+  [+9/-8 lines] [+67/-0 chars]  7 
+  [+3754/-0 lines] [+37954/-0 chars]  astro/public/css/marketing.css 
+  [+289/-5 lines] [+872/-0 chars]  astro/src/components/ChatWidget.astro 
+  [+4/-2 lines] [+76/-0 chars]  astro/src/components/Header.astro 
+  [+5/-2 lines] [+30/-0 chars]  astro/src/components/MobileMenu.astro 
+  [+2/-2 lines] [+124/-0 chars]  astro/src/content/blog/how-to-hide-tv-cables-in-the-wall.md 
+  [+1/-1 lines] [+121/-0 chars]  astro/src/content/blog/mounting-big-tv-on-brick.md 
+  [+2/-2 lines] [+120/-0 chars]  astro/src/content/blog/sample-custom-magazine-post.md 
+  [+1/-1 lines] [+54/-0 chars]  astro/src/content/blog/tv-mounting-paddington-brisbane.md 
+  [+1/-1 lines] [+121/-0 chars]  astro/src/content/locations/new-farm.md 
+  [+1/-1 lines] [+131/-0 chars]  astro/src/content/mounts/sanus-vmpl50a-b1.md 
+  [+2/-2 lines] [+192/-0 chars]  astro/src/content/products/samsung-s95d-65-oled.md 
+  [+1/-1 lines] [+122/-0 chars]  astro/src/content/services/tv-wall-mounting.md 
+  [+41/-36 lines] [+70/-0 chars]  astro/src/layouts/BaseLayout.astro 
+  [+45/-0 lines] [+755/-0 chars]  astro/src/layouts/CustomBlogPost.astro 
+  [+1/-1 lines] [+0/-0 chars]  astro/src/layouts/LocationPage.astro 
+  [+161/-0 lines] [+1388/-0 chars]  astro/src/layouts/MarketingLayout.astro 
+  [+1/-1 lines] [+0/-0 chars]  astro/src/layouts/MountPage.astro 
+  [+1/-1 lines] [+0/-0 chars]  astro/src/layouts/ProductPage.astro 
+  [+1/-1 lines] [+0/-0 chars]  astro/src/layouts/ServicePage.astro 
+  [+10/-9 lines] [+229/-0 chars]  astro/src/pages/blog/index.astro 
+  [+12/-11 lines] [+354/-0 chars]  astro/src/pages/locations/index.astro 
+  [+12/-11 lines] [+369/-0 chars]  astro/src/pages/mounts/index.astro 
+  [+1/-1 lines] [+82/-0 chars]  astro/src/pages/pricing.astro 
+  [+12/-11 lines] [+377/-0 chars]  astro/src/pages/products/index.astro 
+  [+1/-1 lines] [+116/-0 chars]  astro/src/pages/quote.astro 
+  [+12/-11 lines] [+337/-0 chars]  astro/src/pages/services/index.astro 
+ 

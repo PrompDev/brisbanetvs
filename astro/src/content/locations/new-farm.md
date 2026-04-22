@@ -1,7 +1,7 @@
 ---
 title: "TV Installation in New Farm, Brisbane: Local Installers, Same-Week Bookings"
 description: "New Farm queenslanders, Teneriffe warehouse conversions, riverside apartments — we install TVs across 4169 every week. Flat-rate pricing, fully insured, locally based."
-heroImage: "/media/mounting-big-tv-on-brick-hero.jpg"
+heroImage: "https://cdn.brisbanetvs.com/install-new-farm1200x1200.webp"
 heroAlt: "A Brisbane TVs installer mounting a 75-inch TV on the exposed-brick feature wall of a New Farm converted warehouse apartment"
 publishDate: 2026-04-19T09:00:00.000+10:00
 updatedDate: 2026-04-19T09:00:00.000+10:00

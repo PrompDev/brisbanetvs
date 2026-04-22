@@ -1,7 +1,7 @@
 ---
 title: "Mounting a Big TV on Brick: What Brisbane Installers Do That DIYers Don't"
 description: "Brisbane's solid-brick walls crack mortar when you pick the wrong anchor. Here are the three steps our installers follow on every 75-inch brick job — and where we walk away."
-heroImage: "/media/mounting-big-tv-on-brick-hero.jpg"
+heroImage: "https://cdn.brisbanetvs.com/Brick%20Wall%20Mount1200x1200.webp"
 heroAlt: "A 75-inch TV mounted flush on a whitewashed brick feature wall in a Brisbane lounge, no visible cables"
 publishDate: 2026-04-19T09:00:00.000+10:00
 updatedDate: 2026-04-19T09:00:00.000+10:00

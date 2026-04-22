@@ -1,5 +1,5 @@
 ---
-import BaseLayout from "~/layouts/BaseLayout.astro";
+import MarketingLayout from "~/layouts/MarketingLayout.astro";
 import { getCollection } from "astro:content";
 
 /**
@@ -64,18 +64,19 @@ const collectionLd = {
   })),
 };
 ---
-<BaseLayout
-  title="TV Wall Mounts & Brackets — Brisbane Installer Picks"
-  description="Wall mounts and brackets our Brisbane installers trust. Full-motion, tilt, fixed, ceiling, outdoor — VESA-matched to your TV, weight-rated, warrantied."
+<MarketingLayout
+  title="TV Wall Mounts & Brackets — Installer-Approved Picks | Brisbane TVs"
+  description="Full-motion, tilt, fixed, ceiling and outdoor brackets the Brisbane TVs crew actually installs. VESA-matched, weight-rated up to 98″, 5-year warranty."
   canonical={pageUrl}
+  ogImage="https://cdn.brisbanetvs.com/85_%20Samsung%20Cinema%20Setup1200x1200.webp"
+  keywords="TV wall mount Brisbane, full motion TV bracket, tilt mount Brisbane, ceiling TV mount, outdoor TV bracket, 85 inch TV mount, VESA 600x400 mount"
+  jsonLd={[breadcrumbLd, collectionLd]}
+  bodyClass="page-mounts-index"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
-  <script type="application/ld+json" set:html={JSON.stringify(collectionLd)} />
-
   <section class="idx-banner">
     <img
       class="idx-banner-img"
-      src="/media/mount-sanus-vmpl50a-b1-hero.jpg"
+      src="https://cdn.brisbanetvs.com/85_%20Samsung%20Cinema%20Setup1200x1200.webp"
       alt=""
       aria-hidden="true"
     />
@@ -129,8 +130,8 @@ const collectionLd = {
       <div class="idx-split-img-wrap">
         <img
           class="idx-split-img"
-          src="/media/mount-sanus-vmpl50a-b1-hero.jpg"
-          alt="A full-motion wall mount extended from a living room wall with a 65-inch TV attached"
+          src="https://cdn.brisbanetvs.com/Tilt%20Mount%20Bedroom1200x1200.webp"
+          alt="A tilt-mount bracket holding a TV high on a bedroom wall, angled down toward the bed"
           loading="eager"
         />
       </div>
@@ -248,4 +249,4 @@ const collectionLd = {
       <a class="idx-btn idx-btn-primary" href="tel:0432145101">Get a supply-and-fit quote</a>
     </aside>
   </article>
-</BaseLayout>
+</MarketingLayout>

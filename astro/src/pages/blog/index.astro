@@ -1,5 +1,5 @@
 ---
-import BaseLayout from "~/layouts/BaseLayout.astro";
+import MarketingLayout from "~/layouts/MarketingLayout.astro";
 import { getCollection } from "astro:content";
 
 /**
@@ -48,21 +48,22 @@ const blogLd = {
   })),
 };
 ---
-<BaseLayout
-  title="Blog — Brisbane TV Installation Journal"
-  description="Brisbane TVs installation guides, service tips, and suburb-by-suburb advice from our field installers."
+<MarketingLayout
+  title="Brisbane TV Installation Blog — Guides, Tips & Suburb Know-How | Brisbane TVs"
+  description="Install guides, wall-type tips, and suburb-by-suburb advice from Brisbane's highest-rated TV mounting crew. Written by installers, for homeowners."
   canonical={pageUrl}
+  ogImage="https://cdn.brisbanetvs.com/install-hamilton1200x1200.webp"
+  keywords="TV mounting blog Brisbane, TV installation guide, Brisbane TV mounting tips, cable concealment guide, wall-mount buying guide"
+  jsonLd={[breadcrumbLd, blogLd]}
+  bodyClass="page-blog-index"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
-  <script type="application/ld+json" set:html={JSON.stringify(blogLd)} />
-
   {/* Full-bleed banner — "Blog" title over a cinematic image so the
       visitor immediately knows which section they've landed in. Same
       100vw escape trick as LocationPage. */}
   <section class="blog-banner">
     <img
       class="blog-banner-img"
-      src={featured ? featured.data.heroImage : "/media/1280px-al_khazneh.jpg"}
+      src="https://cdn.brisbanetvs.com/install-hamilton1200x1200.webp"
       alt=""
       aria-hidden="true"
     />
@@ -195,7 +196,7 @@ const blogLd = {
       <p class="blog-empty">No posts yet — check back soon.</p>
     )}
   </article>
-</BaseLayout>
+</MarketingLayout>
 
 <style is:global>
   /* ========== Banner ========== */

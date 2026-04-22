@@ -1,8 +1,8 @@
 ---
 title: "How to Hide TV Cables Inside the Wall: A Brisbane Homeowner's Guide"
 description: "A clean install hides every cable. Here's exactly how Brisbane TVs runs HDMI, power, and data behind plasterboard — without risking your warranty or tripping your smoke alarm."
-heroImage: "https://cdn.brisbanetvs.com/TV%20Flush%20Mount%20Living%20Room2-800x800.webp"
-heroAlt: "Mounted TV with every cable hidden behind the wall in a Brisbane living room"
+heroImage: "https://cdn.brisbanetvs.com/Cable%20Concealment1200x1200.webp"
+heroAlt: "Brisbane cable-concealment install — HDMI and power routed cleanly behind plasterboard beneath a wall-mounted TV"
 publishDate: 2026-02-14
 updatedDate: 2026-04-10
 author: "Brisbane TVs Team"

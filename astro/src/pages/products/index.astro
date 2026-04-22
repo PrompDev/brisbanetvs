@@ -1,5 +1,5 @@
 ---
-import BaseLayout from "~/layouts/BaseLayout.astro";
+import MarketingLayout from "~/layouts/MarketingLayout.astro";
 import { getCollection } from "astro:content";
 
 /**
@@ -71,18 +71,19 @@ const collectionLd = {
   })),
 };
 ---
-<BaseLayout
-  title="TVs & AV Gear — Brisbane Installer Picks"
-  description="TVs, soundbars, and AV gear our Brisbane installers recommend after mounting them into real houses. Full specs, current pricing, install-ready."
+<MarketingLayout
+  title="Brisbane Installer-Picked TVs, Soundbars & AV Gear — Current Pricing | Brisbane TVs"
+  description="The exact TVs, soundbars and AV gear our Brisbane installers fit every week — Samsung, LG, Sony, Sonos. Full specs, live pricing, install-ready pairings."
   canonical={pageUrl}
+  ogImage="https://cdn.brisbanetvs.com/TV%20Flush%20Mount%20Living%20Room2-1200x1200.webp"
+  keywords="best TVs Brisbane, Samsung S95 Brisbane, LG OLED installer Brisbane, soundbar install Brisbane, AV gear Brisbane, TV bundle Brisbane"
+  jsonLd={[breadcrumbLd, collectionLd]}
+  bodyClass="page-products-index"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
-  <script type="application/ld+json" set:html={JSON.stringify(collectionLd)} />
-
   <section class="idx-banner">
     <img
       class="idx-banner-img"
-      src="/media/product-samsung-s95d-65-hero.jpg"
+      src="https://cdn.brisbanetvs.com/TV%20Flush%20Mount%20Living%20Room2-1200x1200.webp"
       alt=""
       aria-hidden="true"
     />
@@ -136,8 +137,8 @@ const collectionLd = {
       <div class="idx-split-img-wrap">
         <img
           class="idx-split-img"
-          src="/media/product-samsung-s95d-65-hero.jpg"
-          alt="A Samsung QD-OLED TV mounted in a contemporary Brisbane living room, showing vibrant colour on a sunset scene"
+          src="https://cdn.brisbanetvs.com/outside-alfresco1200x1200.webp"
+          alt="A weatherproof outdoor TV mounted under a Brisbane alfresco pergola, with the pool and sunset in the background"
           loading="eager"
         />
       </div>
@@ -255,7 +256,7 @@ const collectionLd = {
       <a class="idx-btn idx-btn-primary" href="tel:0432145101">Bundle it with an install</a>
     </aside>
   </article>
-</BaseLayout>
+</MarketingLayout>
 
 <style is:global>
   /* Product-specific additions on top of the shared .idx-* styles.

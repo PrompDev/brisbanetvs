@@ -1,8 +1,8 @@
 ---
 title: "Inside a 98-Inch Samsung Install in New Farm"
 description: "A behind-the-scenes look at how we stud-anchored a 65kg, 98-inch Samsung QLED over a floating media console in a New Farm penthouse — without a single visible cable."
-heroImage: "https://cdn.brisbanetvs.com/85_%20Samsung%20Cinema%20Setup800x800.webp"
-heroAlt: "98-inch Samsung QLED wall mounted over a floating media console in a Brisbane penthouse"
+heroImage: "https://cdn.brisbanetvs.com/install-bulimba1200x1200.webp"
+heroAlt: "98-inch Samsung QLED wall mounted over a floating media console in a Brisbane penthouse, no visible cables"
 publishDate: 2026-04-18
 updatedDate: 2026-04-18
 author: "Tom Reilly"

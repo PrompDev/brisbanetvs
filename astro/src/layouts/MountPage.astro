@@ -179,7 +179,7 @@ const bannerLabel = `${frontmatter.brand} ${frontmatter.model}`;
   {/* Full-bleed banner — brand + model overlay. Same chrome as the other
       detail-page layouts (Locations / Services / Products). */}
   <section class="mnt-banner">
-    <img class="mnt-banner-img" src="/media/1280px-al_khazneh.jpg" alt="" aria-hidden="true" />
+    <img class="mnt-banner-img" src={frontmatter.heroImage} alt="" aria-hidden="true" />
     <div class="mnt-banner-inner">
       <p class="mnt-banner-title">{bannerLabel}</p>
     </div>

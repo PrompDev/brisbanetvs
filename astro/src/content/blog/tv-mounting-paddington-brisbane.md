@@ -1,7 +1,7 @@
 ---
 title: "TV Mounting in Paddington: A Field Guide to Heritage Queenslanders"
 description: "Paddington's classic Queenslanders bring their own challenges — timber studs, lath-and-plaster walls, and narrow hallways. Here's exactly what we look for, what it costs, and what usually goes wrong."
-heroImage: "https://cdn.brisbanetvs.com/install-newstead800x800.webp"
+heroImage: "https://cdn.brisbanetvs.com/install-paddington.webp"
 heroAlt: "TV mounted above a fireplace in a Paddington Queenslander, with restored VJ panelling visible"
 publishDate: 2026-03-02
 updatedDate: 2026-04-02
