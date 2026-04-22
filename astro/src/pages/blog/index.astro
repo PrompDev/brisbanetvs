@@ -437,11 +437,10 @@ const blogLd = {
      it becomes static (stacked below the main column). */
   .blog-sidebar { display: flex; flex-direction: column; gap: 1.25rem; }
   @media (min-width: 961px) {
-    .blog-sidebar { position: sticky; top: 6rem; align-self: start; max-height: calc(100vh - 7rem); overflow-y: auto; padding-right: 4px; }
-    /* Hide the scrollbar on the sidebar (still scrollable) so the card
-       edges stay clean on tall sidebar content. */
-    .blog-sidebar::-webkit-scrollbar { width: 6px; }
-    .blog-sidebar::-webkit-scrollbar-thumb { background: #d7dbe2; border-radius: 3px; }
+    /* Sidebar is sticky but does NOT get its own scroll container — we want
+       only the page-level scrollbar. Letting the sidebar scroll internally
+       caused a second scrollbar to appear inside the newsletter card. */
+    .blog-sidebar { position: sticky; top: 6rem; align-self: start; }
   }
 
   /* Base card — the common wrapper for newsletter / popular / topics. */
