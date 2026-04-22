@@ -299,14 +299,13 @@
            inside.
            ================================================================ */
 
-        /* Give the first section of a subpage visible breathing room below
-           the opaque header, so the banner doesn't collide with the nav. */
+        /* Subpage main area: banner sits flush under the opaque header
+           on every back page. An earlier revision added 20/28px of
+           breathing room, but that read as an unwanted white strip
+           between the header and the hero image, so it's been removed. */
         body.page-subpage .page-main {
-            padding-top: 20px;
+            padding-top: 0;
             background: #fff;
-        }
-        @media (min-width: 1024px) {
-            body.page-subpage .page-main { padding-top: 28px; }
         }
 
         /* Force every known banner class on a subpage to be genuinely

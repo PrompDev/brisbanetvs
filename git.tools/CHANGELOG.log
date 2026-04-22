@@ -410,3 +410,12 @@
   [+4/-1 lines] [+72/-0 chars]  astro/src/layouts/ProductPage.astro 
   [+3/-1 lines] [+110/-0 chars]  astro/src/pages/quote.astro 
  
+---------------------------------------- 
+[2026-04-22 20:47] 3 file(s) | commit: 6fa668b 
+---------------------------------------- 
+  Summary:  3 files changed, 21 insertions(+), 22 deletions(-) 
+ 
+  [+8/-8 lines] [+67/-0 chars]  6 
+  [+8/-8 lines] [+67/-0 chars]  7 
+  [+5/-6 lines] [+45/-0 chars]  astro/public/css/marketing.css 
+ 
