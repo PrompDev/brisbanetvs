@@ -1,5 +1,14 @@
 ---
 import BaseLayout from "~/layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+/**
+ * Only render mount cross-links that have real collection entries behind
+ * them, so the "Recommended mounts" list never 404s.
+ */
+const __existingMounts = new Set(
+  (await getCollection("mounts", ({ data }) => !data.draft)).map((e) => e.slug),
+);
 
 /**
  * ProductPage — TV / AV product detail page for the `products` collection.
@@ -55,6 +64,8 @@ interface Props {
 const { frontmatter } = Astro.props;
 const pageUrl = new URL(Astro.url.pathname, Astro.site).toString();
 const businessUrl = new URL("/", Astro.site).toString();
+
+const filteredRecommendedMounts = frontmatter.recommendedMounts.filter((m) => __existingMounts.has(m));
 
 // Build specs table + additionalProperty JSON-LD in one pass so the
 // visible table and structured data never drift apart.
@@ -199,7 +210,7 @@ const bannerLabel = `${frontmatter.brand} ${frontmatter.model}`;
                   Check latest price
                 </a>
               ) : (
-                <a class="prod-btn prod-btn-primary" href="/contact/">Enquire now</a>
+                <a class="prod-btn prod-btn-primary" href="tel:0432145101">Enquire now</a>
               )}
               <a class="prod-btn prod-btn-ghost" href="/services/tv-wall-mounting/">Get it installed</a>
             </div>
@@ -258,11 +269,11 @@ const bannerLabel = `${frontmatter.brand} ${frontmatter.model}`;
           <slot />
         </section>
 
-        {frontmatter.recommendedMounts.length > 0 && (
+        {filteredRecommendedMounts.length > 0 && (
           <section class="prod-mounts" aria-labelledby="prod-mounts-h">
             <h2 id="prod-mounts-h">Recommended wall mounts for this TV</h2>
             <ul class="prod-mount-grid">
-              {frontmatter.recommendedMounts.map((m) => (
+              {filteredRecommendedMounts.map((m) => (
                 <li>
                   <a class="prod-mount-card" href={`/mounts/${m}/`}>
                     <span>{m.replace(/-/g, " ")}</span>
@@ -287,7 +298,7 @@ const bannerLabel = `${frontmatter.brand} ${frontmatter.model}`;
               <li><span class="prod-book-k">Screen</span><span>{frontmatter.screenSizeInches}"</span></li>
             )}
           </ul>
-          <a class="prod-book-btn" href="/contact/">Request a quote →</a>
+          <a class="prod-book-btn" href="tel:0432145101">Request a quote →</a>
           <a class="prod-book-link" href="tel:+61700000000">or call our dispatch line</a>
         </div>
       </aside>
@@ -298,7 +309,7 @@ const bannerLabel = `${frontmatter.brand} ${frontmatter.model}`;
         <h2>Ready to install?</h2>
         <p>We can deliver, wall-mount and configure this TV anywhere in Brisbane.</p>
       </div>
-      <a class="prod-btn prod-btn-primary" href="/contact/">Book installation</a>
+      <a class="prod-btn prod-btn-primary" href="tel:0432145101">Book installation</a>
     </aside>
   </article>
 </BaseLayout>

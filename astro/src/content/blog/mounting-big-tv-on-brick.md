@@ -40,7 +40,7 @@ Before we pick a fastener, we work out what the wall actually *is*. In Brisbane 
 
 **Single-skin brick veneer.** Very common on 1970s–1990s homes across the south side. It *looks* like a double-brick wall from the outside; inside, it's a single skin of brick tied to a timber stud frame. Drilling into the brick alone here is a trap — the fixing has to reach the timber stud behind.
 
-**Rendered cement block.** More common in unit complexes and newer builds through South Brisbane, West End, and [Fortitude Valley](/locations/fortitude-valley/). Hollow-core blocks behave differently to solid brick and need their own anchors.
+**Rendered cement block.** More common in unit complexes and newer builds through South Brisbane, West End, and [Fortitude Valley](/locations/). Hollow-core blocks behave differently to solid brick and need their own anchors.
 
 Each wall type takes a different fastening strategy. For double-brick we use a chemical anchor — an epoxy-resin capsule that bonds a threaded rod into the brick itself, rated up to about 200kg pull-out on a single fixing. For single-skin veneer we go *through* the brick into the timber stud behind, using a long lag bolt with a nylon sleeve at the brick face so the stud does the load-bearing work, not the skin. For rendered block we use specific cavity-fix anchors with a wide collar that can't crush into the hollow core.
 
@@ -62,7 +62,7 @@ We walk every brick customer through all three before we quote. Pretending there
 
 ## What we charge, and what we won't do
 
-Brick adds roughly 30–50% to a standard TV wall-mount price at Brisbane TVs. Full pricing is on the [TV wall-mounting service page](/services/tv-wall-mounting/) and the [cable-concealment service page](/services/cable-concealment/), but the short version is:
+Brick adds roughly 30–50% to a standard TV wall-mount price at Brisbane TVs. Full pricing is on the [TV wall-mounting service page](/services/tv-wall-mounting/) and the [cable-concealment service page](/services/), but the short version is:
 
 - Simple brick mount, no cable concealment — from **$249**
 - Brick mount with surface-conduit cable run — from **$349**
@@ -83,7 +83,7 @@ We also won't bury a power lead inside a chased channel unless a licensed electr
 Usually yes, if the paint is acrylic and has been on for more than a year. We tape, drill through the tape, and pull it away with the dust. Chalky or limewash finishes are harder, and we'll flag the risk on site before we drill so there are no surprises.
 
 **What about a 100kg outdoor TV on an exterior brick wall?**  
-We do these, mostly around the river in [Bulimba](/locations/bulimba/) and [New Farm](/locations/new-farm/). Chemical anchors only, and we want to see the wall first — exterior walls carry weather loading as well as the TV weight, and the bracket specification shifts with the TV size.
+We do these, mostly around the river in [Bulimba](/locations/) and [New Farm](/locations/new-farm/). Chemical anchors only, and we want to see the wall first — exterior walls carry weather loading as well as the TV weight, and the bracket specification shifts with the TV size.
 
 **Do you do brick jobs same-day?**  
 Not usually. Brick jobs get a site visit first if anything about the wall is uncertain — it saves both of us turning up on the day and discovering a hollow block or a heritage mortar line. For straightforward double-brick we can normally book same-week.
@@ -96,7 +96,7 @@ Not if we spec them right. We use stainless or galvanised rod on any wall within
 
 ## Want a quote on your wall?
 
-Send us a photo of the wall, the TV model, and a rough ceiling height — we'll come back with a firm price within one business day. [Book a free site check](/book/) or call us on [07 3186 8644](tel:+61731868644). We cover the inner north, the inner east, and the bayside five days a week, and a senior installer handles every brick job personally.
+Send us a photo of the wall, the TV model, and a rough ceiling height — we'll come back with a firm price within one business day. [Book a free site check](tel:0432145101) or call us on [07 3186 8644](tel:+61731868644). We cover the inner north, the inner east, and the bayside five days a week, and a senior installer handles every brick job personally.
 
 ---
 

@@ -1,5 +1,14 @@
 ---
 import BaseLayout from "~/layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+/**
+ * Only render TV cross-links whose slugs have actual product-collection
+ * entries — stops the "Compatible TVs" list from 404-ing.
+ */
+const __existingProducts = new Set(
+  (await getCollection("products", ({ data }) => !data.draft)).map((e) => e.slug),
+);
 
 /**
  * MountPage — TV wall-mount detail page for the `mounts` collection.
@@ -61,6 +70,8 @@ interface Props {
 const { frontmatter } = Astro.props;
 const pageUrl = new URL(Astro.url.pathname, Astro.site).toString();
 const businessUrl = new URL("/", Astro.site).toString();
+
+const filteredCompatibleTvs = frontmatter.compatibleTvs.filter((t) => __existingProducts.has(t));
 
 type Spec = { name: string; value: string };
 const compat: Spec[] = [];
@@ -218,7 +229,7 @@ const bannerLabel = `${frontmatter.brand} ${frontmatter.model}`;
                   Check latest price
                 </a>
               ) : (
-                <a class="mnt-btn mnt-btn-primary" href="/contact/">Enquire now</a>
+                <a class="mnt-btn mnt-btn-primary" href="tel:0432145101">Enquire now</a>
               )}
               <a class="mnt-btn mnt-btn-ghost" href="/services/tv-wall-mounting/">Get it installed</a>
             </div>
@@ -288,11 +299,11 @@ const bannerLabel = `${frontmatter.brand} ${frontmatter.model}`;
           <slot />
         </section>
 
-        {frontmatter.compatibleTvs.length > 0 && (
+        {filteredCompatibleTvs.length > 0 && (
           <section class="mnt-tvs" aria-labelledby="mnt-tvs-h">
             <h2 id="mnt-tvs-h">Compatible TVs in our catalogue</h2>
             <ul class="mnt-tv-grid">
-              {frontmatter.compatibleTvs.map((t) => (
+              {filteredCompatibleTvs.map((t) => (
                 <li>
                   <a class="mnt-tv-card" href={`/products/${t}/`}>
                     <span>{t.replace(/-/g, " ")}</span>
@@ -316,7 +327,7 @@ const bannerLabel = `${frontmatter.brand} ${frontmatter.model}`;
             <li><span class="mnt-book-k">Fits</span><span>{frontmatter.minScreenInches}"–{frontmatter.maxScreenInches}"</span></li>
             <li><span class="mnt-book-k">Max weight</span><span>{frontmatter.maxWeightKg} kg</span></li>
           </ul>
-          <a class="mnt-book-btn" href="/contact/">Request a quote →</a>
+          <a class="mnt-book-btn" href="tel:0432145101">Request a quote →</a>
           <a class="mnt-book-link" href="tel:+61700000000">or call our dispatch line</a>
         </div>
       </aside>
@@ -327,7 +338,7 @@ const bannerLabel = `${frontmatter.brand} ${frontmatter.model}`;
         <h2>Not sure if it fits?</h2>
         <p>Send us your TV model and we'll confirm compatibility + install it for you.</p>
       </div>
-      <a class="mnt-btn mnt-btn-primary" href="/contact/">Ask an installer</a>
+      <a class="mnt-btn mnt-btn-primary" href="tel:0432145101">Ask an installer</a>
     </aside>
   </article>
 </BaseLayout>

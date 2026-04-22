@@ -1,41 +1,65 @@
 ---
-// Mobile slide-in drawer + backdrop. Opens when the hamburger inside <Header /> is clicked.
+/**
+ * Mobile slide-in drawer + backdrop. Opens when the hamburger inside <Header />
+ * is clicked. All top-level items + sub-links are wired to real Astro routes,
+ * and the 4 content silos (Services / Locations / Products / Mounts) are
+ * mirrored from the desktop mega-menu so mobile users can reach any hub.
+ */
 ---
 <div class="mobile-menu-backdrop" id="mobileBackdrop" aria-hidden="true"></div>
 
 <!-- Mobile Menu -->
 <div class="mobile-menu" id="mobileMenu" aria-hidden="true" role="dialog" aria-label="Main navigation">
     <button class="mobile-menu-close" id="mobileMenuClose" aria-label="Close menu">&times;</button>
-    <a href="#">Services</a>
+    <a href="/services/">Services</a>
     <div class="mobile-sub">
-        <a href="#">TV Wall Mounting</a>
-        <a href="#">Cable Concealment</a>
-        <a href="#">Soundbar Installation</a>
-        <a href="#">Starlink Installation</a>
-        <a href="#">Outdoor TV Installation</a>
-        <a href="#">Home Theatre Setup</a>
-        <a href="#">TV Antenna Installation</a>
+        <a href="/services/">TV Wall Mounting</a>
+        <a href="/services/">Cable Concealment</a>
+        <a href="/services/">Soundbar Installation</a>
+        <a href="/services/">Starlink Installation</a>
+        <a href="/services/">Outdoor TV Installation</a>
+        <a href="/services/">Home Theatre Setup</a>
+        <a href="/services/">TV Antenna Installation</a>
     </div>
-    <a href="#">Locations</a>
+    <a href="/locations/">Locations</a>
     <div class="mobile-sub">
-        <a href="#">Brisbane</a>
-        <a href="#">Moreton Bay</a>
-        <a href="#">Gold Coast</a>
-        <a href="#">Sunshine Coast</a>
-        <a href="#">Logan</a>
-        <a href="#">Ipswich</a>
+        <a href="/locations/">Brisbane CBD</a>
+        <a href="/locations/">North Brisbane</a>
+        <a href="/locations/">South Brisbane</a>
+        <a href="/locations/">Inner Brisbane</a>
+        <a href="/locations/">Moreton Bay</a>
+        <a href="/locations/">Redland City</a>
     </div>
-    <a href="#">Pricing</a>
-    <a href="#">Gallery</a>
-    <a href="#">Blog</a>
-    <a href="../about.html">About</a>
+    <a href="/products/">Products</a>
+    <div class="mobile-sub">
+        <a href="/products/">TVs &amp; Displays</a>
+        <a href="/products/">Soundbars</a>
+        <a href="/products/">HDMI Cables</a>
+        <a href="/products/">Cable Kits</a>
+        <a href="/products/">Accessories</a>
+    </div>
+    <a href="/mounts/">Mounts</a>
+    <div class="mobile-sub">
+        <a href="/mounts/">Full-Motion</a>
+        <a href="/mounts/">Tilt Mounts</a>
+        <a href="/mounts/">Fixed Mounts</a>
+        <a href="/mounts/">Ceiling Mounts</a>
+        <a href="/mounts/">Outdoor Mounts</a>
+    </div>
+    <a href="/pricing/">Pricing</a>
+    <div class="mobile-sub">
+        <a href="/pricing/#pr-pkg-h">All 5 Packages</a>
+        <a href="/pricing/#quick-quote">Instant Quote</a>
+        <a href="/quote/">Photo Quote</a>
+    </div>
+    <a href="/blog/">Blog</a>
 
     <div class="mobile-menu-cta">
-        <a href="tel:1300312271" class="mobile-menu-call" aria-label="Call Brisbane TVs">
+        <a href="tel:0432145101" class="mobile-menu-call" aria-label="Call Brisbane TVs">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
             Call
         </a>
-        <a href="../book.html" class="mobile-menu-book">Book Now</a>
+        <a href="/quote/" class="mobile-menu-book">Get a Quote</a>
     </div>
 
     <div class="mobile-menu-footer">
@@ -58,11 +82,11 @@
         <ul class="mobile-menu-contact">
             <li>
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                <a href="tel:1300312271">1300 312 271</a>
+                <a href="tel:0432145101">0432 145 101</a>
             </li>
             <li>
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                <a href="mailto:hello@brisbanetvs.com">hello@brisbanetvs.com</a>
+                <a href="mailto:admin@brisbanetvs.com">admin@brisbanetvs.com</a>
             </li>
             <li>
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>

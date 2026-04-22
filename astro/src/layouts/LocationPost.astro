@@ -32,6 +32,6 @@ const published = new Date(frontmatter.publishDate).toLocaleDateString("en-AU", 
     </header>
     <slot />
     <hr />
-    <p><a class="btn" href="/contact/">Get a quote in {frontmatter.suburb ?? "your suburb"}</a></p>
+    <p><a class="btn" href="tel:0432145101">Get a quote in {frontmatter.suburb ?? "your suburb"}</a></p>
   </article>
 </BaseLayout>

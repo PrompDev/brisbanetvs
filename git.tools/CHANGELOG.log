@@ -192,3 +192,100 @@
   [+5672/-0 lines] [+0/-0 chars]  v3/blank 
   [+141/-143 lines] [+6860/-0 chars]  v3/index.html 
  
+---------------------------------------- 
+[2026-04-20 00:09] 294 file(s) | commit: 401c6c1 
+---------------------------------------- 
+  Summary:  294 files changed, 34507 insertions(+), 30667 deletions(-) 
+ 
+  [+0/-68 lines] [+0/-0 chars]  6 
+  [+0/-68 lines] [+0/-0 chars]  7 
+  [+0/-0 lines] [+0/-0 chars]  Or 
+  [+0/-95 lines] [+0/-0 chars]  README.md 
+  [binary]  SEO-Optimization-Report.docx 
+  [+0/-269 lines] [+0/-0 chars]  about.html 
+  [+0/-470 lines] [+0/-0 chars]  albany-creek.html 
+  [+0/-470 lines] [+0/-0 chars]  arana-hills.html 
+  [+0/-470 lines] [+0/-0 chars]  ascot.html 
+  [+0/-470 lines] [+0/-0 chars]  ashgrove.html 
+  [+0/-384 lines] [+0/-0 chars]  aspley.html 
+  [+0/-24 lines] [+0/-0 chars]  astro-site/.gitignore 
+  [+0/-46 lines] [+0/-0 chars]  astro-site/README.md 
+  [+0/-5 lines] [+0/-0 chars]  astro-site/astro.config.mjs 
+  [+0/-17 lines] [+0/-0 chars]  astro-site/package.json 
+  [binary]  astro-site/public/favicon.ico 
+  [+0/-9 lines] [+0/-0 chars]  astro-site/public/favicon.svg 
+  [+0/-1 lines] [+0/-0 chars]  astro-site/src/assets/astro.svg 
+  [+0/-1 lines] [+0/-0 chars]  astro-site/src/assets/background.svg 
+  [+0/-210 lines] [+0/-0 chars]  astro-site/src/components/Welcome.astro 
+  [+0/-23 lines] [+0/-0 chars]  astro-site/src/layouts/Layout.astro 
+  [+0/-11 lines] [+0/-0 chars]  astro-site/src/pages/index.astro 
+  [+0/-5 lines] [+0/-0 chars]  astro-site/tsconfig.json 
+  [+18/-0 lines] [+0/-0 chars]  astro/.gitignore 
+  [+143/-0 lines] [+541/-0 chars]  astro/README.md 
+  [+11/-0 lines] [+54/-0 chars]  astro/astro.config.mjs 
+  [+18/-0 lines] [+94/-0 chars]  astro/package.json 
+  [+88/-0 lines] [+1040/-0 chars]  astro/public/admin/config.yml 
+  [binary]  astro/public/media/1280px-al_khazneh.jpg 
+  [binary]  astro/public/media/full_cycle_of_a_sunset_on_the_high_plains_of_the_mojave_desert.jpg 
+  [binary]  astro/public/media/how-diogenes-of-sinope-laid-the-philosophical-foundation-for-stoic-thought_1200x.webp 
+  [binary]  astro/public/media/mounting-big-tv-on-brick-hero.jpg 
+  [binary]  astro/public/media/mounting-big-tv-on-brick-inline-1.webp 
+  [binary]  astro/public/media/mounting-big-tv-on-brick-inline-2.webp 
+  [binary]  astro/public/media/mounting-big-tv-on-brick-inline-3.jpg 
+  [+361/-0 lines] [+1227/-0 chars]  astro/public/templates/blog-post-template.md 
+  [+107/-0 lines] [+575/-0 chars]  astro/public/templates/layout-template.astro 
+  [+86/-0 lines] [+846/-0 chars]  astro/public/templates/location-page-template.md 
+  [+89/-0 lines] [+963/-0 chars]  astro/public/templates/mount-page-template.md 
+  [+87/-0 lines] [+843/-0 chars]  astro/public/templates/product-page-template.md 
+  [+96/-0 lines] [+771/-0 chars]  astro/public/templates/service-page-template.md 
+  [+8/-0 lines] [+0/-0 chars]  astro/src/components/ChatWidget.astro 
+  [+99/-0 lines] [+411/-0 chars]  astro/src/components/CollectionScaffold.astro 
+  [+104/-0 lines] [+90/-0 chars]  astro/src/components/Footer.astro 
+  [+390/-0 lines] [+531/-0 chars]  astro/src/components/Header.astro 
+  [+158/-0 lines] [+616/-0 chars]  astro/src/components/MobileMenu.astro 
+  [+77/-0 lines] [+446/-0 chars]  astro/src/content/blog/how-to-hide-tv-cables-in-the-wall.md 
+  [+108/-0 lines] [+824/-0 chars]  astro/src/content/blog/mounting-big-tv-on-brick.md 
+  [+68/-0 lines] [+265/-0 chars]  astro/src/content/blog/sample-custom-magazine-post.md 
+  [+13/-0 lines] [+220/-0 chars]  astro/src/content/blog/test121212.md 
+  [+13/-0 lines] [+326/-0 chars]  astro/src/content/blog/testtest.md 
+  [+79/-0 lines] [+298/-0 chars]  astro/src/content/blog/tv-mounting-paddington-brisbane.md 
+  [+198/-0 lines] [+3566/-0 chars]  astro/src/content/config.ts 
+  [+83/-0 lines] [+255/-0 chars]  astro/src/content/locations/new-farm.md 
+  [+79/-0 lines] [+587/-0 chars]  astro/src/content/mounts/sanus-vmpl50a-b1.md 
+  [+70/-0 lines] [+479/-0 chars]  astro/src/content/products/samsung-s95d-65-oled.md 
+  [+96/-0 lines] [+178/-0 chars]  astro/src/content/services/tv-wall-mounting.md 
+  [+1/-0 lines] [+0/-0 chars]  astro/src/env.d.ts 
+  [+396/-0 lines] [+3852/-0 chars]  astro/src/layouts/AdminShell.astro 
+  [+46/-0 lines] [+307/-0 chars]  astro/src/layouts/BaseLayout.astro 
+  [+1175/-0 lines] [+6913/-0 chars]  astro/src/layouts/CustomBlogPost.astro 
+---------------------------------------- 
+[2026-04-22 15:16] 25 file(s) | commit: e851b01 
+---------------------------------------- 
+  Summary:  25 files changed, 2340 insertions(+), 221 deletions(-) 
+ 
+  [+68/-0 lines] [+2673/-0 chars]  6 
+  [+68/-0 lines] [+2673/-0 chars]  7 
+  [+0/-0 lines] [+0/-0 chars]  Or 
+  [+8/-3 lines] [+69/-0 chars]  astro/astro.config.mjs 
+  [+108/-0 lines] [+299/-0 chars]  astro/scripts/audit-links.mjs 
+  [+69/-39 lines] [+368/-0 chars]  astro/src/components/Footer.astro 
+  [+142/-105 lines] [+89/-0 chars]  astro/src/components/Header.astro 
+  [+48/-24 lines] [+76/-0 chars]  astro/src/components/MobileMenu.astro 
+  [+4/-4 lines] [+343/-0 chars]  astro/src/content/blog/mounting-big-tv-on-brick.md 
+  [+154/-0 lines] [+975/-0 chars]  astro/src/data/business.ts 
+  [+3/-3 lines] [+105/-0 chars]  astro/src/layouts/CustomBlogPost.astro 
+  [+23/-7 lines] [+121/-0 chars]  astro/src/layouts/LocationPage.astro 
+  [+1/-1 lines] [+0/-0 chars]  astro/src/layouts/LocationPost.astro 
+  [+16/-5 lines] [+89/-0 chars]  astro/src/layouts/MountPage.astro 
+  [+16/-5 lines] [+89/-0 chars]  astro/src/layouts/ProductPage.astro 
+  [+1/-1 lines] [+37/-0 chars]  astro/src/layouts/ServiceGuide.astro 
+  [+24/-8 lines] [+120/-0 chars]  astro/src/layouts/ServicePage.astro 
+  [+4/-4 lines] [+135/-0 chars]  astro/src/pages/locations/index.astro 
+  [+4/-4 lines] [+143/-0 chars]  astro/src/pages/mounts/index.astro 
+  [+757/-0 lines] [+5106/-0 chars]  astro/src/pages/pricing.astro 
+  [+4/-4 lines] [+140/-0 chars]  astro/src/pages/products/index.astro 
+  [+543/-0 lines] [+5129/-0 chars]  astro/src/pages/quote.astro 
+  [+4/-4 lines] [+104/-0 chars]  astro/src/pages/services/index.astro 
+  [+205/-0 lines] [+1092/-0 chars]  documentation/07-n8n-automations.md 
+  [+66/-0 lines] [+95/-0 chars]  git.tools/CHANGELOG.log 
+ 

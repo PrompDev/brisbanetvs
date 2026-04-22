@@ -1,5 +1,17 @@
 ---
 import BaseLayout from "~/layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+/**
+ * Only link to nearby suburbs and services that actually exist as collection
+ * entries — otherwise cross-links 404. Build lookup sets once per render.
+ */
+const __existingLocations = new Set(
+  (await getCollection("locations", ({ data }) => !data.draft)).map((e) => e.slug),
+);
+const __existingServices = new Set(
+  (await getCollection("services", ({ data }) => !data.draft)).map((e) => e.slug),
+);
 
 /**
  * LocationPage — suburb-level landing page for the `locations` collection.
@@ -43,6 +55,10 @@ const { frontmatter } = Astro.props;
 const pageUrl = new URL(Astro.url.pathname, Astro.site).toString();
 const businessUrl = new URL("/", Astro.site).toString();
 const businessName = "Brisbane TVs";
+
+// Filter related lists to only include entries that have real pages built.
+const filteredNearbySuburbs = frontmatter.nearbySuburbs.filter((s) => __existingLocations.has(s));
+const filteredServicesOffered = frontmatter.servicesOffered.filter((s) => __existingServices.has(s));
 
 /**
  * Turn a service slug (e.g. "tv-wall-mounting") into a readable label
@@ -186,16 +202,16 @@ const faqLd =
             )}
           </div>
           <div class="loc-cta-row">
-            <a class="loc-btn loc-btn-primary" href="/contact/">Book in {frontmatter.suburb}</a>
+            <a class="loc-btn loc-btn-primary" href="tel:0432145101">Book in {frontmatter.suburb}</a>
             <a class="loc-btn loc-btn-ghost" href="/services/">See all services</a>
           </div>
         </header>
 
-        {frontmatter.servicesOffered.length > 0 && (
+        {filteredServicesOffered.length > 0 && (
           <section class="loc-services" aria-labelledby="loc-services-h">
             <h2 id="loc-services-h">Services we cover in {frontmatter.suburb}</h2>
             <ul class="loc-service-grid">
-              {frontmatter.servicesOffered.map((s) => (
+              {filteredServicesOffered.map((s) => (
                 <li>
                   <a class="loc-service-card" href={`/services/${s}/`}>
                     <span class="loc-service-name">{formatServiceLabel(s)}</span>
@@ -259,11 +275,11 @@ const faqLd =
           </section>
         )}
 
-        {frontmatter.nearbySuburbs.length > 0 && (
+        {filteredNearbySuburbs.length > 0 && (
           <section class="loc-nearby" aria-labelledby="loc-nearby-h">
             <h2 id="loc-nearby-h">Nearby suburbs we also cover</h2>
             <ul class="loc-nearby-list">
-              {frontmatter.nearbySuburbs.map((n) => (
+              {filteredNearbySuburbs.map((n) => (
                 <li><a href={`/locations/${n}/`}>{n.replace(/-/g, " ")}</a></li>
               ))}
             </ul>
@@ -281,7 +297,7 @@ const faqLd =
             <li><span class="loc-book-k">Postcode</span><span>{frontmatter.postcode ?? "—"}</span></li>
             <li><span class="loc-book-k">Jobs done</span><span>{typeof frontmatter.jobCount === "number" ? `${frontmatter.jobCount}+` : "—"}</span></li>
           </ul>
-          <a class="loc-book-btn" href="/contact/">Book in {frontmatter.suburb} →</a>
+          <a class="loc-book-btn" href="tel:0432145101">Book in {frontmatter.suburb} →</a>
           <a class="loc-book-link" href="tel:+61000000000">or call our dispatch line</a>
         </div>
       </aside>
@@ -292,7 +308,7 @@ const faqLd =
         <h2>Book a {frontmatter.suburb} installer</h2>
         <p>Same-week bookings across {frontmatter.region ?? "Brisbane"}. Upfront pricing, guaranteed work.</p>
       </div>
-      <a class="loc-btn loc-btn-primary" href="/contact/">Get a free quote</a>
+      <a class="loc-btn loc-btn-primary" href="tel:0432145101">Get a free quote</a>
     </aside>
   </article>
 </BaseLayout>

@@ -1,5 +1,17 @@
 ---
 import BaseLayout from "~/layouts/BaseLayout.astro";
+import { getCollection } from "astro:content";
+
+/**
+ * Only link to related services / locations that actually exist as
+ * collection entries — otherwise cross-links 404. Build lookup sets once.
+ */
+const __existingServices = new Set(
+  (await getCollection("services", ({ data }) => !data.draft)).map((e) => e.slug),
+);
+const __existingLocations = new Set(
+  (await getCollection("locations", ({ data }) => !data.draft)).map((e) => e.slug),
+);
 
 /**
  * ServicePage — dedicated layout for entries in the `services` collection.
@@ -51,6 +63,10 @@ const { frontmatter, slug } = Astro.props;
 const pageUrl = new URL(Astro.url.pathname, Astro.site).toString();
 const businessName = "Brisbane TVs";
 const businessUrl = new URL("/", Astro.site).toString();
+
+// Filter related cross-links to only include entries that have real pages.
+const filteredRelatedServices = frontmatter.relatedServices.filter((s) => __existingServices.has(s));
+const filteredRelatedLocations = frontmatter.relatedLocations.filter((l) => __existingLocations.has(l));
 
 /**
  * Slug → readable label, preserving acronyms so CSS capitalize rules
@@ -188,7 +204,7 @@ const faqLd =
             {frontmatter.duration && <span class="svc-duration">{frontmatter.duration}</span>}
           </div>
           <div class="svc-cta-row">
-            <a class="svc-btn svc-btn-primary" href="/contact/">Book this service</a>
+            <a class="svc-btn svc-btn-primary" href="tel:0432145101">Book this service</a>
             <a class="svc-btn svc-btn-ghost" href="tel:+61700000000">Call for a quote</a>
           </div>
         </header>
@@ -258,25 +274,25 @@ const faqLd =
           </section>
         )}
 
-        {(frontmatter.relatedServices.length > 0 || frontmatter.relatedLocations.length > 0) && (
+        {(filteredRelatedServices.length > 0 || filteredRelatedLocations.length > 0) && (
           <section class="svc-related" aria-labelledby="svc-related-h">
             <h2 id="svc-related-h">Related on Brisbane TVs</h2>
             <div class="svc-related-grid">
-              {frontmatter.relatedServices.length > 0 && (
+              {filteredRelatedServices.length > 0 && (
                 <div>
                   <h3>Other services</h3>
                   <ul>
-                    {frontmatter.relatedServices.map((s) => (
+                    {filteredRelatedServices.map((s) => (
                       <li><a href={`/services/${s}/`}>{s.replace(/-/g, " ")}</a></li>
                     ))}
                   </ul>
                 </div>
               )}
-              {frontmatter.relatedLocations.length > 0 && (
+              {filteredRelatedLocations.length > 0 && (
                 <div>
                   <h3>Popular suburbs</h3>
                   <ul>
-                    {frontmatter.relatedLocations.map((l) => (
+                    {filteredRelatedLocations.map((l) => (
                       <li><a href={`/locations/${l}/`}>{l.replace(/-/g, " ")}</a></li>
                     ))}
                   </ul>
@@ -297,7 +313,7 @@ const faqLd =
             <li><span class="svc-book-k">Duration</span><span>{frontmatter.duration ?? "—"}</span></li>
             <li><span class="svc-book-k">Coverage</span><span>{frontmatter.serviceArea.length > 0 ? `${frontmatter.serviceArea.length}+ suburbs` : "Brisbane-wide"}</span></li>
           </ul>
-          <a class="svc-book-btn" href="/contact/">Book this service →</a>
+          <a class="svc-book-btn" href="tel:0432145101">Book this service →</a>
           <a class="svc-book-link" href="tel:+61700000000">or call our dispatch line</a>
         </div>
       </aside>
@@ -308,7 +324,7 @@ const faqLd =
         <h2>Ready to book?</h2>
         <p>Same-week installs across Brisbane. Flat-rate quotes, no surprises.</p>
       </div>
-      <a class="svc-btn svc-btn-primary" href="/contact/">Get a free quote</a>
+      <a class="svc-btn svc-btn-primary" href="tel:0432145101">Get a free quote</a>
     </aside>
   </article>
 </BaseLayout>

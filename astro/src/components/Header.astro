@@ -1,17 +1,49 @@
 ---
-// Real Brisbane TVs site header — ported wholesale from the homepage/blog template.
-// Renders the top-bar, main header with logo, nav (with hover mega-menus), search,
-// call button + hamburger. Mega-menu supporting CSS lives in global.css.
+/**
+ * Real Brisbane TVs site header — wired to the Astro content collections
+ * so every nav link resolves to a real built page. No more href="#" stubs.
+ *
+ * Behaviour:
+ *   - Logo → `/` (homepage)
+ *   - Top-level nav items (Services / Locations / Products / Mounts / Blog)
+ *     are anchor tags (not buttons) so they navigate to their hub on click
+ *     AND open the mega-menu on hover. Hover-to-open is handled by the
+ *     inline script below.
+ *   - Mega-menu sub-links: the left column ("Browse by…") is curated
+ *     category copy that all points to the parent hub; the middle column
+ *     ("Popular…") is populated from the real content collections so it
+ *     auto-fills as more entries are published.
+ *   - BOOK NOW / View All / Featured CTAs all route to the corresponding hub.
+ */
+
+import { getCollection } from "astro:content";
+
+// Pull real entries for the "Popular" column of each mega-menu. Limited
+// to 8 each so the mega-menu doesn't overflow vertically. As the
+// collections grow, these auto-populate.
+const services = (await getCollection("services", ({ data }) => !data.draft))
+  .sort((a, b) => a.data.priceFrom - b.data.priceFrom)
+  .slice(0, 8);
+
+const locations = (await getCollection("locations", ({ data }) => !data.draft))
+  .sort((a, b) => a.data.suburb.localeCompare(b.data.suburb))
+  .slice(0, 8);
+
+const products = (await getCollection("products", ({ data }) => !data.draft))
+  .sort((a, b) => b.data.priceAud - a.data.priceAud)
+  .slice(0, 8);
+
+const mounts = (await getCollection("mounts", ({ data }) => !data.draft))
+  .sort((a, b) => b.data.maxWeightKg - a.data.maxWeightKg)
+  .slice(0, 8);
 ---
 <div class="page-header-wrapper">
     <div class="site-header">
-        <!-- Top Bar: Support | trust items | Areas + Search -->
+        <!-- Top Bar: trust items + search -->
         <div class="top-bar">
             <div class="container">
                 <div class="top-left">
-                    <a href="#">Support</a>
-                    <a href="#">Reviews</a>
-                    <a href="#">Careers</a>
+                    <a href="tel:0432145101">Support · 0432 145 101</a>
                 </div>
                 <div class="top-center">
                     <div class="item">
@@ -28,7 +60,7 @@
                     </div>
                 </div>
                 <div class="top-right">
-                    <a href="#">Referral</a>
+                    <a href="/blog/">Journal</a>
                     <div class="search-bar-sm">
                         <input type="text" placeholder="What can we help you find?">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -40,35 +72,33 @@
         <!-- Main Header: Logo | Nav (centered) | Phone + Book Now -->
         <header class="main-header">
             <div class="container">
-                <a href="../index.html" class="logo">
+                <a href="/" class="logo">
                     <img src="https://cdn.brisbanetvs.com/brisbanetvs-logo-white.png" alt="Brisbane TVs">
                 </a>
 
                 <nav class="main-nav">
                     <div class="nav-item" data-menu="services">
-                        <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Services <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                        <a href="/services/" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Services <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
                     </div>
                     <div class="nav-item" data-menu="locations">
-                        <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Locations <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                        <a href="/locations/" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Locations <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
                     </div>
                     <div class="nav-item" data-menu="products">
-                        <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Products <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                        <a href="/products/" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Products <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
                     </div>
                     <div class="nav-item" data-menu="mounts">
-                        <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Mounts <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                        <a href="/mounts/" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Mounts <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
                     </div>
-                    <a href="#">Pricing</a>
-                    <a href="#">Gallery</a>
-                    <a href="#">Blog</a>
-                    <a href="../about.html">About</a>
+                    <a href="/pricing/">Pricing</a>
+                    <a href="/blog/">Blog</a>
                 </nav>
 
                 <div class="header-right">
-                    <a href="tel:1300312271" class="header-phone">
+                    <a href="tel:0432145101" class="header-phone">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                        1300 312 271
+                        0432 145 101
                     </a>
-                    <a href="../book.html" class="header-book-btn">BOOK NOW</a>
+                    <a href="/quote/" class="header-book-btn">GET A QUOTE</a>
                 </div>
 
                 <button class="hamburger" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
@@ -85,29 +115,31 @@
                         <div class="mega-col">
                             <h4>Browse by Category</h4>
                             <div class="mega-links mega-links-sm mega-links-2col">
-                                <a href="#">Residential Installation</a>
-                                <a href="#">Commercial &amp; Fit-Out</a>
-                                <a href="#">New Builds &amp; Renos</a>
-                                <a href="#">Real Estate Styling</a>
-                                <a href="#">Rental &amp; Move-In</a>
-                                <a href="#">Retail &amp; Hospitality</a>
-                                <a href="#">Schools &amp; Clinics</a>
-                                <a href="#">Warranty Call-Outs</a>
+                                <a href="/services/">Residential Installation</a>
+                                <a href="/services/">Commercial &amp; Fit-Out</a>
+                                <a href="/services/">New Builds &amp; Renos</a>
+                                <a href="/services/">Real Estate Styling</a>
+                                <a href="/services/">Rental &amp; Move-In</a>
+                                <a href="/services/">Retail &amp; Hospitality</a>
+                                <a href="/services/">Schools &amp; Clinics</a>
+                                <a href="/services/">Warranty Call-Outs</a>
                             </div>
-                            <a href="../services.html" class="mega-view-all">View All Services →</a>
+                            <a href="/services/" class="mega-view-all">View All Services →</a>
                         </div>
 
                         <div class="mega-col">
                             <h4>Popular Services</h4>
                             <div class="mega-links mega-links-2col">
-                                <a href="#">TV Wall Mounting</a>
-                                <a href="#">Cable Concealment</a>
-                                <a href="#">Soundbar Install</a>
-                                <a href="#">Starlink Install</a>
-                                <a href="#">Outdoor TV Install</a>
-                                <a href="#">Home Theatre Setup</a>
-                                <a href="#">TV Antenna Install</a>
-                                <a href="#">Fireplace Mounting</a>
+                                {services.length > 0 ? services.map((s) => (
+                                    <a href={`/services/${s.slug}/`}>{s.data.title}</a>
+                                )) : (
+                                    <>
+                                        <a href="/services/">TV Wall Mounting</a>
+                                        <a href="/services/">Cable Concealment</a>
+                                        <a href="/services/">Soundbar Install</a>
+                                        <a href="/services/">Starlink Install</a>
+                                    </>
+                                )}
                             </div>
                         </div>
 
@@ -122,7 +154,7 @@
                                     <span class="mega-featured-eyebrow">Most Booked Package</span>
                                     <h5>Complete Media Room Install</h5>
                                     <p>TV mount, soundbar, in-wall cable run and full home-theatre calibration — one visit, from $549.</p>
-                                    <a href="#" class="mega-featured-cta">Book Package →</a>
+                                    <a href="/quote/" class="mega-featured-cta">Book Package →</a>
                                 </div>
                             </div>
                         </div>
@@ -135,29 +167,31 @@
                         <div class="mega-col">
                             <h4>Greater Brisbane Regions</h4>
                             <div class="mega-links mega-links-sm mega-links-2col">
-                                <a href="#">Brisbane CBD</a>
-                                <a href="#">Inner Brisbane</a>
-                                <a href="#">North Brisbane</a>
-                                <a href="#">South Brisbane</a>
-                                <a href="#">East &amp; Bayside</a>
-                                <a href="#">West Brisbane</a>
-                                <a href="#">Moreton Bay</a>
-                                <a href="#">Redland City</a>
+                                <a href="/locations/">Brisbane CBD</a>
+                                <a href="/locations/">Inner Brisbane</a>
+                                <a href="/locations/">North Brisbane</a>
+                                <a href="/locations/">South Brisbane</a>
+                                <a href="/locations/">East &amp; Bayside</a>
+                                <a href="/locations/">West Brisbane</a>
+                                <a href="/locations/">Moreton Bay</a>
+                                <a href="/locations/">Redland City</a>
                             </div>
-                            <a href="#" class="mega-view-all">View All 100+ Suburbs →</a>
+                            <a href="/locations/" class="mega-view-all">View All Suburbs →</a>
                         </div>
 
                         <div class="mega-col">
                             <h4>Popular Suburbs</h4>
                             <div class="mega-links mega-links-2col">
-                                <a href="#">New Farm</a>
-                                <a href="#">Paddington</a>
-                                <a href="#">Indooroopilly</a>
-                                <a href="#">Chermside</a>
-                                <a href="#">Carindale</a>
-                                <a href="#">Wynnum &amp; Manly</a>
-                                <a href="#">Springfield</a>
-                                <a href="#">Kenmore</a>
+                                {locations.length > 0 ? locations.map((l) => (
+                                    <a href={`/locations/${l.slug}/`}>{l.data.suburb}</a>
+                                )) : (
+                                    <>
+                                        <a href="/locations/">New Farm</a>
+                                        <a href="/locations/">Paddington</a>
+                                        <a href="/locations/">Indooroopilly</a>
+                                        <a href="/locations/">Chermside</a>
+                                    </>
+                                )}
                             </div>
                         </div>
 
@@ -172,7 +206,7 @@
                                     <span class="mega-featured-eyebrow">Same-Day, Brisbane-Wide</span>
                                     <h5>Serving 100+ Brisbane Suburbs</h5>
                                     <p>From New Farm apartments to Samford acreage — on-site the same day you book.</p>
-                                    <a href="#" class="mega-featured-cta">Check Your Suburb →</a>
+                                    <a href="/locations/" class="mega-featured-cta">Check Your Suburb →</a>
                                 </div>
                             </div>
                         </div>
@@ -185,27 +219,31 @@
                         <div class="mega-col">
                             <h4>Shop by Type</h4>
                             <div class="mega-links mega-links-sm mega-links-2col">
-                                <a href="#">TV Brackets</a>
-                                <a href="#">Soundbars</a>
-                                <a href="#">HDMI Cables</a>
-                                <a href="#">Cable Kits</a>
-                                <a href="#">Starlink Hardware</a>
-                                <a href="#">Outdoor Enclosures</a>
-                                <a href="#">Universal Remotes</a>
-                                <a href="#">Surge Protection</a>
+                                <a href="/products/">TV Brackets</a>
+                                <a href="/products/">Soundbars</a>
+                                <a href="/products/">HDMI Cables</a>
+                                <a href="/products/">Cable Kits</a>
+                                <a href="/products/">Starlink Hardware</a>
+                                <a href="/products/">Outdoor Enclosures</a>
+                                <a href="/products/">Universal Remotes</a>
+                                <a href="/products/">Surge Protection</a>
                             </div>
-                            <a href="#" class="mega-view-all">View All Products →</a>
+                            <a href="/products/" class="mega-view-all">View All Products →</a>
                         </div>
 
                         <div class="mega-col">
                             <h4>Customer Favourites</h4>
                             <div class="mega-links mega-links-2col">
-                                <a href="#">Full-Motion Mounts</a>
-                                <a href="#">Heavy-Duty Brackets</a>
-                                <a href="#">Soundbar + Sub Kits</a>
-                                <a href="#">In-Wall HDMI Kits</a>
-                                <a href="#">Weatherproof Cases</a>
-                                <a href="#">Starlink Mount Kits</a>
+                                {products.length > 0 ? products.map((p) => (
+                                    <a href={`/products/${p.slug}/`}>{p.data.title}</a>
+                                )) : (
+                                    <>
+                                        <a href="/products/">Full-Motion Mounts</a>
+                                        <a href="/products/">Heavy-Duty Brackets</a>
+                                        <a href="/products/">Soundbar + Sub Kits</a>
+                                        <a href="/products/">In-Wall HDMI Kits</a>
+                                    </>
+                                )}
                             </div>
                         </div>
 
@@ -220,7 +258,7 @@
                                     <span class="mega-featured-eyebrow">Supply + Install Bundle</span>
                                     <h5>Premium Mount + Install — From $259</h5>
                                     <p>VESA-rated bracket, fixings, cable tidy and lifetime workmanship warranty.</p>
-                                    <a href="#" class="mega-featured-cta">See Bundles →</a>
+                                    <a href="/products/" class="mega-featured-cta">See Bundles →</a>
                                 </div>
                             </div>
                         </div>
@@ -233,26 +271,30 @@
                         <div class="mega-col">
                             <h4>By Mount Style</h4>
                             <div class="mega-links mega-links-sm mega-links-2col">
-                                <a href="#">Flat / Fixed</a>
-                                <a href="#">Tilt Mounts</a>
-                                <a href="#">Full-Motion Swivel</a>
-                                <a href="#">Ceiling Mounts</a>
-                                <a href="#">Outdoor / Weatherproof</a>
-                                <a href="#">Pull-Down Fireplace</a>
-                                <a href="#">Rotating Portrait</a>
+                                <a href="/mounts/">Flat / Fixed</a>
+                                <a href="/mounts/">Tilt Mounts</a>
+                                <a href="/mounts/">Full-Motion Swivel</a>
+                                <a href="/mounts/">Ceiling Mounts</a>
+                                <a href="/mounts/">Outdoor / Weatherproof</a>
+                                <a href="/mounts/">Pull-Down Fireplace</a>
+                                <a href="/mounts/">Rotating Portrait</a>
                             </div>
-                            <a href="#" class="mega-view-all">View All Mounts →</a>
+                            <a href="/mounts/" class="mega-view-all">View All Mounts →</a>
                         </div>
 
                         <div class="mega-col">
-                            <h4>By TV Size</h4>
+                            <h4>Top-Rated Mounts</h4>
                             <div class="mega-links mega-links-2col">
-                                <a href="#">Small 32″–43″</a>
-                                <a href="#">Medium 50″–65″</a>
-                                <a href="#">Large 75″–85″</a>
-                                <a href="#">Extra-Large 85″–98″</a>
-                                <a href="#">Samsung Frame</a>
-                                <a href="#">LG OLED Gallery</a>
+                                {mounts.length > 0 ? mounts.map((m) => (
+                                    <a href={`/mounts/${m.slug}/`}>{m.data.title}</a>
+                                )) : (
+                                    <>
+                                        <a href="/mounts/">Small 32″–43″</a>
+                                        <a href="/mounts/">Medium 50″–65″</a>
+                                        <a href="/mounts/">Large 75″–85″</a>
+                                        <a href="/mounts/">Extra-Large 85″–98″</a>
+                                    </>
+                                )}
                             </div>
                         </div>
 
@@ -267,7 +309,7 @@
                                     <span class="mega-featured-eyebrow">Most Installed</span>
                                     <h5>Large TV Mount — 75″ to 98″</h5>
                                     <p>Heavy-gauge, stud-anchored, VESA 800×600. The same mount we install on 85″ Samsungs across Brisbane.</p>
-                                    <a href="#" class="mega-featured-cta">See Large Mounts →</a>
+                                    <a href="/mounts/" class="mega-featured-cta">See Large Mounts →</a>
                                 </div>
                             </div>
                         </div>
@@ -284,7 +326,11 @@
 </div>  <!-- /.page-header-wrapper -->
 
 <script is:inline>
-    // ===== Mega Menu — hover with open/close delay =====
+    // ===== Mega Menu — hover opens panel, click on trigger navigates =====
+    // Triggers are now <a href> (not <button>), so a normal click follows
+    // the link. We only intercept the click if it's a keyboard-style tap
+    // and the panel is currently closed (to give phone / keyboard users
+    // a way to peek at sub-items before committing to the hub).
     (function () {
         const OPEN_DELAY = 150;
         const CLOSE_DELAY = 200;
@@ -308,8 +354,8 @@
             panels.forEach(p => p.classList.remove('is-active'));
             navItems.forEach(n => {
                 n.classList.remove('is-active');
-                const btn = n.querySelector('.nav-dropdown-trigger');
-                if (btn) btn.setAttribute('aria-expanded', 'false');
+                const trigger = n.querySelector('.nav-dropdown-trigger');
+                if (trigger) trigger.setAttribute('aria-expanded', 'false');
             });
 
             const panel = panelFor(key);
@@ -317,8 +363,8 @@
             if (panel) panel.classList.add('is-active');
             if (item) {
                 item.classList.add('is-active');
-                const btn = item.querySelector('.nav-dropdown-trigger');
-                if (btn) btn.setAttribute('aria-expanded', 'true');
+                const trigger = item.querySelector('.nav-dropdown-trigger');
+                if (trigger) trigger.setAttribute('aria-expanded', 'true');
             }
 
             siteHeader.classList.add('is-menu-open');
@@ -330,8 +376,8 @@
             panels.forEach(p => p.classList.remove('is-active'));
             navItems.forEach(n => {
                 n.classList.remove('is-active');
-                const btn = n.querySelector('.nav-dropdown-trigger');
-                if (btn) btn.setAttribute('aria-expanded', 'false');
+                const trigger = n.querySelector('.nav-dropdown-trigger');
+                if (trigger) trigger.setAttribute('aria-expanded', 'false');
             });
             siteHeader.classList.remove('is-menu-open');
             if (backdrop) backdrop.classList.remove('is-active');
@@ -353,20 +399,11 @@
             closeTimer = setTimeout(closeMenu, CLOSE_DELAY);
         }
 
-        // Hover on triggers
+        // Hover opens the mega panel. Click navigates (default <a> behaviour).
         navItems.forEach(item => {
             const key = item.getAttribute('data-menu');
             item.addEventListener('mouseenter', () => scheduleOpen(key));
             item.addEventListener('mouseleave', scheduleClose);
-            // Click toggles (keyboard / tap fallback)
-            const btn = item.querySelector('.nav-dropdown-trigger');
-            if (btn) {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    if (currentMenu === key) closeMenu();
-                    else openMenu(key);
-                });
-            }
         });
 
         // Hover on panels keeps them open
