@@ -258,12 +258,9 @@ const collectionLd = {
   </article>
 </MarketingLayout>
 
-<style is:global>
-  /* Product-specific additions on top of the shared .idx-* styles.
-     The save-badge sits over the top-left corner of the card image
-     (mirrors how the detail page surfaces discount pricing). */
-  .idx-card-badge { position: absolute; top: 0.75rem; left: 0.75rem; z-index: 1; background: #c5332e; color: #fff; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; padding: 0.3rem 0.55rem; border-radius: 4px; text-transform: uppercase; }
-  /* Star rating pill in the card footer. Kept subtle so it doesn't
-     compete with the price, which is the primary comparison signal. */
-  .idx-card-rating { font-size: 0.85rem; color: #131619; font-weight: 600; padding: 0.15rem 0.45rem; background: #fafbfc; border: 1px solid #eef0f3; border-radius: 4px; align-self: flex-end; }
-</style>
+<!--
+  All .idx-* styles (including .idx-card-badge / .idx-card-rating) now
+  live in /public/css/marketing.css — loaded by MarketingLayout on every
+  hub page so the chrome stays consistent across services / locations /
+  products / mounts.
+-->

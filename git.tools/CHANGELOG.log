@@ -387,3 +387,15 @@
   [+8/-8 lines] [+67/-0 chars]  6 
   [+8/-8 lines] [+67/-0 chars]  7 
  
+---------------------------------------- 
+[2026-04-22 19:45] 6 file(s) | commit: 5b14037 
+---------------------------------------- 
+  Summary:  6 files changed, 154 insertions(+), 145 deletions(-) 
+ 
+  [+8/-8 lines] [+67/-0 chars]  6 
+  [+8/-8 lines] [+67/-0 chars]  7 
+  [+126/-0 lines] [+6338/-0 chars]  astro/public/css/marketing.css 
+  [+6/-9 lines] [+0/-0 chars]  astro/src/pages/locations/index.astro 
+  [+6/-9 lines] [+0/-0 chars]  astro/src/pages/products/index.astro 
+  [+0/-111 lines] [+0/-0 chars]  astro/src/pages/services/index.astro 
+ 
