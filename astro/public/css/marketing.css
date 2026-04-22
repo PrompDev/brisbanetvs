@@ -288,6 +288,70 @@
         body.page-subpage .site-header.is-menu-open .main-header { border-bottom-color: transparent; }
         body.page-subpage .site-header.is-menu-open .top-bar { border-bottom-color: transparent; }
 
+        /* ================================================================
+           SUBPAGE — HEADER-TO-BANNER GAP + GUARANTEED FULL-BLEED BANNER
+           ----------------------------------------------------------------
+           Every back-page banner (`.idx-banner` on hub index pages,
+           `.pr-banner` on pricing, `.lp-banner` on locations detail, etc.)
+           has to span the full viewport width and sit visually separate
+           from the white header above it. These rules enforce both,
+           regardless of whatever container the banner happens to render
+           inside.
+           ================================================================ */
+
+        /* Give the first section of a subpage visible breathing room below
+           the opaque header, so the banner doesn't collide with the nav. */
+        body.page-subpage .page-main {
+            padding-top: 20px;
+            background: #fff;
+        }
+        @media (min-width: 1024px) {
+            body.page-subpage .page-main { padding-top: 28px; }
+        }
+
+        /* Force every known banner class on a subpage to be genuinely
+           full-viewport-width with the -50vw escape trick — wins over any
+           per-page rule that may have been scoped too tightly, and gives
+           each banner a minimum height so the image always has a box to
+           cover even if a parent swallows the height. */
+        body.page-subpage .idx-banner,
+        body.page-subpage .pr-banner,
+        body.page-subpage .loc-banner,
+        body.page-subpage .svc-banner,
+        body.page-subpage .prod-banner,
+        body.page-subpage .mnt-banner,
+        body.page-subpage [data-subpage-banner] {
+            position: relative !important;
+            width: 100vw !important;
+            max-width: 100vw !important;
+            margin-left: calc(50% - 50vw) !important;
+            margin-right: calc(50% - 50vw) !important;
+            height: clamp(240px, 32vh, 420px) !important;
+            overflow: hidden !important;
+            background: #131619;
+            display: block;
+        }
+
+        /* The image inside a banner must always cover the full banner box —
+           no intrinsic-size half-width rendering. Target the first <img>
+           child so per-page class names don't matter. */
+        body.page-subpage .idx-banner > img,
+        body.page-subpage .pr-banner > img,
+        body.page-subpage .loc-banner > img,
+        body.page-subpage .svc-banner > img,
+        body.page-subpage .prod-banner > img,
+        body.page-subpage .mnt-banner > img,
+        body.page-subpage [data-subpage-banner] > img {
+            position: absolute !important;
+            inset: 0 !important;
+            display: block !important;
+            width: 100% !important;
+            height: 100% !important;
+            max-width: none !important;
+            object-fit: cover !important;
+            object-position: center !important;
+        }
+
         /* Mega Menu Panels (full-width, below main-header) */
         .mega-panels {
             position: absolute;

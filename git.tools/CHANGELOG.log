@@ -370,3 +370,12 @@
   [+8/-1 lines] [+64/-0 chars]  astro/src/layouts/MarketingLayout.astro 
   [+408/-610 lines] [+2243/-0 chars]  astro/src/pages/pricing.astro 
  
+---------------------------------------- 
+[2026-04-22 18:52] 3 file(s) | commit: 2354ae8 
+---------------------------------------- 
+  Summary:  3 files changed, 78 insertions(+), 14 deletions(-) 
+ 
+  [+7/-7 lines] [+2/-0 chars]  6 
+  [+7/-7 lines] [+2/-0 chars]  7 
+  [+64/-0 lines] [+340/-0 chars]  astro/public/css/marketing.css 
+ 
