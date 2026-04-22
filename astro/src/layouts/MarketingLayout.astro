@@ -107,6 +107,13 @@ const localBusiness = {
 };
 
 const extraJsonLd = Array.isArray(jsonLd) ? jsonLd : (jsonLd ? [jsonLd] : []);
+
+// Every MarketingLayout-wrapped page is a "back page" (not the homepage —
+// the homepage is the static /index.html). We always stamp `page-subpage`
+// onto the body so marketing.css can flip the header out of its transparent-
+// over-hero state and into an opaque white chrome. The per-page bodyClass
+// still gets carried through for page-specific scoping hooks.
+const finalBodyClass = ["page-subpage", bodyClass].filter(Boolean).join(" ");
 ---
 <!DOCTYPE html>
 <html lang="en-AU">
@@ -149,7 +156,7 @@ const extraJsonLd = Array.isArray(jsonLd) ? jsonLd : (jsonLd ? [jsonLd] : []);
       <script type="application/ld+json" set:html={JSON.stringify(entry)}></script>
     ))}
   </head>
-  <body class={bodyClass}>
+  <body class={finalBodyClass}>
     <Header />
     <main class="page-main" role="main">
       <slot />

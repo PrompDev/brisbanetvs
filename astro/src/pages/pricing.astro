@@ -1,21 +1,20 @@
 ---
-import BaseLayout from "~/layouts/BaseLayout.astro";
+import MarketingLayout from "~/layouts/MarketingLayout.astro";
 import { BUSINESS, PACKAGES } from "~/data/business";
 
 /**
  * /pricing/ — public pricing page.
  *
- * Two jobs on one page:
- *   1. Surface Tom's 5 canonical packages (Basic / Living Room / XL
- *      Living Room / Cinema / XL Cinema) with honest "from" prices so
- *      visitors self-qualify before calling.
- *   2. Instant quote calculator: visitor enters TV size + wall type +
- *      suburb → page computes a package + tentative total. Form is
- *      n8n-ready — the submit handler POSTs to BUSINESS.webhooks.quickQuote
- *      so the owner gets an email/SMS lead the moment someone submits.
+ * Rewritten 2026-04-22 to mirror the homepage's `.pricing-section`
+ * treatment so the chrome feels continuous: same beige canvas, same
+ * interactive calculator, same dark featured card, same serif-headline
+ * grid of cards. Data source is `data/business.ts` — Tom's 5 canonical
+ * packages (Basic / Living Room / XL Living Room / Cinema / XL Cinema).
  *
- * The final card on the package grid is "Not sure? Submit a photo" —
- * anchors to /quote/ which is the deeper form with image upload.
+ * Two jobs on one page:
+ *   1. Show Tom's packages with honest "from" prices.
+ *   2. Instant quote calculator: TV size + wall type → matched package +
+ *      tentative total, POST'd to BUSINESS.webhooks.quickQuote.
  */
 
 const pageUrl = new URL("/pricing/", Astro.site).toString();
@@ -47,711 +46,510 @@ const offersLd = PACKAGES.filter((p) => p.priceAud !== null).map((p) => ({
     unitText: "inch TV",
   },
 }));
+
+// Mark the middle tier ("Living Room" / 60–70") as the featured card —
+// it's the size bucket Tom books the most of.
+const FEATURED_ID = "living-room";
 ---
-<BaseLayout
-  title="TV Mounting Prices — Brisbane TVs"
+<MarketingLayout
+  title="TV Mounting Prices Brisbane — Flat-Rate Install Packages | Brisbane TVs"
   description="Flat-rate TV mounting packages across Brisbane. From $289 for small TVs through to custom-quoted oversize cinema installs. Instant quote + same-day booking."
   canonical={pageUrl}
+  ogImage="https://cdn.brisbanetvs.com/install-ashgrove1200x1200.webp"
+  keywords="TV mounting Brisbane prices, flat-rate TV install Brisbane, TV mount packages Brisbane, instant TV install quote Brisbane"
+  jsonLd={[breadcrumbLd, ...offersLd]}
+  bodyClass="page-pricing"
 >
-  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
-  {offersLd.map((ld) => (
-    <script type="application/ld+json" set:html={JSON.stringify(ld)} />
-  ))}
-
+  {/* ===== BANNER ===== */}
   <section class="pr-banner">
-    <img class="pr-banner-img" src="https://cdn.brisbanetvs.com/install-ashgrove1200x1200.webp" alt="" aria-hidden="true" />
+    <img
+      class="pr-banner-img"
+      src="https://cdn.brisbanetvs.com/install-ashgrove1200x1200.webp"
+      alt=""
+      aria-hidden="true"
+    />
     <div class="pr-banner-inner">
       <p class="pr-banner-title">Pricing</p>
     </div>
   </section>
 
-  <article class="pr">
-    <div class="pr-hero">
-      <nav class="pr-crumbs" aria-label="Breadcrumb">
-        <a href="/">Home</a>
-        <span aria-hidden="true">›</span>
-        <span class="pr-crumbs-current">Pricing</span>
-      </nav>
-      <p class="pr-eyebrow">Brisbane TVs · Flat-rate installs</p>
-      <h1>Honest, flat-rate TV mounting prices.</h1>
-      <p class="pr-lede">
-        Five packages — sized by the TV, not by the hour. Pick the one that matches
-        your screen or use the instant quote below. Every price is a locked-in flat
-        rate: no call-out fees, no hourly clocks, no post-install surprise invoices.
-      </p>
-      <div class="pr-hero-cta-row">
-        <a class="pr-btn pr-btn-primary" href="#quick-quote">Get an instant quote</a>
-        <a class="pr-btn pr-btn-ghost" href={BUSINESS.phoneTel}>Call {BUSINESS.phoneDisplay}</a>
+  {/* ===== PRICING SECTION — homepage style ===== */}
+  <section class="pricing-section" id="pricing">
+    <div class="pricing-inner">
+      <div class="pricing-header">
+        <span class="pricing-eyebrow">Flat-Rate Pricing</span>
+        <h1 class="pricing-title">TV Wall Mounting Prices Brisbane</h1>
+        <p class="pricing-sub">
+          Honest, flat-rate packages — sized by the TV, not by the hour.
+          GST included, no call-out fees, every job backed by our lifetime
+          workmanship guarantee. Use the instant calculator below or pick
+          the package that matches your screen.
+        </p>
       </div>
-    </div>
 
-    <hr class="pr-divider" />
+      {/* Quick Quote Calculator — matches homepage calculator markup */}
+      <div class="pricing-calculator" id="pricingCalculator" data-webhook={BUSINESS.webhooks.quickQuote}>
+        <div class="calc-inputs">
+          <div class="calc-field">
+            <label class="calc-label">Number of TVs</label>
+            <div class="calc-stepper" data-stepper>
+              <button type="button" data-action="dec" aria-label="Decrease">−</button>
+              <span class="calc-stepper-value" id="calcCount">1</span>
+              <button type="button" data-action="inc" aria-label="Increase">+</button>
+            </div>
+          </div>
 
-    {/* ===== PACKAGE GRID ===== */}
-    <section class="pr-packages" aria-labelledby="pr-pkg-h">
-      <h2 id="pr-pkg-h">Pick your TV size</h2>
-      <p class="u-muted">
-        Every package includes the wall bracket, stud-mounted fitting, levelling,
-        cable tidy, and a 12-month workmanship warranty. Extras (cable concealment,
-        brick/concrete walls, above-fireplace lifts) get added as flat-rate line items.
-      </p>
+          <div class="calc-field">
+            <label class="calc-label">TV Size</label>
+            <div class="calc-segmented" id="calcSize">
+              {PACKAGES.map((pkg) => (
+                <button
+                  type="button"
+                  class={pkg.id === FEATURED_ID ? "is-active" : ""}
+                  data-tier={pkg.id}
+                  data-price={pkg.priceAud ?? 0}
+                  data-custom={pkg.priceAud === null ? "true" : "false"}
+                  data-label={`${pkg.name} (${pkg.sizeLabel})`}
+                >
+                  {pkg.sizeLabel}
+                </button>
+              ))}
+            </div>
+          </div>
 
-      <ul class="pr-grid">
+          <div class="calc-field">
+            <label class="calc-label">Add-ons (per TV)</label>
+            <div class="calc-addons" id="calcAddons">
+              <label class="calc-checkbox"><input type="checkbox" data-price="100" data-label="In-wall cable concealment"> <span>Cable concealment <em>+$100</em></span></label>
+              <label class="calc-checkbox"><input type="checkbox" data-price="80" data-label="Soundbar mount"> <span>Soundbar mount <em>+$80</em></span></label>
+              <label class="calc-checkbox"><input type="checkbox" data-price="50" data-label="Full-motion bracket upgrade"> <span>Full-motion bracket <em>+$50</em></span></label>
+            </div>
+          </div>
+        </div>
+
+        <div class="calc-summary">
+          <div class="calc-summary-label">Estimated Total</div>
+          <div class="calc-total">
+            <span class="currency">$</span><span id="calcTotal">{PACKAGES.find((p) => p.id === FEATURED_ID)?.priceAud ?? "—"}</span>
+          </div>
+          <div class="calc-breakdown" id="calcBreakdown">
+            1 TV · {PACKAGES.find((p) => p.id === FEATURED_ID)?.name}
+          </div>
+          <a href="/quote/" class="calc-cta" id="calcCta">Book this install <span>›</span></a>
+        </div>
+      </div>
+
+      {/* Package Grid — matches homepage pricing-card markup */}
+      <div class="pricing-grid pricing-grid-five">
         {PACKAGES.map((pkg) => (
-          <li class={`pr-card ${pkg.priceAud === null ? "pr-card-custom" : ""}`}>
-            <header class="pr-card-head">
-              <p class="pr-card-size">{pkg.sizeLabel}</p>
-              <h3 class="pr-card-name">{pkg.name}</h3>
-              <p class="pr-card-tag">{pkg.tagline}</p>
-            </header>
-            <div class="pr-card-price">
+          <div
+            class={`pricing-card ${pkg.id === FEATURED_ID ? "is-featured" : ""} ${pkg.priceAud === null ? "is-custom" : ""}`}
+            data-tier={pkg.id}
+          >
+            {pkg.id === FEATURED_ID && <span class="pricing-card-tag">Most Booked</span>}
+            <div class="pricing-card-name">{pkg.name}</div>
+            <div class="pricing-card-meta">TVs {pkg.sizeLabel}</div>
+            <div class="pricing-card-price">
               {pkg.priceAud !== null ? (
-                <>
-                  <span class="pr-card-from">From</span>
-                  <span class="pr-card-amount">${pkg.priceAud}</span>
-                  <span class="pr-card-unit">flat rate</span>
-                </>
+                <><span class="currency">$</span>{pkg.priceAud}</>
               ) : (
-                <>
-                  <span class="pr-card-amount pr-card-amount-custom">Custom quote</span>
-                  <span class="pr-card-unit">sized on site</span>
-                </>
+                <span class="pricing-card-price-custom">Custom</span>
               )}
             </div>
-            <ul class="pr-card-list">
-              {pkg.highlights.map((h) => (
-                <li>{h}</li>
-              ))}
+            <div class="pricing-card-price-note">
+              {pkg.priceAud !== null ? "Flat rate, Brisbane metro" : "Photo of wall speeds this up"}
+            </div>
+            <ul class="pricing-card-features">
+              {pkg.highlights.map((h) => <li>{h}</li>)}
             </ul>
-            <a
-              class={`pr-card-cta ${pkg.priceAud === null ? "pr-card-cta-ghost" : ""}`}
-              href={`/quote/?package=${pkg.id}`}
-            >
-              {pkg.ctaLabel} →
+            <a href={`/quote/?package=${pkg.id}`} class="pricing-card-cta">
+              {pkg.priceAud !== null ? `Book ${pkg.name.replace(" Package", "")}` : "Request quote"} <span>›</span>
             </a>
-          </li>
+          </div>
         ))}
-      </ul>
-
-      <p class="pr-small">
-        Prices current as of {new Date().toLocaleDateString("en-AU", { month: "long", year: "numeric" })}.
-        Add-ons: cable concealment from $89, brick/concrete from +30%, above-fireplace from +$120.
-        Final quote locked after a 60-second phone check or uploaded photo.
-      </p>
-    </section>
-
-    <hr class="pr-divider" />
-
-    {/* ===== INSTANT QUOTE ===== */}
-    <section class="pr-quick" id="quick-quote" aria-labelledby="pr-quick-h">
-      <div class="pr-quick-inner">
-        <div class="pr-quick-copy">
-          <p class="pr-eyebrow">60-second form</p>
-          <h2 id="pr-quick-h">Instant quote — tell us the TV.</h2>
-          <p class="pr-lede">
-            Enter your TV size and wall type and we'll lock in a package price before
-            you finish your coffee. Prefer to send a photo of the wall? Use the
-            <a href="/quote/"> full quote form with photo upload</a>.
-          </p>
-
-          <ul class="pr-quick-perks">
-            <li><strong>No call-out fees</strong> — we only charge if we install.</li>
-            <li><strong>Same-day bookings</strong> if you message before 10 AM weekdays.</li>
-            <li><strong>Book-before-install cancellation is free</strong> — no deposit locked.</li>
-          </ul>
-        </div>
-
-        <form
-          class="pr-form"
-          id="quick-quote-form"
-          data-webhook={BUSINESS.webhooks.quickQuote}
-          aria-label="Instant quote form"
-        >
-          <div class="pr-field">
-            <label for="qq-size">TV size (inches)</label>
-            <input
-              type="number"
-              id="qq-size"
-              name="tvSize"
-              min="30"
-              max="130"
-              step="1"
-              required
-              placeholder="e.g. 65"
-              autocomplete="off"
-            />
-          </div>
-
-          <div class="pr-field">
-            <label for="qq-wall">Wall type</label>
-            <select id="qq-wall" name="wallType" required>
-              <option value="">Select wall type…</option>
-              <option value="plasterboard">Plasterboard (timber stud)</option>
-              <option value="plasterboard-steel">Plasterboard (steel stud)</option>
-              <option value="brick">Exposed / rendered brick</option>
-              <option value="concrete">Concrete / cement block</option>
-              <option value="fibro">Fibro / weatherboard</option>
-              <option value="not-sure">Not sure</option>
-            </select>
-          </div>
-
-          <div class="pr-field">
-            <label for="qq-suburb">Suburb</label>
-            <input
-              type="text"
-              id="qq-suburb"
-              name="suburb"
-              required
-              placeholder="e.g. New Farm"
-              autocomplete="address-level2"
-            />
-          </div>
-
-          <div class="pr-field">
-            <label for="qq-name">Your name</label>
-            <input
-              type="text"
-              id="qq-name"
-              name="name"
-              required
-              autocomplete="name"
-            />
-          </div>
-
-          <div class="pr-field">
-            <label for="qq-phone">Phone</label>
-            <input
-              type="tel"
-              id="qq-phone"
-              name="phone"
-              required
-              placeholder="0412 345 678"
-              autocomplete="tel"
-            />
-          </div>
-
-          <div class="pr-field">
-            <label for="qq-email">Email</label>
-            <input
-              type="email"
-              id="qq-email"
-              name="email"
-              required
-              autocomplete="email"
-            />
-          </div>
-
-          <div class="pr-field pr-field-full">
-            <label for="qq-notes">Anything else? <span class="pr-muted">(optional)</span></label>
-            <textarea
-              id="qq-notes"
-              name="notes"
-              rows="3"
-              placeholder="Above-fireplace, cable concealment, preferred day…"
-            ></textarea>
-          </div>
-
-          {/* Live estimate panel — computed in JS from TV size */}
-          <div class="pr-estimate" id="qq-estimate" hidden>
-            <p class="pr-estimate-eyebrow">Your estimate</p>
-            <p class="pr-estimate-package" id="qq-estimate-package"></p>
-            <p class="pr-estimate-price" id="qq-estimate-price"></p>
-            <p class="pr-estimate-note" id="qq-estimate-note"></p>
-          </div>
-
-          <button type="submit" class="pr-submit" id="qq-submit">
-            Send me my quote →
-          </button>
-
-          <p class="pr-form-status" id="qq-status" role="status" aria-live="polite"></p>
-        </form>
       </div>
-    </section>
 
-    <hr class="pr-divider" />
+      <div class="pricing-footnote">
+        <span class="pricing-footnote-icon" aria-hidden="true">!</span>
+        <h3 class="pricing-footnote-title">Need something beyond a standard TV wall mount?</h3>
+        <p>
+          Our Brisbane installers also handle <strong>soundbar mounting</strong>,
+          <strong> Starlink dish installation</strong>,
+          <strong> digital TV antenna setup</strong>,
+          <strong> in-wall cable concealment</strong>, and
+          <strong> full home theatre builds</strong> — across every Brisbane suburb,
+          from the inner city out to the bay. Every custom job is fixed-price, GST-included, and backed by our lifetime workmanship guarantee.
+        </p>
+        <p class="pricing-footnote-cta">
+          <a href="/quote/">Get a free quote ›</a> &nbsp;·&nbsp; We respond in under 2 hours, Brisbane-wide.
+        </p>
+      </div>
+    </div>
+  </section>
 
-    {/* ===== TRUST STRIP ===== */}
-    <section class="pr-trust" aria-labelledby="pr-trust-h">
+  {/* ===== TRUST STRIP ===== */}
+  <section class="pr-trust" aria-labelledby="pr-trust-h">
+    <div class="pr-trust-inner">
       <h2 id="pr-trust-h">Why the flat rate works</h2>
       <div class="pr-trust-grid">
-        <div>
+        <div class="pr-trust-card">
           <h3>No hourly billing</h3>
           <p>
-            Your quote is locked before the installer arrives. If a job takes longer
-            than expected, that's on us — we eat the time, not you.
+            Your quote is locked before the installer arrives. If a job takes
+            longer than expected, that's on us — we eat the time, not you.
           </p>
         </div>
-        <div>
+        <div class="pr-trust-card">
           <h3>$20M public liability</h3>
           <p>
-            Every job is covered. If we put a hole in the wrong wall, our insurer
-            handles it — not a hand-scribbled receipt.
+            Every job is covered. If we put a hole in the wrong wall, our
+            insurer handles it — not a hand-scribbled receipt.
           </p>
         </div>
-        <div>
-          <h3>12-month workmanship warranty</h3>
+        <div class="pr-trust-card">
+          <h3>Lifetime workmanship</h3>
           <p>
-            If the mount loosens, the cable conceal lifts, or anything we installed
-            fails within 12 months, we come back and fix it — free.
+            If the mount loosens, the cable conceal lifts, or anything we
+            installed fails — we come back and fix it. Free. Forever.
           </p>
         </div>
-        <div>
-          <h3>Locally owned, locally run</h3>
+        <div class="pr-trust-card">
+          <h3>Locally owned</h3>
           <p>
-            Every installer lives in Brisbane. No franchise head office, no sub-contractor
-            roulette — you talk to the same team that shows up.
+            Every installer lives in Brisbane. No franchise head office,
+            no sub-contractor roulette — you talk to the same team that shows up.
           </p>
         </div>
       </div>
-    </section>
+    </div>
+  </section>
 
-    <section class="pr-foot-cta">
-      <p class="pr-foot-title">Prefer to talk it through?</p>
-      <p class="pr-foot-lede">Tom answers the phone 7 days a week, 7 AM – 7 PM.</p>
+  {/* ===== FOOT CTA ===== */}
+  <section class="pr-foot">
+    <div class="pr-foot-inner">
+      <p class="pr-foot-eyebrow">Prefer to talk it through?</p>
+      <h2 class="pr-foot-title">Tom answers the phone, 7 days a week.</h2>
+      <p class="pr-foot-lede">7 AM – 7 PM · Same-week bookings · Brisbane-wide</p>
       <div class="pr-foot-cta-row">
-        <a class="pr-btn pr-btn-primary" href={BUSINESS.phoneTel}>Call {BUSINESS.phoneDisplay}</a>
-        <a class="pr-btn pr-btn-ghost" href={BUSINESS.mailto}>Email {BUSINESS.email}</a>
+        <a class="pr-foot-btn pr-foot-btn-primary" href={BUSINESS.phoneTel}>
+          Call {BUSINESS.phoneDisplay}
+        </a>
+        <a class="pr-foot-btn pr-foot-btn-ghost" href="/quote/">
+          Send a photo quote →
+        </a>
       </div>
-    </section>
-  </article>
-</BaseLayout>
+    </div>
+  </section>
+</MarketingLayout>
 
 {/* ===== JS: price the quote live + submit to n8n ===== */}
-<script is:inline define:vars={{ PACKAGES: PACKAGES.map(p => ({ id: p.id, name: p.name, sizeMin: p.sizeMin, sizeMax: p.sizeMax, priceAud: p.priceAud })) }}>
+<script is:inline define:vars={{ PACKAGES: PACKAGES.map((p) => ({ id: p.id, name: p.name, sizeMin: p.sizeMin, sizeMax: p.sizeMax, priceAud: p.priceAud, sizeLabel: p.sizeLabel })) }}>
   (function () {
-    const form = document.getElementById("quick-quote-form");
-    if (!form) return;
+    const calc = document.getElementById("pricingCalculator");
+    if (!calc) return;
 
-    const sizeEl = document.getElementById("qq-size");
-    const wallEl = document.getElementById("qq-wall");
-    const estEl = document.getElementById("qq-estimate");
-    const pkgEl = document.getElementById("qq-estimate-package");
-    const priceEl = document.getElementById("qq-estimate-price");
-    const noteEl = document.getElementById("qq-estimate-note");
-    const statusEl = document.getElementById("qq-status");
-    const submitEl = document.getElementById("qq-submit");
-    const webhook = form.dataset.webhook;
+    const stepper = calc.querySelector("[data-stepper]");
+    const countEl = document.getElementById("calcCount");
+    const segButtons = calc.querySelectorAll("#calcSize button");
+    const addons = calc.querySelectorAll("#calcAddons input");
+    const totalEl = document.getElementById("calcTotal");
+    const breakdownEl = document.getElementById("calcBreakdown");
+    const cards = document.querySelectorAll(".pricing-card[data-tier]");
 
-    function packageForSize(inches) {
-      return PACKAGES.find(
-        (p) => inches >= p.sizeMin && (p.sizeMax === null || inches <= p.sizeMax)
-      ) || PACKAGES[PACKAGES.length - 1];
-    }
+    let count = 1;
+    let tier = document.querySelector("#calcSize button.is-active");
 
     function recompute() {
-      const inches = parseFloat(sizeEl.value);
-      if (!inches || inches < 30) {
-        estEl.hidden = true;
-        return;
-      }
-      const pkg = packageForSize(inches);
-      let price = pkg.priceAud;
-      let note = "Flat-rate price covers mount, fitting, cable tidy, warranty.";
+      const selectedTier = calc.querySelector("#calcSize button.is-active");
+      const price = parseFloat(selectedTier?.dataset.price || "0");
+      const custom = selectedTier?.dataset.custom === "true";
+      const label = selectedTier?.dataset.label || "";
+      const tierId = selectedTier?.dataset.tier;
 
-      // Wall-type surcharges (rough rules-of-thumb — owner confirms final)
-      const wall = wallEl.value;
-      if (wall === "brick") {
-        if (price) price = Math.round(price * 1.35);
-        note = "Brick adds ~35% — chemical anchoring + dust extraction included.";
-      } else if (wall === "concrete") {
-        if (price) price = Math.round(price * 1.4);
-        note = "Concrete/block adds ~40% — masonry drilling + specialist anchors.";
-      } else if (wall === "not-sure") {
-        note = "We'll confirm the wall type on site before locking the price.";
-      }
+      let total = price;
+      let addonSum = 0;
+      const addonNames = [];
+      addons.forEach((a) => {
+        if (a.checked) {
+          addonSum += parseFloat(a.dataset.price || "0");
+          addonNames.push(a.dataset.label);
+        }
+      });
+      total = (total + addonSum) * count;
 
-      estEl.hidden = false;
-      pkgEl.textContent = pkg.name + " — " + inches + "\" TV";
-      if (price === null || pkg.priceAud === null) {
-        priceEl.textContent = "Custom quote";
-        noteEl.textContent = "Oversize TVs are quoted after a photo or site check.";
+      if (custom || !price) {
+        totalEl.textContent = "Quote";
+        totalEl.style.fontSize = "1.8rem";
+        breakdownEl.textContent = count + " × " + label + " — sized on site";
       } else {
-        priceEl.textContent = "~ $" + price + " AUD";
-        noteEl.textContent = note;
+        totalEl.textContent = total.toLocaleString();
+        totalEl.style.fontSize = "";
+        const addonText = addonNames.length ? " + " + addonNames.join(", ") : "";
+        breakdownEl.textContent = count + (count === 1 ? " TV · " : " TVs · ") + label + addonText;
+      }
+
+      // Sync matched card highlight
+      cards.forEach((c) => c.classList.remove("is-matched"));
+      if (tierId) {
+        const matchedCard = document.querySelector('.pricing-card[data-tier="' + tierId + '"]');
+        if (matchedCard) matchedCard.classList.add("is-matched");
       }
     }
 
-    sizeEl.addEventListener("input", recompute);
-    wallEl.addEventListener("change", recompute);
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      submitEl.disabled = true;
-      statusEl.textContent = "Sending…";
-      statusEl.className = "pr-form-status";
-
-      const payload = Object.fromEntries(new FormData(form).entries());
-      payload.submittedAt = new Date().toISOString();
-      payload.source = "pricing-quick-quote";
-      const inches = parseFloat(payload.tvSize);
-      if (inches) {
-        const pkg = packageForSize(inches);
-        payload.matchedPackage = pkg.id;
-        payload.matchedPackageName = pkg.name;
-        payload.matchedPackagePrice = pkg.priceAud;
-      }
-
-      try {
-        const res = await fetch(webhook, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) throw new Error("Server returned " + res.status);
-        form.reset();
-        estEl.hidden = true;
-        statusEl.textContent =
-          "Got it! Tom will text or call you back within 60 minutes (7 AM – 7 PM).";
-        statusEl.classList.add("pr-form-status-ok");
-      } catch (err) {
-        statusEl.textContent =
-          "Couldn't send that — please call 0432 145 101 or email admin@brisbanetvs.com.";
-        statusEl.classList.add("pr-form-status-err");
-      } finally {
-        submitEl.disabled = false;
-      }
+    // Stepper
+    stepper?.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-action]");
+      if (!btn) return;
+      if (btn.dataset.action === "inc") count = Math.min(count + 1, 10);
+      else count = Math.max(count - 1, 1);
+      countEl.textContent = count;
+      recompute();
     });
+
+    // Segmented buttons
+    segButtons.forEach((b) => {
+      b.addEventListener("click", () => {
+        segButtons.forEach((x) => x.classList.remove("is-active"));
+        b.classList.add("is-active");
+        recompute();
+      });
+    });
+
+    // Pricing card → clicking a non-featured card also selects it in the segmented control
+    cards.forEach((card) => {
+      card.addEventListener("click", (e) => {
+        // Don't hijack clicks on the CTA link
+        if (e.target.closest("a")) return;
+        const tierId = card.dataset.tier;
+        const match = calc.querySelector('#calcSize button[data-tier="' + tierId + '"]');
+        if (match) {
+          segButtons.forEach((x) => x.classList.remove("is-active"));
+          match.classList.add("is-active");
+          card.classList.add("is-selected");
+          setTimeout(() => card.classList.remove("is-selected"), 1500);
+          recompute();
+          document.getElementById("pricingCalculator")?.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      });
+    });
+
+    // Checkbox toggles
+    addons.forEach((a) => {
+      a.addEventListener("change", () => {
+        const wrap = a.closest(".calc-checkbox");
+        if (wrap) wrap.classList.toggle("is-checked", a.checked);
+        recompute();
+      });
+    });
+
+    recompute();
   })();
 </script>
 
 <style is:global>
-  /* ===== PRICING PAGE ===== */
+  /* =====================================================================
+     PRICING PAGE — banner + homepage-style pricing block + trust + CTA
+     =====================================================================
+     The middle "pricing-section" is inherited from /css/marketing.css so it
+     renders identically to the homepage. This file only adds the banner,
+     the 5-column grid override, the trust strip, and the foot CTA.
+  */
+
+  /* ===== Banner ===== */
   .pr-banner {
     position: relative;
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
-    height: clamp(160px, 22vw, 260px);
+    width: 100vw;
+    height: clamp(240px, 32vh, 420px);
     overflow: hidden;
-    background: #111;
+    background: #131619;
   }
   .pr-banner-img {
-    position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.55;
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center;
+  }
+  .pr-banner::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 35%, rgba(0,0,0,0) 70%);
+    pointer-events: none;
   }
   .pr-banner-inner {
-    position: relative; height: 100%;
-    display: flex; align-items: flex-end;
-    max-width: 1720px; margin: 0 auto;
-    padding: 0 clamp(16px, 4vw, 48px) clamp(16px, 3vw, 32px);
+    position: relative; z-index: 1;
+    width: 100%; max-width: 1200px; height: 100%;
+    margin: 0 auto;
+    padding: 0 24px;
+    display: flex; align-items: center;
+  }
+  @media (min-width: 1201px) {
+    .pr-banner-inner { width: 90%; max-width: 1720px; padding: 0; }
   }
   .pr-banner-title {
-    font-family: "Noto Serif", Georgia, serif;
-    font-size: clamp(36px, 6vw, 72px);
-    color: #fff; letter-spacing: -0.02em; margin: 0;
-  }
-
-  .pr {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: clamp(32px, 5vw, 64px) clamp(16px, 4vw, 48px) 96px;
-    color: #111;
-  }
-
-  .pr-crumbs {
-    font-size: 13px;
-    color: #767676;
-    display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
-    margin-bottom: 20px;
-  }
-  .pr-crumbs a { color: #4a4a4a; text-decoration: none; }
-  .pr-crumbs a:hover { color: #111; text-decoration: underline; }
-  .pr-crumbs-current { color: #111; font-weight: 500; }
-
-  .pr-eyebrow {
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #767676;
-    margin: 0 0 8px;
-  }
-  .pr-hero h1 {
-    font-family: "Noto Serif", Georgia, serif;
-    font-size: clamp(32px, 5vw, 52px);
-    line-height: 1.1;
-    letter-spacing: -0.02em;
-    margin: 0 0 16px;
-    max-width: 18ch;
-  }
-  .pr-lede {
-    font-size: clamp(16px, 1.4vw, 19px);
-    line-height: 1.55;
-    color: #4a4a4a;
-    max-width: 68ch;
-    margin: 0 0 28px;
-  }
-  .pr-hero-cta-row {
-    display: flex; gap: 12px; flex-wrap: wrap;
-  }
-  .pr-btn {
-    display: inline-flex; align-items: center; justify-content: center;
-    height: 48px; padding: 0 22px;
-    border-radius: 4px;
-    font-size: 15px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: transform 0.15s, background 0.15s, border-color 0.15s, color 0.15s;
-  }
-  .pr-btn-primary {
-    background: #111; color: #fff; border: 1px solid #111;
-  }
-  .pr-btn-primary:hover { background: #333; transform: translateY(-1px); }
-  .pr-btn-ghost {
-    background: transparent; color: #111; border: 1px solid #d0d0d0;
-  }
-  .pr-btn-ghost:hover { border-color: #111; transform: translateY(-1px); }
-
-  .pr-divider {
-    border: none;
-    border-top: 1px solid #e5e5e5;
-    margin: clamp(40px, 6vw, 64px) 0;
-  }
-
-  .pr-packages h2,
-  .pr-quick h2,
-  .pr-trust h2 {
-    font-family: "Noto Serif", Georgia, serif;
-    font-size: clamp(24px, 3vw, 34px);
-    letter-spacing: -0.01em;
-    margin: 0 0 8px;
-  }
-  .u-muted { color: #767676; font-size: 15px; margin: 0 0 28px; max-width: 68ch; }
-
-  .pr-grid {
-    list-style: none;
-    padding: 0; margin: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 20px;
-  }
-  .pr-card {
-    display: flex;
-    flex-direction: column;
-    padding: 24px;
-    background: #fff;
-    border: 1px solid #e5e5e5;
-    border-radius: 6px;
-    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
-  }
-  .pr-card:hover {
-    border-color: #111;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.06);
-    transform: translateY(-2px);
-  }
-  .pr-card-custom {
-    background: linear-gradient(180deg, #fafafa 0%, #f4f4f4 100%);
-  }
-  .pr-card-size {
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: #767676;
-    margin: 0 0 6px;
-    font-weight: 600;
-  }
-  .pr-card-name {
-    font-family: "Noto Serif", Georgia, serif;
-    font-size: 20px;
-    margin: 0 0 6px;
-  }
-  .pr-card-tag {
-    font-size: 14px; color: #4a4a4a; margin: 0 0 16px; line-height: 1.4;
-  }
-  .pr-card-price {
-    display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
-    padding: 12px 0;
-    border-top: 1px solid #eee;
-    border-bottom: 1px solid #eee;
-    margin-bottom: 16px;
-  }
-  .pr-card-from { font-size: 12px; color: #767676; text-transform: uppercase; letter-spacing: 0.1em; }
-  .pr-card-amount {
-    font-family: "Noto Serif", Georgia, serif;
-    font-size: 32px;
-    font-weight: 700;
-    color: #111;
-  }
-  .pr-card-amount-custom { font-size: 22px; }
-  .pr-card-unit { font-size: 13px; color: #767676; }
-  .pr-card-list {
-    list-style: none; padding: 0; margin: 0 0 20px;
-    font-size: 14px; color: #333;
-    line-height: 1.5;
-    flex-grow: 1;
-  }
-  .pr-card-list li {
-    padding: 4px 0 4px 18px;
-    position: relative;
-  }
-  .pr-card-list li::before {
-    content: "✓";
-    position: absolute; left: 0; color: #111; font-weight: 700;
-  }
-  .pr-card-cta {
-    display: inline-flex; align-items: center; justify-content: center;
-    height: 42px;
-    background: #111; color: #fff; text-decoration: none;
-    border-radius: 4px;
-    font-size: 14px; font-weight: 600;
-    transition: background 0.15s;
-  }
-  .pr-card-cta:hover { background: #333; }
-  .pr-card-cta-ghost {
-    background: transparent; color: #111;
-    border: 1px solid #111;
-  }
-  .pr-card-cta-ghost:hover { background: #111; color: #fff; }
-
-  .pr-small {
-    font-size: 12px; color: #767676;
-    margin-top: 20px; line-height: 1.5;
-  }
-
-  /* ===== QUICK QUOTE FORM ===== */
-  .pr-quick {
-    background: #f7f7f7;
-    margin-left: calc(50% - 50vw);
-    margin-right: calc(50% - 50vw);
-    padding: clamp(40px, 6vw, 72px) clamp(16px, 4vw, 48px);
-  }
-  .pr-quick-inner {
-    max-width: 1280px;
-    margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1fr 1.2fr;
-    gap: clamp(32px, 5vw, 60px);
-    align-items: start;
-  }
-  .pr-quick-copy h2 { margin-bottom: 12px; }
-  .pr-quick-perks {
-    list-style: none;
-    padding: 0; margin: 28px 0 0;
-    font-size: 15px; color: #333;
-    line-height: 1.5;
-  }
-  .pr-quick-perks li { padding: 6px 0; border-bottom: 1px solid #e5e5e5; }
-  .pr-quick-perks li:last-child { border-bottom: none; }
-  .pr-quick-copy a { color: #111; text-decoration: underline; }
-
-  .pr-form {
-    background: #fff;
-    padding: 28px;
-    border-radius: 8px;
-    box-shadow: 0 2px 14px rgba(0,0,0,0.04);
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-  .pr-field { display: flex; flex-direction: column; }
-  .pr-field-full { grid-column: 1 / -1; }
-  .pr-field label {
-    font-size: 13px;
-    font-weight: 600;
-    color: #111;
-    margin-bottom: 6px;
-  }
-  .pr-muted { color: #767676; font-weight: 400; }
-  .pr-field input,
-  .pr-field select,
-  .pr-field textarea {
-    height: 42px;
-    padding: 0 12px;
-    border: 1px solid #d0d0d0;
-    border-radius: 4px;
-    font-size: 15px;
-    font-family: inherit;
-    background: #fff;
-    color: #111;
-    transition: border-color 0.15s;
-  }
-  .pr-field textarea { height: auto; padding: 10px 12px; resize: vertical; min-height: 80px; }
-  .pr-field input:focus,
-  .pr-field select:focus,
-  .pr-field textarea:focus {
-    outline: none;
-    border-color: #111;
-    box-shadow: 0 0 0 3px rgba(17,17,17,0.08);
-  }
-
-  .pr-estimate {
-    grid-column: 1 / -1;
-    padding: 16px 18px;
-    background: #111;
-    color: #fff;
-    border-radius: 6px;
-  }
-  .pr-estimate-eyebrow {
-    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
-    color: #aaa; margin: 0 0 6px;
-  }
-  .pr-estimate-package { font-size: 14px; color: #ddd; margin: 0 0 4px; }
-  .pr-estimate-price {
-    font-family: "Noto Serif", Georgia, serif;
-    font-size: 28px; margin: 0 0 4px; font-weight: 700;
-  }
-  .pr-estimate-note { font-size: 13px; color: #aaa; margin: 0; line-height: 1.4; }
-
-  .pr-submit {
-    grid-column: 1 / -1;
-    height: 48px;
-    border: none;
-    background: #111;
-    color: #fff;
-    font-size: 15px;
-    font-weight: 600;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background 0.15s, transform 0.15s;
-  }
-  .pr-submit:hover:not(:disabled) { background: #333; transform: translateY(-1px); }
-  .pr-submit:disabled { opacity: 0.6; cursor: not-allowed; }
-
-  .pr-form-status {
-    grid-column: 1 / -1;
     margin: 0;
-    font-size: 14px;
-    line-height: 1.5;
-    min-height: 20px;
-  }
-  .pr-form-status-ok { color: #1a6e3a; }
-  .pr-form-status-err { color: #b03a2e; }
-
-  /* ===== TRUST ===== */
-  .pr-trust-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 24px;
-  }
-  .pr-trust h3 {
-    font-family: "Noto Serif", Georgia, serif;
-    font-size: 18px;
-    margin: 0 0 8px;
-  }
-  .pr-trust p { font-size: 14px; color: #4a4a4a; line-height: 1.5; margin: 0; }
-
-  .pr-foot-cta {
-    margin-top: clamp(40px, 6vw, 64px);
-    padding: clamp(28px, 4vw, 40px);
-    background: #111;
     color: #fff;
-    border-radius: 8px;
+    font-family: "Inter", sans-serif;
+    font-weight: 400;
+    font-size: clamp(2.5rem, 6vw, 5rem);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    line-height: 1;
+    text-shadow: 0 2px 18px rgba(0,0,0,0.35);
+  }
+
+  /* ===== 5-column pricing grid override ===== */
+  /* Homepage uses `repeat(4, 1fr)` — we ship 5 packages, so override here */
+  .pricing-grid.pricing-grid-five {
+    grid-template-columns: repeat(5, 1fr);
+  }
+  @media (max-width: 1280px) {
+    .pricing-grid.pricing-grid-five { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 860px) {
+    .pricing-grid.pricing-grid-five { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 560px) {
+    .pricing-grid.pricing-grid-five { grid-template-columns: 1fr; }
+  }
+
+  /* Custom-quote card's "Custom" label — match the currency/price rhythm */
+  .pricing-card.is-custom .pricing-card-price-custom {
+    font-family: "Noto Serif", serif;
+    font-size: 1.7rem;
+    font-weight: 400;
+    color: #1a1a1a;
+    letter-spacing: -0.4px;
+  }
+  .pricing-card.is-featured.is-custom .pricing-card-price-custom,
+  .pricing-card.is-custom:hover .pricing-card-price-custom,
+  .pricing-card.is-custom.is-matched .pricing-card-price-custom,
+  .pricing-card.is-custom.is-selected .pricing-card-price-custom {
+    color: #fff;
+  }
+
+  /* Hide an empty currency span in pricing-card-price when a custom label is rendered */
+  .pricing-card.is-custom .pricing-card-price { line-height: 1.2; }
+
+  /* ===== Trust strip ===== */
+  .pr-trust {
+    background: #fff;
+    padding: clamp(48px, 7vw, 96px) 0;
+    display: flex;
+    justify-content: center;
+  }
+  .pr-trust-inner {
+    width: 85%;
+    max-width: 1720px;
+  }
+  .pr-trust h2 {
+    font-family: "Noto Serif", serif;
+    font-size: clamp(1.8rem, 2.6vw, 2.4rem);
+    font-weight: 500;
+    color: #1a1a1a;
+    letter-spacing: -0.4px;
+    margin: 0 0 28px;
     text-align: center;
   }
-  .pr-foot-title {
-    font-family: "Noto Serif", Georgia, serif;
-    font-size: clamp(24px, 3vw, 32px);
+  .pr-trust-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+  .pr-trust-card {
+    padding: 24px 26px 22px;
+    background: #fafafa;
+    border: 1px solid rgba(0,0,0,0.06);
+    border-radius: 4px;
+  }
+  .pr-trust-card h3 {
+    font-family: "Noto Serif", serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #1a1a1a;
     margin: 0 0 8px;
+    letter-spacing: -0.2px;
+  }
+  .pr-trust-card p {
+    font-family: "Inter", sans-serif;
+    font-size: 13.5px;
+    color: #4a4a4a;
+    line-height: 1.55;
+    margin: 0;
+  }
+  @media (max-width: 960px) {
+    .pr-trust-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 520px) {
+    .pr-trust-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ===== Foot CTA (dark, full-bleed) ===== */
+  .pr-foot {
+    background: linear-gradient(152deg, #1c1c1f 0%, #0a0a0c 52%, #000 100%);
+    color: #f5f5f5;
+    padding: clamp(48px, 7vw, 96px) 0;
+    display: flex;
+    justify-content: center;
+  }
+  .pr-foot-inner {
+    width: 85%;
+    max-width: 1200px;
+    text-align: center;
+  }
+  .pr-foot-eyebrow {
+    font-family: "Inter", sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: #7b79f0;
+    margin: 0 0 12px;
+  }
+  .pr-foot-title {
+    font-family: "Noto Serif", serif;
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    font-weight: 500;
+    letter-spacing: -0.4px;
+    margin: 0 0 10px;
+    color: #fff;
   }
   .pr-foot-lede {
-    color: #bbb; font-size: 16px; margin: 0 0 20px;
+    font-family: "Inter", sans-serif;
+    font-size: 15px;
+    color: rgba(255,255,255,0.55);
+    margin: 0 0 28px;
   }
-  .pr-foot-cta-row { display: inline-flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
-  .pr-foot-cta .pr-btn-primary { background: #fff; color: #111; border-color: #fff; }
-  .pr-foot-cta .pr-btn-primary:hover { background: #e5e5e5; }
-  .pr-foot-cta .pr-btn-ghost { color: #fff; border-color: #444; }
-  .pr-foot-cta .pr-btn-ghost:hover { border-color: #fff; }
-
-  /* ===== MOBILE ===== */
-  @media (max-width: 820px) {
-    .pr-quick-inner { grid-template-columns: 1fr; }
-    .pr-form { grid-template-columns: 1fr; }
+  .pr-foot-cta-row {
+    display: inline-flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
   }
+  .pr-foot-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 26px;
+    font-family: "Inter", sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    border-radius: 2px;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    text-decoration: none;
+  }
+  .pr-foot-btn-primary {
+    background: #fff;
+    color: #1a1a1a;
+    border: 1px solid #fff;
+  }
+  .pr-foot-btn-primary:hover { background: #f7f3ec; }
+  .pr-foot-btn-ghost {
+    background: transparent;
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.3);
+  }
+  .pr-foot-btn-ghost:hover { border-color: #fff; }
 </style>

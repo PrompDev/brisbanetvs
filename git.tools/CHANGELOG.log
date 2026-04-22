@@ -359,3 +359,14 @@
   [+1/-1 lines] [+116/-0 chars]  astro/src/pages/quote.astro 
   [+12/-11 lines] [+337/-0 chars]  astro/src/pages/services/index.astro 
  
+---------------------------------------- 
+[2026-04-22 18:41] 5 file(s) | commit: ab8f028 
+---------------------------------------- 
+  Summary:  5 files changed, 483 insertions(+), 627 deletions(-) 
+ 
+  [+8/-8 lines] [+67/-0 chars]  6 
+  [+8/-8 lines] [+67/-0 chars]  7 
+  [+51/-0 lines] [+343/-0 chars]  astro/public/css/marketing.css 
+  [+8/-1 lines] [+64/-0 chars]  astro/src/layouts/MarketingLayout.astro 
+  [+408/-610 lines] [+2243/-0 chars]  astro/src/pages/pricing.astro 
+ 
