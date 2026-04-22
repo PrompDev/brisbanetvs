@@ -1,5 +1,7 @@
 ---
 import AdminShell from "~/layouts/AdminShell.astro";
+import BulkCreateModal from "~/components/admin/BulkCreateModal.astro";
+import PublishToggle from "~/components/admin/PublishToggle.astro";
 import { getCollection } from "astro:content";
 
 /**
@@ -7,6 +9,11 @@ import { getCollection } from "astro:content";
  *
  * First row is the public /locations/ landing page. Subsequent rows list
  * each suburb entry sorted alphabetically.
+ *
+ * Top-right "+ New suburb ▾" dropdown offers both the single-entry CMS
+ * flow and the bulk .md uploader — bulk saves go straight to
+ * src/content/locations/ via the Decap local proxy (folder-picker
+ * fallback when the proxy isn't running).
  */
 const locations = (await getCollection("locations")).sort(
   (a, b) => a.data.suburb.localeCompare(b.data.suburb)
@@ -16,9 +23,21 @@ const drafts = locations.filter((l) => l.data.draft).length;
 ---
 <AdminShell title="Locations" active="locations" description="Suburb-level service pages.">
   <div slot="actions">
-    <a class="btn btn-primary" href="/admin/#/collections/locations/new" target="_blank" rel="noopener">
-      + New suburb
-    </a>
+    <div class="np-dropdown" data-np-root>
+      <button type="button" class="btn btn-primary" data-np-toggle aria-haspopup="true" aria-expanded="false">
+        + New suburb <span class="np-caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="np-menu" data-np-menu hidden role="menu">
+        <a class="np-item" href="/admin/#/collections/locations/new" target="_blank" rel="noopener" role="menuitem">
+          <span class="np-item-title">Single suburb</span>
+          <span class="np-item-sub">Open the CMS editor</span>
+        </a>
+        <button type="button" class="np-item" data-bulk-open role="menuitem">
+          <span class="np-item-title">Bulk upload .md files</span>
+          <span class="np-item-sub">Drag up to 50 files at once</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <div class="content">
@@ -27,6 +46,7 @@ const drafts = locations.filter((l) => l.data.draft).length;
         <h2>Locations<span class="counter">({locations.length} entries · {published} live · {drafts} draft)</span></h2>
         <div class="panel-actions">
           <a class="btn" href="/locations/" target="_blank" rel="noopener">View hub</a>
+          <a class="btn" href="/templates/location-page-template.md" download>Download .md template</a>
           <a class="btn" href="/admin/#/collections/locations" target="_blank" rel="noopener">Manage in CMS</a>
         </div>
       </div>
@@ -91,7 +111,8 @@ const drafts = locations.filter((l) => l.data.draft).length;
                   <td>
                     <div class="actions">
                       <a class="btn" href={`/locations/${l.slug}/`} target="_blank" rel="noopener">View</a>
-                      <a class="btn btn-primary" href={`/admin/#/collections/locations/entries/${l.slug}`} target="_blank" rel="noopener">Edit</a>
+                      <a class="btn" href={`/admin/#/collections/locations/entries/${l.slug}`} target="_blank" rel="noopener">Edit</a>
+                      <PublishToggle collection="locations" slug={l.slug} draft={l.data.draft} />
                     </div>
                   </td>
                 </tr>
@@ -102,6 +123,9 @@ const drafts = locations.filter((l) => l.data.draft).length;
       </div>
     </section>
   </div>
+
+  {/* Bulk-upload overlay (hidden by default, opened by [data-bulk-open]) */}
+  <BulkCreateModal collection="locations" />
 
   <style is:global>
     .row-index td { background: #fafbff; }

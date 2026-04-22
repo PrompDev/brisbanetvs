@@ -1,0 +1,42 @@
+# wrangler.toml — deploys the Decap CMS OAuth proxy to Cloudflare Workers.
+#
+# Once deployed, the worker's public URL must match `backend.base_url` in
+# astro/public/admin/config.yml. The default route below binds the worker
+# to cms-auth.brisbanetvs.com — update both the route and config.yml if you
+# pick a different subdomain.
+#
+# Deploy:
+#   cd git.tools/cms-auth-worker
+#   npm install -g wrangler                 # one-off
+#   wrangler login                          # one-off, browser auth
+#   wrangler secret put GITHUB_CLIENT_ID    # paste the client_id
+#   wrangler secret put GITHUB_CLIENT_SECRET # paste the client_secret
+#   wrangler deploy
+
+name = "cms-auth"
+main = "src/index.js"
+compatibility_date = "2024-10-01"
+
+# Bind to the public hostname referenced by astro/public/admin/config.yml.
+# The `zone_name` must be an active Cloudflare zone on your account.
+routes = [
+  { pattern = "cms-auth.brisbanetvs.com/*", zone_name = "brisbanetvs.com" },
+]
+
+# Public, non-secret config. Override per-environment with `[env.<name>.vars]`.
+[vars]
+# Optional hardening: comma-separated list of hostnames that are allowed to
+# receive the postMessage with the access token. "*" (default) accepts any
+# opener, which is fine for low-risk content sites. For production, set this
+# to the admin hostnames only, e.g. "brisbanetvs.com,www.brisbanetvs.com".
+ALLOWED_ORIGIN_HOSTS = "*"
+
+# Space- or comma-separated OAuth scopes. `repo` is required so Decap can
+# commit content; `user` lets it show the signed-in user's avatar.
+GITHUB_SCOPE = "repo,user"
+
+# Optional alternate environments — deploy a staging proxy with:
+#   wrangler deploy --env staging
+# [env.staging]
+# name = "cms-auth-staging"
+# routes = [{ pattern = "cms-auth-staging.brisbanetvs.com/*", zone_name = "brisbanetvs.com" }]

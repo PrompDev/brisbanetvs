@@ -1,8 +1,18 @@
 backend:
   name: github
-  repo: your-github-user/brisbane-tvs       # change when the repo is live
+  # ┌─────────────────────────────────────────────────────────────────────────┐
+  # │ ACTION REQUIRED: replace the placeholder below with the real GitHub     │
+  # │ org/repo (e.g. "brisbane-tvs/site"). Until this is set the GitHub      │
+  # │ backend will 404 when Decap tries to list or commit content.            │
+  # │ Local dev keeps working because `local_backend: true` short-circuits    │
+  # │ the GitHub backend entirely — see the note below.                       │
+  # └─────────────────────────────────────────────────────────────────────────┘
+  repo: your-github-user/brisbane-tvs
   branch: main
-  base_url: https://cms-auth.brisbanetvs.com   # Cloudflare Worker OAuth proxy
+  # base_url points at the Cloudflare Worker OAuth proxy we ship under
+  # git.tools/cms-auth-worker/. Deploy that worker once per environment and
+  # keep this URL in sync with the worker's public hostname.
+  base_url: https://cms-auth.brisbanetvs.com
   auth_endpoint: /auth
 
 # Enables local editing via `npx decap-server` on port 8081.
@@ -86,3 +96,241 @@ collections:
           - { label: "Description", name: "description", widget: "text", required: false, hint: "What this photo should show — shown next to the file picker in bulk upload" }
           - { label: "Alt text", name: "alt", widget: "string", required: false, hint: "Literal description of the image for screen readers" }
       - { label: "Body",    name: "body",    widget: "markdown" }
+
+  # ===== SERVICES =====
+  # Structured service-landing-page entries. Field list matches the
+  # `services` Zod schema in src/content/config.ts — keep the two in sync.
+  - name: "services"
+    label: "Services"
+    folder: "src/content/services"
+    create: true
+    slug: "{{slug}}"
+    extension: "md"
+    format: "frontmatter"
+    preview_path: "services/{{slug}}"
+    fields:
+      - label: "Title"
+        name: "title"
+        widget: "string"
+        hint: "8–120 characters"
+        pattern: ['^.{8,120}$', "Title must be 8–120 characters"]
+      - label: "Description"
+        name: "description"
+        widget: "text"
+        hint: "40–200 characters — shows in search results"
+        pattern: ['^[\s\S]{40,200}$', "Description must be 40–200 characters"]
+      - { label: "Hero image",   name: "heroImage",   widget: "image" }
+      - label: "Hero alt"
+        name: "heroAlt"
+        widget: "string"
+        pattern: ['^.{8,}$', "Hero alt text must be at least 8 characters"]
+      - { label: "Publish date", name: "publishDate", widget: "datetime" }
+      - { label: "Updated date", name: "updatedDate", widget: "datetime", required: false }
+      # Pricing — drives the schema.org/Service Offer block
+      - { label: "Price from (AUD)", name: "priceFrom",     widget: "number", value_type: "float", min: 1 }
+      - { label: "Price to (AUD)",   name: "priceTo",       widget: "number", value_type: "float", min: 1, required: false }
+      - { label: "Currency",         name: "priceCurrency", widget: "string", default: "AUD" }
+      - { label: "Price unit",       name: "priceUnit",     widget: "string", default: "per job" }
+      - { label: "Duration",         name: "duration",      widget: "string", required: false, hint: "e.g. '60–90 min'" }
+      - { label: "Highlights", name: "highlights", widget: "list", default: [], hint: "Short bullet points — what the visitor needs to know at a glance" }
+      - { label: "Service area", name: "serviceArea", widget: "list", default: [], hint: "Suburb slugs this service is delivered in" }
+      - { label: "Warranty", name: "warranty", widget: "string", required: false }
+      - { label: "Related services",  name: "relatedServices",  widget: "list", default: [], hint: "Slugs of other services to cross-link" }
+      - { label: "Related locations", name: "relatedLocations", widget: "list", default: [], hint: "Slugs of suburbs to cross-link" }
+      - label: "FAQ"
+        name: "faq"
+        widget: "list"
+        required: false
+        default: []
+        summary: "{{fields.q}}"
+        fields:
+          - { label: "Question", name: "q", widget: "string" }
+          - { label: "Answer",   name: "a", widget: "text" }
+      - { label: "Tags",  name: "tags",  widget: "list", default: [] }
+      - { label: "Draft", name: "draft", widget: "boolean", default: false }
+      - { label: "Body",  name: "body",  widget: "markdown" }
+
+  # ===== LOCATIONS =====
+  # Suburb-level landing pages. Coordinates + postcode power the
+  # schema.org/LocalBusiness JSON-LD.
+  - name: "locations"
+    label: "Locations"
+    folder: "src/content/locations"
+    create: true
+    slug: "{{slug}}"
+    extension: "md"
+    format: "frontmatter"
+    preview_path: "locations/{{slug}}"
+    fields:
+      - label: "Title"
+        name: "title"
+        widget: "string"
+        pattern: ['^.{8,120}$', "Title must be 8–120 characters"]
+      - label: "Description"
+        name: "description"
+        widget: "text"
+        pattern: ['^[\s\S]{40,200}$', "Description must be 40–200 characters"]
+      - { label: "Hero image", name: "heroImage", widget: "image" }
+      - label: "Hero alt"
+        name: "heroAlt"
+        widget: "string"
+        pattern: ['^.{8,}$', "Hero alt text must be at least 8 characters"]
+      - { label: "Publish date", name: "publishDate", widget: "datetime" }
+      - { label: "Updated date", name: "updatedDate", widget: "datetime", required: false }
+      - { label: "Suburb",   name: "suburb",   widget: "string" }
+      - { label: "Postcode", name: "postcode", widget: "string", required: false, pattern: ['^\d{4}$', "Australian postcodes are 4 digits"] }
+      - { label: "Region",   name: "region",   widget: "string", required: false, hint: "e.g. 'Inner Brisbane', 'Bayside'" }
+      - { label: "Latitude",  name: "latitude",  widget: "number", value_type: "float", required: false }
+      - { label: "Longitude", name: "longitude", widget: "number", value_type: "float", required: false }
+      - { label: "Travel time from CBD", name: "travelTimeFromCbd", widget: "string", required: false, hint: "e.g. '25 min'" }
+      - { label: "Common housing stock", name: "commonHousingStock", widget: "list", default: [], hint: "e.g. 'brick veneer', 'Queenslander'" }
+      - { label: "Nearby suburbs",      name: "nearbySuburbs",      widget: "list", default: [] }
+      - { label: "Services offered",    name: "servicesOffered",    widget: "list", default: [], hint: "Slugs from the services collection" }
+      - { label: "Job count", name: "jobCount", widget: "number", value_type: "int", required: false, min: 0 }
+      - label: "FAQ"
+        name: "faq"
+        widget: "list"
+        required: false
+        default: []
+        summary: "{{fields.q}}"
+        fields:
+          - { label: "Question", name: "q", widget: "string" }
+          - { label: "Answer",   name: "a", widget: "text" }
+      - { label: "Tags",  name: "tags",  widget: "list", default: [] }
+      - { label: "Draft", name: "draft", widget: "boolean", default: false }
+      - { label: "Body",  name: "body",  widget: "markdown" }
+
+  # ===== PRODUCTS =====
+  # TV / AV product pages. Emits schema.org/Product JSON-LD with an Offer.
+  - name: "products"
+    label: "Products"
+    folder: "src/content/products"
+    create: true
+    slug: "{{slug}}"
+    extension: "md"
+    format: "frontmatter"
+    preview_path: "products/{{slug}}"
+    fields:
+      - label: "Title"
+        name: "title"
+        widget: "string"
+        pattern: ['^.{8,120}$', "Title must be 8–120 characters"]
+      - label: "Description"
+        name: "description"
+        widget: "text"
+        pattern: ['^[\s\S]{40,200}$', "Description must be 40–200 characters"]
+      - { label: "Hero image", name: "heroImage", widget: "image" }
+      - label: "Hero alt"
+        name: "heroAlt"
+        widget: "string"
+        pattern: ['^.{8,}$', "Hero alt text must be at least 8 characters"]
+      - { label: "Publish date", name: "publishDate", widget: "datetime" }
+      - { label: "Updated date", name: "updatedDate", widget: "datetime", required: false }
+      - { label: "Brand", name: "brand", widget: "string" }
+      - { label: "Model", name: "model", widget: "string" }
+      - { label: "SKU",   name: "sku",   widget: "string", required: false }
+      - label: "Category"
+        name: "category"
+        widget: "select"
+        default: "tv"
+        options:
+          - { label: "TV",        value: "tv" }
+          - { label: "Soundbar",  value: "soundbar" }
+          - { label: "Media box", value: "media-box" }
+          - { label: "Cable",     value: "cable" }
+          - { label: "Accessory", value: "accessory" }
+      - { label: "Price (AUD)", name: "priceAud", widget: "number", value_type: "float", min: 1 }
+      - { label: "Was price",   name: "priceWas", widget: "number", value_type: "float", min: 1, required: false }
+      - label: "Availability"
+        name: "availability"
+        widget: "select"
+        default: "InStock"
+        options: ["InStock", "OutOfStock", "PreOrder"]
+      # Specs
+      - { label: "Screen size (inches)", name: "screenSizeInches", widget: "number", value_type: "float", min: 1, required: false }
+      - { label: "Resolution",           name: "resolution",       widget: "string", required: false, hint: "e.g. '4K UHD', '8K'" }
+      - { label: "Panel type",           name: "panelType",        widget: "string", required: false, hint: "e.g. 'OLED', 'QLED', 'Mini-LED'" }
+      - { label: "Refresh rate (Hz)",    name: "refreshRateHz",    widget: "number", value_type: "int", min: 1, required: false }
+      - { label: "HDR support",          name: "hdrSupport",       widget: "list", default: [], hint: "e.g. 'HDR10', 'Dolby Vision'" }
+      - { label: "VESA",                 name: "vesa",             widget: "string", required: false, hint: "e.g. '400x400'" }
+      - { label: "Weight (kg)",          name: "weightKg",         widget: "number", value_type: "float", min: 0, required: false }
+      # Review
+      - { label: "Pros", name: "pros", widget: "list", default: [] }
+      - { label: "Cons", name: "cons", widget: "list", default: [] }
+      - { label: "Rating (0–5)", name: "rating", widget: "number", value_type: "float", min: 0, max: 5, required: false }
+      - { label: "Review count", name: "reviewCount", widget: "number", value_type: "int", min: 0, required: false }
+      # Commerce
+      - { label: "Affiliate URL",       name: "affiliateUrl",      widget: "string", required: false, pattern: ['^https?://.+', "Must be a full URL"] }
+      - { label: "Recommended mounts",  name: "recommendedMounts", widget: "list", default: [], hint: "Slugs from the mounts collection" }
+      - { label: "Tags",  name: "tags",  widget: "list", default: [] }
+      - { label: "Draft", name: "draft", widget: "boolean", default: false }
+      - { label: "Body",  name: "body",  widget: "markdown" }
+
+  # ===== MOUNTS =====
+  # Wall-mount / bracket product pages.
+  - name: "mounts"
+    label: "Mounts"
+    folder: "src/content/mounts"
+    create: true
+    slug: "{{slug}}"
+    extension: "md"
+    format: "frontmatter"
+    preview_path: "mounts/{{slug}}"
+    fields:
+      - label: "Title"
+        name: "title"
+        widget: "string"
+        pattern: ['^.{8,120}$', "Title must be 8–120 characters"]
+      - label: "Description"
+        name: "description"
+        widget: "text"
+        pattern: ['^[\s\S]{40,200}$', "Description must be 40–200 characters"]
+      - { label: "Hero image", name: "heroImage", widget: "image" }
+      - label: "Hero alt"
+        name: "heroAlt"
+        widget: "string"
+        pattern: ['^.{8,}$', "Hero alt text must be at least 8 characters"]
+      - { label: "Publish date", name: "publishDate", widget: "datetime" }
+      - { label: "Updated date", name: "updatedDate", widget: "datetime", required: false }
+      - { label: "Brand", name: "brand", widget: "string" }
+      - { label: "Model", name: "model", widget: "string" }
+      - { label: "SKU",   name: "sku",   widget: "string", required: false }
+      - label: "Mount type"
+        name: "mountType"
+        widget: "select"
+        default: "full-motion"
+        options:
+          - { label: "Fixed",       value: "fixed" }
+          - { label: "Tilt",        value: "tilt" }
+          - { label: "Full-motion", value: "full-motion" }
+          - { label: "Ceiling",     value: "ceiling" }
+          - { label: "Outdoor",     value: "outdoor" }
+      - { label: "Price (AUD)", name: "priceAud", widget: "number", value_type: "float", min: 1 }
+      - { label: "Was price",   name: "priceWas", widget: "number", value_type: "float", min: 1, required: false }
+      - label: "Availability"
+        name: "availability"
+        widget: "select"
+        default: "InStock"
+        options: ["InStock", "OutOfStock", "PreOrder"]
+      # Compatibility
+      - { label: "Min screen (inches)", name: "minScreenInches", widget: "number", value_type: "float", min: 1 }
+      - { label: "Max screen (inches)", name: "maxScreenInches", widget: "number", value_type: "float", min: 1 }
+      - { label: "Max weight (kg)",     name: "maxWeightKg",     widget: "number", value_type: "float", min: 0 }
+      - { label: "VESA min", name: "vesaMin", widget: "string", required: false, hint: "e.g. '100x100'" }
+      - { label: "VESA max", name: "vesaMax", widget: "string", required: false, hint: "e.g. '600x400'" }
+      # Motion + geometry
+      - { label: "Tilt (°)",       name: "tiltDegrees",   widget: "number", value_type: "float", min: 0, required: false }
+      - { label: "Swivel (°)",     name: "swivelDegrees", widget: "number", value_type: "float", min: 0, required: false }
+      - { label: "Extension (mm)", name: "extensionMm",   widget: "number", value_type: "float", min: 0, required: false }
+      - { label: "Profile (mm)",   name: "profileMm",     widget: "number", value_type: "float", min: 0, required: false }
+      - { label: "Finish",         name: "finish",        widget: "string", required: false, hint: "e.g. 'matte black'" }
+      # Review
+      - { label: "Pros", name: "pros", widget: "list", default: [] }
+      - { label: "Cons", name: "cons", widget: "list", default: [] }
+      - { label: "Rating (0–5)", name: "rating", widget: "number", value_type: "float", min: 0, max: 5, required: false }
+      - { label: "Review count", name: "reviewCount", widget: "number", value_type: "int", min: 0, required: false }
+      - { label: "Affiliate URL",  name: "affiliateUrl",   widget: "string", required: false, pattern: ['^https?://.+', "Must be a full URL"] }
+      - { label: "Compatible TVs", name: "compatibleTvs",  widget: "list", default: [], hint: "Slugs from the products collection" }
+      - { label: "Tags",  name: "tags",  widget: "list", default: [] }
+      - { label: "Draft", name: "draft", widget: "boolean", default: false }
+      - { label: "Body",  name: "body",  widget: "markdown" }

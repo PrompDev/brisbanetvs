@@ -1,5 +1,7 @@
 ---
 import AdminShell from "~/layouts/AdminShell.astro";
+import BulkCreateModal from "~/components/admin/BulkCreateModal.astro";
+import PublishToggle from "~/components/admin/PublishToggle.astro";
 import { getCollection } from "astro:content";
 
 /**
@@ -7,6 +9,9 @@ import { getCollection } from "astro:content";
  *
  * First row is the public /products/ landing page. Subsequent rows list
  * every product entry sorted by price descending (flagship first).
+ *
+ * Top-right "+ New product ▾" dropdown offers both the single-entry CMS
+ * flow and the bulk .md uploader (see BulkCreateModal).
  */
 const products = (await getCollection("products")).sort(
   (a, b) => b.data.priceAud - a.data.priceAud
@@ -16,9 +21,21 @@ const drafts = products.filter((p) => p.data.draft).length;
 ---
 <AdminShell title="Products" active="products" description="TV and AV product pages.">
   <div slot="actions">
-    <a class="btn btn-primary" href="/admin/#/collections/products/new" target="_blank" rel="noopener">
-      + New product
-    </a>
+    <div class="np-dropdown" data-np-root>
+      <button type="button" class="btn btn-primary" data-np-toggle aria-haspopup="true" aria-expanded="false">
+        + New product <span class="np-caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="np-menu" data-np-menu hidden role="menu">
+        <a class="np-item" href="/admin/#/collections/products/new" target="_blank" rel="noopener" role="menuitem">
+          <span class="np-item-title">Single product</span>
+          <span class="np-item-sub">Open the CMS editor</span>
+        </a>
+        <button type="button" class="np-item" data-bulk-open role="menuitem">
+          <span class="np-item-title">Bulk upload .md files</span>
+          <span class="np-item-sub">Drag up to 50 files at once</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <div class="content">
@@ -27,6 +44,7 @@ const drafts = products.filter((p) => p.data.draft).length;
         <h2>Products<span class="counter">({products.length} entries · {published} live · {drafts} draft)</span></h2>
         <div class="panel-actions">
           <a class="btn" href="/products/" target="_blank" rel="noopener">View hub</a>
+          <a class="btn" href="/templates/product-page-template.md" download>Download .md template</a>
           <a class="btn" href="/admin/#/collections/products" target="_blank" rel="noopener">Manage in CMS</a>
         </div>
       </div>
@@ -91,7 +109,8 @@ const drafts = products.filter((p) => p.data.draft).length;
                   <td>
                     <div class="actions">
                       <a class="btn" href={`/products/${p.slug}/`} target="_blank" rel="noopener">View</a>
-                      <a class="btn btn-primary" href={`/admin/#/collections/products/entries/${p.slug}`} target="_blank" rel="noopener">Edit</a>
+                      <a class="btn" href={`/admin/#/collections/products/entries/${p.slug}`} target="_blank" rel="noopener">Edit</a>
+                      <PublishToggle collection="products" slug={p.slug} draft={p.data.draft} />
                     </div>
                   </td>
                 </tr>
@@ -102,6 +121,9 @@ const drafts = products.filter((p) => p.data.draft).length;
       </div>
     </section>
   </div>
+
+  {/* Bulk-upload overlay (hidden by default, opened by [data-bulk-open]) */}
+  <BulkCreateModal collection="products" />
 
   <style is:global>
     .row-index td { background: #fafbff; }

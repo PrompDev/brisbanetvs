@@ -1,0 +1,208 @@
+---
+/**
+ * PublishToggle.astro — one-click flip of the `draft:` frontmatter field on
+ * any content entry in any collection (blog, services, locations, products,
+ * mounts).
+ *
+ * Surface: a single "Publish" (when draft) or "Unpublish" (when live) button
+ * that sits in the Actions column of the admin list pages.
+ *
+ * How it works:
+ *   1. Click → probe the Decap local proxy at :8081 (started with
+ *      `npx decap-server`).
+ *   2. `getEntry` pulls the live raw file off disk.
+ *   3. A tiny textual flip rewrites `draft: true` ↔ `draft: false` without
+ *      round-tripping through a YAML parser (bulletproof for our schema,
+ *      which always emits the key unquoted).
+ *   4. `persistEntry` writes it back. In dev that's a direct file write; in
+ *      production (against the GitHub backend configured in
+ *      public/admin/config.yml) it commits straight to main.
+ *   5. location.reload() so the row badge re-reads from disk.
+ *
+ * Graceful degradation: if the proxy isn't running, we show an alert that
+ * tells the user to either start `npx decap-server` or click the Edit button
+ * next to this one (which opens the entry in the full Decap CMS).
+ *
+ * One delegated `click` listener handles every toggle on the page, so this
+ * component can be rendered N times per page with zero script duplication.
+ */
+export interface Props {
+  /** Decap collection name — must match config.yml and src/content/config.ts */
+  collection: "blog" | "services" | "locations" | "products" | "mounts";
+  /** Entry slug (the filename without `.md`) */
+  slug: string;
+  /** Current draft state — drives label + colour of the button */
+  draft: boolean;
+}
+const { collection, slug, draft } = Astro.props;
+const label = draft ? "Publish" : "Unpublish";
+const cls = draft ? "btn btn-primary pt-btn" : "btn pt-btn pt-btn-warn";
+const titleAttr = draft
+  ? "Flip draft → live (commits to main)"
+  : "Flip live → draft (hides from the public site on next build)";
+---
+<button
+  type="button"
+  class={cls}
+  data-publish-toggle
+  data-collection={collection}
+  data-slug={slug}
+  data-draft={String(draft)}
+  title={titleAttr}
+  aria-label={`${label} ${collection} ${slug}`}
+>{label}</button>
+
+<script is:inline>
+  // Install once per page. Safe if PublishToggle is rendered in every row —
+  // only the first instance wires the listener, subsequent ones no-op.
+  (function () {
+    if (window.__publishToggleInstalled) return;
+    window.__publishToggleInstalled = true;
+
+    const DECAP_URL = "http://localhost:8081/api/v1";
+    const DECAP_BRANCH = "main";
+
+    async function decap(action, params) {
+      const r = await fetch(DECAP_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: action, params: params || {} }),
+      });
+      if (!r.ok) {
+        let body = "";
+        try { body = await r.text(); } catch (_) {}
+        throw new Error("Decap " + action + " " + r.status + ": " + (body || r.statusText));
+      }
+      return await r.json();
+    }
+
+    /**
+     * Flip the `draft:` frontmatter key textually. Much safer than a full
+     * YAML round-trip because we never re-serialize the rest of the
+     * frontmatter (which could contain dates, arrays, nested FAQ blocks,
+     * smart quotes, etc.).
+     *
+     * Recognises unquoted `draft: true` / `draft: false`. If the key is
+     * missing (legacy file), it appends it to the end of the frontmatter.
+     */
+    function flipDraft(raw, nextDraft) {
+      const m = raw.match(/^(---\r?\n)([\s\S]*?)(\r?\n---\r?\n)([\s\S]*)$/);
+      if (!m) throw new Error("Not a frontmatter file (missing --- delimiters)");
+      const open = m[1], fm = m[2], close = m[3], body = m[4];
+      const draftRe = /^draft:\s*(?:true|false)\s*$/m;
+      let newFm;
+      if (draftRe.test(fm)) {
+        newFm = fm.replace(draftRe, "draft: " + nextDraft);
+      } else {
+        newFm = fm.replace(/\s+$/, "") + "\ndraft: " + nextDraft;
+      }
+      return open + newFm + close + body;
+    }
+
+    /**
+     * Decap's local proxy returns slightly different shapes across versions
+     * for the `getEntry` action. Normalise so we always end up with a string.
+     */
+    function extractRaw(res) {
+      if (!res) return "";
+      if (typeof res.raw === "string") return res.raw;
+      if (res.data && typeof res.data.raw === "string") return res.data.raw;
+      if (res.data && res.data.file && typeof res.data.file.content === "string") return res.data.file.content;
+      if (res.file && typeof res.file.content === "string") return res.file.content;
+      return "";
+    }
+
+    document.addEventListener("click", async function (e) {
+      const target = e.target instanceof Element ? e.target : null;
+      const btn = target ? target.closest("[data-publish-toggle]") : null;
+      if (!btn) return;
+      if (btn.disabled) return;
+      e.preventDefault();
+
+      const collection = btn.dataset.collection;
+      const slug = btn.dataset.slug;
+      const isDraft = btn.dataset.draft === "true";
+      const nextDraft = !isDraft;
+      const verb = nextDraft ? "Unpublish" : "Publish";
+
+      // Going live warrants a confirm. Going back to draft is reversible and
+      // low-stakes, so we skip the nag there.
+      if (!nextDraft) {
+        const ok = confirm(
+          "Publish " + collection + "/" + slug + "?\n\n" +
+          "This flips draft: false and commits to the main branch " +
+          "(via CMS proxy in dev, via GitHub backend in production). " +
+          "The public page appears on the next build."
+        );
+        if (!ok) return;
+      }
+
+      const originalLabel = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = verb + "ing…";
+
+      try {
+        // 1. Probe — cheap + catches the "proxy not running" case early
+        await decap("info", {});
+
+        // 2. Fetch the live raw off disk
+        const got = await decap("getEntry", { collection: collection, slug: slug });
+        const raw0 = extractRaw(got);
+        if (!raw0) throw new Error("Empty response from getEntry");
+
+        // 3. Textual flip (no YAML parsing)
+        const raw1 = flipDraft(raw0, nextDraft);
+
+        // 4. Write back
+        await decap("persistEntry", {
+          branch: DECAP_BRANCH,
+          entry: {
+            slug: slug,
+            path: "src/content/" + collection + "/" + slug + ".md",
+            raw: raw1,
+          },
+          assets: [],
+          options: {
+            commitMessage: verb + " " + collection + "/" + slug,
+            useWorkflow: false,
+            status: nextDraft ? "draft" : "published",
+          },
+        });
+
+        // 5. Reload — Astro's dev server will have already picked up the file
+        //    change, so the row badge will reflect the new state.
+        location.reload();
+      } catch (err) {
+        console.error("[PublishToggle]", err);
+        btn.disabled = false;
+        btn.textContent = originalLabel;
+        const msg = err && err.message ? err.message : String(err);
+        alert(
+          "Couldn't " + verb.toLowerCase() + " " + collection + "/" + slug + ".\n\n" +
+          "Error: " + msg + "\n\n" +
+          "Is the local CMS proxy running? Start it in a second terminal with:\n" +
+          "  npx decap-server\n\n" +
+          "Or click the Edit button to flip the Draft toggle in the full CMS editor."
+        );
+      }
+    });
+  })();
+</script>
+
+<style is:global>
+  /* Amber "Unpublish" variant — distinct from the blue primary Publish so the
+     user feels the asymmetry between going live and hiding. */
+  .pt-btn-warn {
+    background: #b2440a;
+    color: #fff;
+    border-color: #b2440a;
+  }
+  .pt-btn-warn:hover:not(:disabled) {
+    background: #8a3408;
+    border-color: #8a3408;
+  }
+  .pt-btn:disabled {
+    opacity: 0.55;
+    cursor: wait;
+  }
+</style>

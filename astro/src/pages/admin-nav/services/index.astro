@@ -1,5 +1,7 @@
 ---
 import AdminShell from "~/layouts/AdminShell.astro";
+import BulkCreateModal from "~/components/admin/BulkCreateModal.astro";
+import PublishToggle from "~/components/admin/PublishToggle.astro";
 import { getCollection } from "astro:content";
 
 /**
@@ -8,6 +10,10 @@ import { getCollection } from "astro:content";
  * First row is always the public /services/ landing page so the dashboard
  * doubles as a site-map. Subsequent rows are every published service entry
  * from the content collection, sorted by price-from ascending.
+ *
+ * The top-right "+ New service ▾" dropdown offers both the single-entry
+ * CMS flow and the bulk .md uploader (see BulkCreateModal). The uploader
+ * lives at the end of this file and renders a hidden overlay.
  */
 const services = (await getCollection("services")).sort(
   (a, b) => a.data.priceFrom - b.data.priceFrom
@@ -17,9 +23,21 @@ const drafts = services.filter((s) => s.data.draft).length;
 ---
 <AdminShell title="Services" active="services" description="TV mounting services.">
   <div slot="actions">
-    <a class="btn btn-primary" href="/admin/#/collections/services/new" target="_blank" rel="noopener">
-      + New service
-    </a>
+    <div class="np-dropdown" data-np-root>
+      <button type="button" class="btn btn-primary" data-np-toggle aria-haspopup="true" aria-expanded="false">
+        + New service <span class="np-caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="np-menu" data-np-menu hidden role="menu">
+        <a class="np-item" href="/admin/#/collections/services/new" target="_blank" rel="noopener" role="menuitem">
+          <span class="np-item-title">Single service</span>
+          <span class="np-item-sub">Open the CMS editor</span>
+        </a>
+        <button type="button" class="np-item" data-bulk-open role="menuitem">
+          <span class="np-item-title">Bulk upload .md files</span>
+          <span class="np-item-sub">Drag up to 50 files at once</span>
+        </button>
+      </div>
+    </div>
   </div>
 
   <div class="content">
@@ -28,6 +46,7 @@ const drafts = services.filter((s) => s.data.draft).length;
         <h2>Services<span class="counter">({services.length} entries · {published} live · {drafts} draft)</span></h2>
         <div class="panel-actions">
           <a class="btn" href="/services/" target="_blank" rel="noopener">View hub</a>
+          <a class="btn" href="/templates/service-page-template.md" download>Download .md template</a>
           <a class="btn" href="/admin/#/collections/services" target="_blank" rel="noopener">Manage in CMS</a>
         </div>
       </div>
@@ -97,7 +116,8 @@ const drafts = services.filter((s) => s.data.draft).length;
                   <td>
                     <div class="actions">
                       <a class="btn" href={`/services/${s.slug}/`} target="_blank" rel="noopener">View</a>
-                      <a class="btn btn-primary" href={`/admin/#/collections/services/entries/${s.slug}`} target="_blank" rel="noopener">Edit</a>
+                      <a class="btn" href={`/admin/#/collections/services/entries/${s.slug}`} target="_blank" rel="noopener">Edit</a>
+                      <PublishToggle collection="services" slug={s.slug} draft={s.data.draft} />
                     </div>
                   </td>
                 </tr>
@@ -108,6 +128,9 @@ const drafts = services.filter((s) => s.data.draft).length;
       </div>
     </section>
   </div>
+
+  {/* Bulk-upload overlay (hidden by default, opened by [data-bulk-open]) */}
+  <BulkCreateModal collection="services" />
 
   <style is:global>
     /* Visually lift the landing-page row so it reads as "this is a whole

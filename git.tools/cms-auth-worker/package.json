@@ -1,0 +1,15 @@
+{
+  "name": "cms-auth-worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloudflare Worker OAuth proxy for Decap CMS (GitHub backend)",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

@@ -289,3 +289,26 @@
   [+205/-0 lines] [+1092/-0 chars]  documentation/07-n8n-automations.md 
   [+66/-0 lines] [+95/-0 chars]  git.tools/CHANGELOG.log 
  
+---------------------------------------- 
+[2026-04-22 16:08] 17 file(s) | commit: e5bdb43 
+---------------------------------------- 
+  Summary:  17 files changed, 2486 insertions(+), 83 deletions(-) 
+ 
+  [+18/-19 lines] [+67/-0 chars]  6 
+  [+18/-19 lines] [+67/-0 chars]  7 
+  [+250/-2 lines] [+4929/-0 chars]  astro/public/admin/config.yml 
+  [+1444/-0 lines] [+10602/-0 chars]  astro/src/components/admin/BulkCreateModal.astro 
+  [+208/-0 lines] [+826/-0 chars]  astro/src/components/admin/PublishToggle.astro 
+  [+0/-13 lines] [+60/-0 chars]  astro/src/content/blog/test121212.md 
+  [+0/-13 lines] [+60/-0 chars]  astro/src/content/blog/testtest.md 
+  [+3/-1 lines] [+0/-0 chars]  astro/src/pages/admin-nav/blogs/index.astro 
+  [+28/-4 lines] [+9/-0 chars]  astro/src/pages/admin-nav/locations/index.astro 
+  [+26/-4 lines] [+9/-0 chars]  astro/src/pages/admin-nav/mounts/index.astro 
+  [+26/-4 lines] [+9/-0 chars]  astro/src/pages/admin-nav/products/index.astro 
+  [+27/-4 lines] [+9/-0 chars]  astro/src/pages/admin-nav/services/index.astro 
+  [+5/-0 lines] [+0/-0 chars]  git.tools/cms-auth-worker/.gitignore 
+  [+125/-0 lines] [+367/-0 chars]  git.tools/cms-auth-worker/README.md 
+  [+15/-0 lines] [+74/-0 chars]  git.tools/cms-auth-worker/package.json 
+  [+251/-0 lines] [+710/-0 chars]  git.tools/cms-auth-worker/src/index.js 
+  [+42/-0 lines] [+54/-0 chars]  git.tools/cms-auth-worker/wrangler.toml 
+ 
