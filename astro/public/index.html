@@ -21,15 +21,22 @@
     <style>
         /* === Reset === */
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html { height: 100%; }
+        /* html is the single scroll container; body just grows with content.
+           Previously both had height:100% and body had overflow-x:hidden —
+           per CSS spec that silently promotes body's overflow-y to `auto`,
+           giving the page a second scrollbar and letting you scroll past
+           the footer. */
+        html {
+            min-height: 100%;
+            overflow-x: hidden;
+        }
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             color: #1a1a1a;
             background: #fff;
             line-height: 1.5;
             -webkit-font-smoothing: antialiased;
-            height: 100%;
-            overflow-x: hidden;
+            min-height: 100%;
         }
         a { color: inherit; text-decoration: none; }
         ul { list-style: none; }
@@ -782,6 +789,7 @@
             letter-spacing: 0.2px;
         }
         body.menu-open { overflow: hidden; }
+        html:has(body.menu-open) { overflow: hidden; }
 
         /* Mobile Sticky Bottom Bar */
         .mobile-sticky-bar {
@@ -3426,8 +3434,13 @@
             .mobile-sticky-bar a { font-size: 11px; letter-spacing: 0.6px; }
         }
 
-        /* Prevent any section accidentally triggering horizontal page scroll */
-        html, body { max-width: 100%; overflow-x: hidden; }
+        /* Prevent any section accidentally triggering horizontal page scroll.
+           Only html gets overflow-x:hidden. Putting overflow-x on body
+           silently promotes it to a scroll container (overflow-y computes
+           to `auto` per spec), which creates a SECOND scrollbar alongside
+           html's and lets you scroll past the footer. */
+        html { max-width: 100%; overflow-x: hidden; }
+        body { max-width: 100%; }
 
         /* ================================================================
            FOOTER — dark, editorial, SEO-rich. Adapted from MOD Lighting style.
@@ -3827,16 +3840,16 @@
 
                 <nav class="main-nav">
                     <div class="nav-item" data-menu="services">
-                        <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Services <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                        <a href="/services/" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Services <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
                     </div>
                     <div class="nav-item" data-menu="locations">
-                        <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Locations <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                        <a href="/locations/" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Locations <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
                     </div>
                     <div class="nav-item" data-menu="products">
-                        <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Products <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                        <a href="/products/" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Products <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
                     </div>
                     <div class="nav-item" data-menu="mounts">
-                        <button class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Mounts <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                        <a href="/mounts/" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">Mounts <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></a>
                     </div>
                     <a href="/pricing/">Pricing</a>
                     <a href="#gallery">Gallery</a>
@@ -5054,20 +5067,13 @@
             closeTimer = setTimeout(closeMenu, CLOSE_DELAY);
         }
 
-        // Hover on triggers
+        // Hover on triggers opens the mega-menu. Click is allowed to
+        // navigate normally (the triggers are now <a> tags pointing at
+        // /services/, /locations/, /products/, /mounts/).
         navItems.forEach(item => {
             const key = item.getAttribute('data-menu');
             item.addEventListener('mouseenter', () => scheduleOpen(key));
             item.addEventListener('mouseleave', scheduleClose);
-            // Click toggles (keyboard / tap fallback)
-            const btn = item.querySelector('.nav-dropdown-trigger');
-            if (btn) {
-                btn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    if (currentMenu === key) closeMenu();
-                    else openMenu(key);
-                });
-            }
         });
 
         // Hover on panels keeps them open
