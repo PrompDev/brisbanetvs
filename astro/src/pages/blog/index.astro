@@ -240,48 +240,54 @@ const blogLd = {
   .blog-lede { font-size: 1.05rem; color: #3d4656; line-height: 1.55; margin: 0; max-width: 720px; }
 
   /* ========== Featured card — the first (most recent) post ========== */
-  /* Stacked layout: cinematic image on top, rich body below. Dropped
-     the 1.3fr/1fr split so the photo gets full editorial width and the
-     body can breathe with proper symmetric padding. */
-  .blog-featured { margin: 0 0 3rem; }
-  .blog-featured-link { display: flex; flex-direction: column; text-decoration: none; color: inherit; border-radius: 14px; overflow: hidden; background: #fff; border: 1px solid #eef0f3; transition: border-color 0.15s, box-shadow 0.15s; }
+  /* Stacked layout: cinematic image on top, rich body below. Capped at
+     900px so the card reads as a sized editorial feature on wide
+     viewports rather than sprawling across the full 1720px hub width.
+     Image is shorter (24/9) and body padding is tighter to keep the
+     whole card compact. */
+  .blog-featured { margin: 0 0 3rem; max-width: 900px; }
+  .blog-featured-link { display: flex; flex-direction: column; text-decoration: none; color: inherit; border-radius: 12px; overflow: hidden; background: #fff; border: 1px solid #eef0f3; transition: border-color 0.15s, box-shadow 0.15s; }
   .blog-featured-link:hover { border-color: #131619; box-shadow: 0 6px 28px rgba(15, 22, 36, 0.08); }
-  /* Wide cinematic image — aspect-ratio: 21/9 gives the hero card a
-     "magazine cover" feel now that it's stacked rather than split. */
-  .blog-featured-img-wrap { position: relative; width: 100%; aspect-ratio: 21/9; overflow: hidden; background: #eef0f3; }
+  /* Flatter, more compact hero image. Was 21/9 (tall cinematic);
+     now 24/9 so the card's vertical footprint drops noticeably. */
+  .blog-featured-img-wrap { position: relative; width: 100%; aspect-ratio: 24/9; overflow: hidden; background: #eef0f3; }
   .blog-featured-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-  /* Flag sits 5px off the top-left corner of the image with a 14px
-     border-radius — the same rounding as the image's own top corners
-     so the flag reads as a matching editorial label rather than a
-     random sticker. Offset (not flush) per design brief. */
-  .blog-featured-flag { position: absolute; top: 5px; left: 5px; background: #131619; color: #fff; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; padding: 0.55rem 0.95rem; border-radius: 14px; text-transform: uppercase; }
-  /* Symmetric padding now that the card is stacked — the old
-     2.5rem 2rem 2.5rem 0 was asymmetric to hug the split image on
-     the left. */
-  .blog-featured-body { display: flex; flex-direction: column; padding: 2rem 2.5rem 2.25rem; gap: 0.9rem; }
+  /* Flag sits 5px off the top-left corner of the image with a 12px
+     border-radius — matches the image's own top corners so the flag
+     reads as a matching editorial label rather than a random sticker.
+     Slightly smaller now that the card itself is smaller. */
+  .blog-featured-flag { position: absolute; top: 5px; left: 5px; background: #131619; color: #fff; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; padding: 0.4rem 0.75rem; border-radius: 12px; text-transform: uppercase; }
+  /* Tighter symmetric padding so the body doesn't dwarf the smaller
+     image. Was 2rem 2.5rem 2.25rem. */
+  .blog-featured-body { display: flex; flex-direction: column; padding: 1.4rem 1.75rem 1.6rem; gap: 0.7rem; }
 
   /* Tag chips — small pill chips at the top of the body so the post's
      topic is visible before the title. */
   .blog-featured-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-  .blog-featured-tag { display: inline-block; padding: 0.25rem 0.65rem; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; color: #131619; background: #eef0f3; border-radius: 999px; }
+  .blog-featured-tag { display: inline-block; padding: 0.22rem 0.6rem; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; color: #131619; background: #eef0f3; border-radius: 999px; }
 
-  .blog-featured-title { margin: 0; font-size: clamp(1.5rem, 2.6vw, 2.25rem); line-height: 1.2; color: #131619; font-family: 'Noto Serif', serif; font-weight: 700; }
-  .blog-featured-desc { margin: 0; font-size: 1.05rem; color: #3d4656; line-height: 1.55; }
+  /* Title scaled down from clamp(1.5rem, 2.6vw, 2.25rem) so it fits
+     the smaller card without wrapping to four lines. */
+  .blog-featured-title { margin: 0; font-size: clamp(1.25rem, 2vw, 1.6rem); line-height: 1.2; color: #131619; font-family: 'Noto Serif', serif; font-weight: 700; }
+  .blog-featured-desc { margin: 0; font-size: 0.95rem; color: #3d4656; line-height: 1.5; }
 
   /* Meta row — labelled inline data with matching SVG icons. Divider
-     dots between items keep it readable without stacking everything. */
-  .blog-featured-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin-top: 0.3rem; padding-top: 0.9rem; border-top: 1px solid #eef0f3; font-size: 0.85rem; color: #5a6271; }
+     dots between items keep it readable without stacking everything.
+     Slightly smaller than before to match the reduced card. */
+  .blog-featured-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.55rem; margin-top: 0.2rem; padding-top: 0.75rem; border-top: 1px solid #eef0f3; font-size: 0.8rem; color: #5a6271; }
   .blog-featured-meta-item { display: inline-flex; align-items: center; gap: 0.4rem; }
-  .blog-featured-meta-item svg { width: 15px; height: 15px; color: #8a94a6; flex-shrink: 0; }
+  .blog-featured-meta-item svg { width: 14px; height: 14px; color: #8a94a6; flex-shrink: 0; }
   .blog-featured-meta-item strong { color: #131619; font-weight: 600; }
   .blog-featured-meta-sep { color: #d7dbe2; font-weight: 700; }
 
-  .blog-featured-cta { margin-top: 0.25rem; font-size: 0.95rem; font-weight: 600; color: #131619; }
+  .blog-featured-cta { margin-top: 0.2rem; font-size: 0.88rem; font-weight: 600; color: #131619; }
 
   @media (max-width: 860px) {
+    /* Card already capped at 900px; on narrow viewports it just fills
+       the container. Shorter image + tighter padding on mobile. */
     .blog-featured-img-wrap { aspect-ratio: 16/10; }
-    .blog-featured-body { padding: 1.5rem; }
-    .blog-featured-meta { font-size: 0.8rem; }
+    .blog-featured-body { padding: 1.15rem 1.25rem 1.3rem; }
+    .blog-featured-meta { font-size: 0.78rem; }
   }
 
   /* ========== Divider ========== */
@@ -359,10 +365,10 @@ const blogLd = {
        Flag shrinks slightly + slightly tighter inset so it doesn't
        crowd the thumb-zone. */
     .blog-featured { margin: 0 0 2rem; }
-    .blog-featured-flag { padding: 0.45rem 0.75rem; font-size: 0.7rem; }
-    .blog-featured-body { padding: 1.25rem; gap: 0.75rem; }
-    .blog-featured-title { font-size: clamp(1.25rem, 5vw, 1.6rem); }
-    .blog-featured-desc { font-size: 0.98rem; }
+    .blog-featured-flag { padding: 0.35rem 0.65rem; font-size: 0.65rem; }
+    .blog-featured-body { padding: 1rem 1.15rem 1.15rem; gap: 0.6rem; }
+    .blog-featured-title { font-size: clamp(1.1rem, 4.5vw, 1.4rem); }
+    .blog-featured-desc { font-size: 0.92rem; }
     /* Meta row stacks cleanly on phones — flex-wrap already on,
        just tighten the gap and hide the visual separator dots since
        wrapped items don't need them. */
