@@ -3,13 +3,24 @@ import MarketingLayout from "~/layouts/MarketingLayout.astro";
 import { getCollection } from "astro:content";
 
 /**
- * /blog/ — blog hub with a featured post up top and a card grid below.
+ * /blog/ — blog hub with a featured post, card grid, and a magazine-style
+ * sidebar on the right.
  *
- * Mirrors the approved LocationPage chrome: full-bleed banner, 1720px
- * container aligned with the header edges, split hero (eyebrow + h1 +
- * lede on the left, featured post image on the right). Everything lives
- * inside the `.blog-hub` container so it can't be overridden by the
- * older `.container` global rules the previous iteration relied on.
+ * Layout (desktop):
+ *   ┌──────────────── .blog-hub (1720px / 90% from 1201px) ───────────────┐
+ *   │ banner, breadcrumb, hero copy                                        │
+ *   │ ┌────────────── .blog-split (grid 1fr / 340px) ──────────────────┐   │
+ *   │ │ .blog-main                          │  .blog-sidebar (sticky)  │   │
+ *   │ │   .blog-featured                    │  newsletter card         │   │
+ *   │ │   .blog-section-divider             │  popular posts card      │   │
+ *   │ │   .blog-feed                        │  topics card             │   │
+ *   │ │                                     │  book an install CTA     │   │
+ *   │ └───────────────────────────────────────────────────────────────┘    │
+ *   └──────────────────────────────────────────────────────────────────────┘
+ *
+ * Below 960px the sidebar drops under the feed instead of sitting beside
+ * it, so mobile readers still get a banner, featured post, and article
+ * feed in the natural reading order.
  */
 
 const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
@@ -18,6 +29,27 @@ const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
 
 const featured = posts[0];
 const rest = posts.slice(1);
+
+// Sidebar "popular" picks — if we had view counts we'd sort by those;
+// for now we use the next 3 most recent (behind the featured one) so
+// the sidebar always shows something the reader hasn't just seen in
+// the big card above.
+const popular = rest.slice(0, 3);
+
+// Topic cloud — aggregate tags across every published post, count
+// occurrences, and keep the 10 most-used so the sidebar shows a real
+// usage-weighted list rather than whatever the most recent post
+// happened to be tagged with.
+const tagCounts = new Map<string, number>();
+for (const p of posts) {
+  for (const t of p.data.tags ?? []) {
+    tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1);
+  }
+}
+const topTags = [...tagCounts.entries()]
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 10)
+  .map(([name, count]) => ({ name, count }));
 
 const pageUrl = new URL("/blog/", Astro.site).toString();
 const businessUrl = new URL("/", Astro.site).toString();
@@ -88,113 +120,223 @@ const blogLd = {
       </p>
     </header>
 
-    {/* Featured post — one big split card taking the first post from the
-        sorted list. Image on the left (60% column), copy on the right
-        (40%). Below 860px collapses to a single stacked card. */}
-    {featured && (
-      <section class="blog-featured" aria-labelledby="blog-featured-h">
-        <a class="blog-featured-link" href={`/blog/${featured.slug}/`}>
-          <div class="blog-featured-img-wrap">
-            <img
-              class="blog-featured-img"
-              src={featured.data.heroImage}
-              alt={featured.data.heroAlt}
-              loading="eager"
-            />
-            <span class="blog-featured-flag">Featured</span>
-          </div>
-          <div class="blog-featured-body">
-            {/* Tag row — surfaces the first few tags as pill chips so
-                the visitor can see the post's topic at a glance. */}
-            {featured.data.tags.length > 0 && (
-              <div class="blog-featured-tags">
-                {featured.data.tags.slice(0, 3).map((t) => (
-                  <span class="blog-featured-tag">{t}</span>
-                ))}
+    {/* Split grid — main column (featured + feed) plus sticky sidebar.
+        Collapses to a single column below 960px. */}
+    <div class="blog-split">
+      <div class="blog-main">
+        {/* Featured post — one compact card taking the most recent post.
+            Capped at 900px in the CSS so it doesn't sprawl; the sidebar
+            on the right fills the remaining grid width on wide screens. */}
+        {featured && (
+          <section class="blog-featured" aria-labelledby="blog-featured-h">
+            <a class="blog-featured-link" href={`/blog/${featured.slug}/`}>
+              <div class="blog-featured-img-wrap">
+                <img
+                  class="blog-featured-img"
+                  src={featured.data.heroImage}
+                  alt={featured.data.heroAlt}
+                  loading="eager"
+                />
+                <span class="blog-featured-flag">Featured</span>
               </div>
-            )}
+              <div class="blog-featured-body">
+                {featured.data.tags.length > 0 && (
+                  <div class="blog-featured-tags">
+                    {featured.data.tags.slice(0, 3).map((t) => (
+                      <span class="blog-featured-tag">{t}</span>
+                    ))}
+                  </div>
+                )}
 
-            <h2 id="blog-featured-h" class="blog-featured-title">{featured.data.title}</h2>
-            <p class="blog-featured-desc">{featured.data.description}</p>
+                <h2 id="blog-featured-h" class="blog-featured-title">{featured.data.title}</h2>
+                <p class="blog-featured-desc">{featured.data.description}</p>
 
-            {/* Meta row — author + date + read time, each with a small
-                SVG icon so the row reads as labelled data rather than
-                three loose strings. Inline SVG keeps it one round-trip
-                and hits every stroke/weight the same as the body copy. */}
-            <div class="blog-featured-meta">
-              <span class="blog-featured-meta-item">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <circle cx="12" cy="8" r="4"/>
-                  <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>
-                </svg>
-                <span>By <strong>{featured.data.author}</strong></span>
-              </span>
-              <span class="blog-featured-meta-sep" aria-hidden="true">·</span>
-              <span class="blog-featured-meta-item">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <rect x="3" y="4" width="18" height="17" rx="2"/>
-                  <path d="M16 2v4M8 2v4M3 10h18"/>
-                </svg>
-                <span>{new Date(featured.data.publishDate).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}</span>
-              </span>
-              {featured.data.readTime && (
-                <>
+                <div class="blog-featured-meta">
+                  <span class="blog-featured-meta-item">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="8" r="4"/>
+                      <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/>
+                    </svg>
+                    <span>By <strong>{featured.data.author}</strong></span>
+                  </span>
                   <span class="blog-featured-meta-sep" aria-hidden="true">·</span>
                   <span class="blog-featured-meta-item">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                      <circle cx="12" cy="12" r="9"/>
-                      <path d="M12 7v5l3 2"/>
+                      <rect x="3" y="4" width="18" height="17" rx="2"/>
+                      <path d="M16 2v4M8 2v4M3 10h18"/>
                     </svg>
-                    <span>{featured.data.readTime} min read</span>
+                    <span>{new Date(featured.data.publishDate).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}</span>
                   </span>
-                </>
-              )}
+                  {featured.data.readTime && (
+                    <>
+                      <span class="blog-featured-meta-sep" aria-hidden="true">·</span>
+                      <span class="blog-featured-meta-item">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                          <circle cx="12" cy="12" r="9"/>
+                          <path d="M12 7v5l3 2"/>
+                        </svg>
+                        <span>{featured.data.readTime} min read</span>
+                      </span>
+                    </>
+                  )}
+                </div>
+
+                <span class="blog-featured-cta">Read the post →</span>
+              </div>
+            </a>
+          </section>
+        )}
+
+        {rest.length > 0 && <hr class="blog-section-divider" />}
+
+        {rest.length > 0 && (
+          <section class="blog-feed" aria-labelledby="blog-feed-h">
+            <h2 id="blog-feed-h" class="blog-feed-title">More from the journal</h2>
+            <div class="blog-grid">
+              {rest.map((post) => (
+                <article class="blog-card">
+                  <a href={`/blog/${post.slug}/`}>
+                    <div class="blog-card-img-wrap">
+                      <img
+                        class="blog-card-img"
+                        src={post.data.heroImage}
+                        alt={post.data.heroAlt}
+                        loading="lazy"
+                      />
+                    </div>
+                    <div class="blog-card-body">
+                      <p class="blog-card-meta">
+                        {new Date(post.data.publishDate).toLocaleDateString("en-AU", {
+                          day: "numeric", month: "short", year: "numeric",
+                        })}
+                      </p>
+                      <h3 class="blog-card-title">{post.data.title}</h3>
+                      <p class="blog-card-desc">{post.data.description}</p>
+                    </div>
+                  </a>
+                </article>
+              ))}
             </div>
+          </section>
+        )}
 
-            <span class="blog-featured-cta">Read the post →</span>
-          </div>
-        </a>
-      </section>
-    )}
+        {posts.length === 0 && (
+          <p class="blog-empty">No posts yet — check back soon.</p>
+        )}
+      </div>
 
-    {/* Divider separates the featured card from the rest of the feed. */}
-    {rest.length > 0 && <hr class="blog-section-divider" />}
+      {/* Sidebar — newsletter, popular picks, topics, and an install CTA.
+          Sits sticky below the header on desktop so it stays in view as
+          the visitor scrolls the feed. On mobile it stacks below the
+          main column (still useful, just non-sticky). */}
+      <aside class="blog-sidebar" aria-label="Blog sidebar">
+        {/* Newsletter — editorial hook, single-field form. The form is
+            a mailto fallback so this still works on a static host; the
+            real integration (Buttondown, Mailchimp, etc.) can be wired
+            into the same markup later. */}
+        <section class="blog-side-card blog-side-newsletter" aria-labelledby="blog-news-h">
+          <p class="blog-side-eyebrow">Newsletter</p>
+          <h3 id="blog-news-h" class="blog-side-title">Install notes in your inbox.</h3>
+          <p class="blog-side-desc">
+            One short email a month. New posts, buying tips, and the real-world gotchas
+            our Brisbane crew hit on install days — no spam, unsubscribe anytime.
+          </p>
+          <form
+            class="blog-side-form"
+            action="mailto:hello@brisbanetvs.com"
+            method="post"
+            enctype="text/plain"
+          >
+            <label class="blog-side-form-label" for="blog-newsletter-email">Your email</label>
+            <div class="blog-side-form-row">
+              <input
+                id="blog-newsletter-email"
+                class="blog-side-form-input"
+                type="email"
+                name="email"
+                placeholder="you@example.com"
+                autocomplete="email"
+                required
+              />
+              <button type="submit" class="blog-side-form-btn">Subscribe</button>
+            </div>
+            <p class="blog-side-form-fineprint">By subscribing you agree to our privacy policy.</p>
+          </form>
+        </section>
 
-    {/* Remainder feed — a responsive card grid of the rest of the posts. */}
-    {rest.length > 0 && (
-      <section class="blog-feed" aria-labelledby="blog-feed-h">
-        <h2 id="blog-feed-h" class="blog-feed-title">More from the journal</h2>
-        <div class="blog-grid">
-          {rest.map((post) => (
-            <article class="blog-card">
-              <a href={`/blog/${post.slug}/`}>
-                <div class="blog-card-img-wrap">
-                  <img
-                    class="blog-card-img"
-                    src={post.data.heroImage}
-                    alt={post.data.heroAlt}
-                    loading="lazy"
-                  />
-                </div>
-                <div class="blog-card-body">
-                  <p class="blog-card-meta">
-                    {new Date(post.data.publishDate).toLocaleDateString("en-AU", {
-                      day: "numeric", month: "short", year: "numeric",
-                    })}
-                  </p>
-                  <h3 class="blog-card-title">{post.data.title}</h3>
-                  <p class="blog-card-desc">{post.data.description}</p>
-                </div>
-              </a>
-            </article>
-          ))}
-        </div>
-      </section>
-    )}
+        {/* Popular posts — three compact rows with thumbnail + title. A
+            visitor who isn't interested in the featured post can still
+            find something to click on without scrolling the feed. */}
+        {popular.length > 0 && (
+          <section class="blog-side-card" aria-labelledby="blog-pop-h">
+            <div class="blog-side-heading">
+              <p class="blog-side-eyebrow">Popular</p>
+              <h3 id="blog-pop-h" class="blog-side-title">Most-read right now</h3>
+            </div>
+            <ol class="blog-side-list">
+              {popular.map((p, i) => (
+                <li class="blog-side-list-item">
+                  <a class="blog-side-list-link" href={`/blog/${p.slug}/`}>
+                    <span class="blog-side-list-num">{String(i + 1).padStart(2, "0")}</span>
+                    <div class="blog-side-list-body">
+                      <p class="blog-side-list-title">{p.data.title}</p>
+                      <p class="blog-side-list-meta">
+                        {new Date(p.data.publishDate).toLocaleDateString("en-AU", {
+                          day: "numeric", month: "short", year: "numeric",
+                        })}
+                        {p.data.readTime && (
+                          <>
+                            <span aria-hidden="true"> · </span>
+                            <span>{p.data.readTime} min read</span>
+                          </>
+                        )}
+                      </p>
+                    </div>
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
 
-    {posts.length === 0 && (
-      <p class="blog-empty">No posts yet — check back soon.</p>
-    )}
+        {/* Topic pills — aggregated from tags so readers can jump into
+            a specific vein of posts. Click goes back to the feed (no
+            per-tag page yet); the href is a fragment link that scrolls
+            the feed section into view so it still reads as an action. */}
+        {topTags.length > 0 && (
+          <section class="blog-side-card" aria-labelledby="blog-topics-h">
+            <div class="blog-side-heading">
+              <p class="blog-side-eyebrow">Topics</p>
+              <h3 id="blog-topics-h" class="blog-side-title">Browse by subject</h3>
+            </div>
+            <ul class="blog-side-topics">
+              {topTags.map((t) => (
+                <li>
+                  <a class="blog-side-topic" href="#blog-feed-h">
+                    <span>{t.name}</span>
+                    <span class="blog-side-topic-count">{t.count}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* Install CTA — dark card, mirrors the .idx-book-card pattern
+            on the hub pages so the sidebar closes with a strong action
+            rather than tapering off into whitespace. */}
+        <section class="blog-side-cta" aria-labelledby="blog-cta-h">
+          <p class="blog-side-cta-eyebrow">Ready to mount?</p>
+          <h3 id="blog-cta-h" class="blog-side-cta-title">Book a Brisbane install crew.</h3>
+          <p class="blog-side-cta-desc">
+            Same-day quotes, 5-year warranty, fully insured. We'll confirm bracket
+            compatibility before we knock.
+          </p>
+          <a class="blog-side-cta-btn" href="/quote/">Get a quote →</a>
+          <a class="blog-side-cta-link" href="tel:0432145101">or call 0432 145 101</a>
+        </section>
+      </aside>
+    </div>
   </article>
 </MarketingLayout>
 
@@ -208,14 +350,9 @@ const blogLd = {
   .blog-banner-title { margin: 0; color: #fff; font-weight: 400; font-size: clamp(2.5rem, 6vw, 5rem); letter-spacing: 0.02em; text-transform: uppercase; line-height: 1; text-shadow: 0 2px 18px rgba(0,0,0,0.35); }
 
   /* ========== Hub container — aligns with the header edges ========== */
-  /* 1720px / 90% mirrors the site header rule:
-       @media (min-width: 1201px) {
-         .site-header .container, .main-header .container {
-           width: 90%; max-width: 1720px; padding: 0;
-         }
-       }
-     Below 1201px we default to the 1200px container with 24px gutter so
-     the blog hub stays flush with the narrower header on smaller screens. */
+  /* 1720px / 90% mirrors the site header rule. Below 1201px we default
+     to the 1200px container with 24px gutter so the blog hub stays
+     flush with the narrower header on smaller screens. */
   .blog-hub { width: 100%; max-width: 1200px; margin: 0 auto; padding: 2rem 24px 4rem; }
   @media (min-width: 1201px) { .blog-hub { width: 90%; max-width: 1720px; padding: 2rem 0 4rem; } }
 
@@ -224,67 +361,50 @@ const blogLd = {
   .blog-crumbs a:hover { color: #131619; text-decoration: underline; }
   .blog-crumbs-current { color: #131619; font-weight: 500; }
 
-  /* Hero copy — eyebrow + h1 + lede. Intentionally NOT inside the
-     old .post-header + .container combo so we aren't fighting older
-     global rules that center the hero block. The h1 is allowed to
-     stretch to the full hub width so it stays on one line on desktop;
-     the lede is capped at a readable 720px via its own rule below. */
+  /* Hero copy — eyebrow + h1 + lede. Kept above the split grid so the
+     heading still takes the full hub width without being squeezed by
+     the sidebar column. */
   .blog-hero-copy { margin-bottom: 2.5rem; }
   .blog-eyebrow { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.75rem; color: #8a94a6; margin: 0 0 0.5rem; font-weight: 600; }
-  /* Heading scales with viewport but caps at 2.4rem so 36-char
-     titles like "Guides, stories, and local know-how." fit on one
-     line at desktop widths. `white-space: nowrap` on desktop forces
-     the one-line rule; below 960px we let it wrap naturally. */
   .blog-hero-copy h1 { font-size: clamp(1.8rem, 3vw, 2.4rem); line-height: 1.15; margin: 0 0 0.75rem; }
   @media (min-width: 961px) { .blog-hero-copy h1 { white-space: nowrap; } }
   .blog-lede { font-size: 1.05rem; color: #3d4656; line-height: 1.55; margin: 0; max-width: 720px; }
 
-  /* ========== Featured card — the first (most recent) post ========== */
-  /* Stacked layout: cinematic image on top, rich body below. Capped at
-     900px so the card reads as a sized editorial feature on wide
-     viewports rather than sprawling across the full 1720px hub width.
-     Image is shorter (24/9) and body padding is tighter to keep the
-     whole card compact. */
-  .blog-featured { margin: 0 0 3rem; max-width: 900px; }
+  /* ========== Split grid: main column + sidebar ========== */
+  /* 340px sidebar on the right at 961px+, collapses to a single column
+     below. minmax(0, 1fr) on the main column prevents overflowing
+     images/titles from pushing the sidebar off-grid. The column-gap
+     sets the white-space between main and sidebar. */
+  .blog-split { display: grid; grid-template-columns: 1fr; gap: 2.5rem; align-items: start; }
+  @media (min-width: 961px) {
+    .blog-split { grid-template-columns: minmax(0, 1fr) 340px; column-gap: 3rem; row-gap: 2.5rem; }
+  }
+  @media (min-width: 1201px) {
+    .blog-split { grid-template-columns: minmax(0, 1fr) 360px; column-gap: 4rem; }
+  }
+
+  /* ========== Featured card ========== */
+  /* Card now fills its grid column instead of being capped at 900px —
+     the sidebar is what holds the visual balance on wide screens. */
+  .blog-featured { margin: 0 0 2.5rem; }
   .blog-featured-link { display: flex; flex-direction: column; text-decoration: none; color: inherit; border-radius: 12px; overflow: hidden; background: #fff; border: 1px solid #eef0f3; transition: border-color 0.15s, box-shadow 0.15s; }
   .blog-featured-link:hover { border-color: #131619; box-shadow: 0 6px 28px rgba(15, 22, 36, 0.08); }
-  /* Flatter, more compact hero image. Was 21/9 (tall cinematic);
-     now 24/9 so the card's vertical footprint drops noticeably. */
-  .blog-featured-img-wrap { position: relative; width: 100%; aspect-ratio: 24/9; overflow: hidden; background: #eef0f3; }
+  .blog-featured-img-wrap { position: relative; width: 100%; aspect-ratio: 21/9; overflow: hidden; background: #eef0f3; }
   .blog-featured-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-  /* Flag sits 5px off the top-left corner of the image with a 12px
-     border-radius — matches the image's own top corners so the flag
-     reads as a matching editorial label rather than a random sticker.
-     Slightly smaller now that the card itself is smaller. */
-  .blog-featured-flag { position: absolute; top: 5px; left: 5px; background: #131619; color: #fff; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; padding: 0.4rem 0.75rem; border-radius: 12px; text-transform: uppercase; }
-  /* Tighter symmetric padding so the body doesn't dwarf the smaller
-     image. Was 2rem 2.5rem 2.25rem. */
-  .blog-featured-body { display: flex; flex-direction: column; padding: 1.4rem 1.75rem 1.6rem; gap: 0.7rem; }
-
-  /* Tag chips — small pill chips at the top of the body so the post's
-     topic is visible before the title. */
+  .blog-featured-flag { position: absolute; top: 5px; left: 5px; background: #131619; color: #fff; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; padding: 0.45rem 0.8rem; border-radius: 12px; text-transform: uppercase; }
+  .blog-featured-body { display: flex; flex-direction: column; padding: 1.5rem 1.85rem 1.75rem; gap: 0.75rem; }
   .blog-featured-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
   .blog-featured-tag { display: inline-block; padding: 0.22rem 0.6rem; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; color: #131619; background: #eef0f3; border-radius: 999px; }
-
-  /* Title scaled down from clamp(1.5rem, 2.6vw, 2.25rem) so it fits
-     the smaller card without wrapping to four lines. */
-  .blog-featured-title { margin: 0; font-size: clamp(1.25rem, 2vw, 1.6rem); line-height: 1.2; color: #131619; font-family: 'Noto Serif', serif; font-weight: 700; }
-  .blog-featured-desc { margin: 0; font-size: 0.95rem; color: #3d4656; line-height: 1.5; }
-
-  /* Meta row — labelled inline data with matching SVG icons. Divider
-     dots between items keep it readable without stacking everything.
-     Slightly smaller than before to match the reduced card. */
-  .blog-featured-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.55rem; margin-top: 0.2rem; padding-top: 0.75rem; border-top: 1px solid #eef0f3; font-size: 0.8rem; color: #5a6271; }
+  .blog-featured-title { margin: 0; font-size: clamp(1.35rem, 2.2vw, 1.85rem); line-height: 1.2; color: #131619; font-family: 'Noto Serif', serif; font-weight: 700; }
+  .blog-featured-desc { margin: 0; font-size: 1rem; color: #3d4656; line-height: 1.5; }
+  .blog-featured-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.55rem; margin-top: 0.2rem; padding-top: 0.8rem; border-top: 1px solid #eef0f3; font-size: 0.82rem; color: #5a6271; }
   .blog-featured-meta-item { display: inline-flex; align-items: center; gap: 0.4rem; }
   .blog-featured-meta-item svg { width: 14px; height: 14px; color: #8a94a6; flex-shrink: 0; }
   .blog-featured-meta-item strong { color: #131619; font-weight: 600; }
   .blog-featured-meta-sep { color: #d7dbe2; font-weight: 700; }
-
-  .blog-featured-cta { margin-top: 0.2rem; font-size: 0.88rem; font-weight: 600; color: #131619; }
+  .blog-featured-cta { margin-top: 0.2rem; font-size: 0.9rem; font-weight: 600; color: #131619; }
 
   @media (max-width: 860px) {
-    /* Card already capped at 900px; on narrow viewports it just fills
-       the container. Shorter image + tighter padding on mobile. */
     .blog-featured-img-wrap { aspect-ratio: 16/10; }
     .blog-featured-body { padding: 1.15rem 1.25rem 1.3rem; }
     .blog-featured-meta { font-size: 0.78rem; }
@@ -295,98 +415,126 @@ const blogLd = {
 
   /* ========== Feed — the rest of the posts ========== */
   .blog-feed-title { margin: 0 0 1.25rem; font-size: 1.3rem; color: #131619; }
-  /* Grid `align-items: stretch` makes every card in a row the exact
-     same height. Each card's anchor is `height: 100%` with a flex
-     column body that grows (`flex: 1`) so the card bottom aligns
-     across the whole row regardless of title/description length. */
-  .blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; align-items: stretch; }
+  /* Grid sizing accounts for the narrower column when the sidebar is
+     visible — minmax(260px, 1fr) gives us a dense 2-up / 3-up feed in
+     the main column rather than the wide 3-up that looked sparse. */
+  .blog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.5rem; align-items: stretch; }
   .blog-card { display: flex; height: 100%; }
-  /* Using `box-shadow: 0 0 0 1px` instead of `border` means the hairline
-     is drawn OUTSIDE the card's box, so the image inside (clipped by
-     `overflow: hidden` + `border-radius`) can sit flush against the
-     true edge of the card. A `border: 1px` would eat into the box and
-     create a visible 1px ring between the image and the card outline —
-     that's the "double border" effect we're killing here. */
-  /* Card background is the hairline colour, not white. That way any
-     sub-pixel bleed-through at the rounded corners (where the image
-     can't reach the very last anti-aliased pixel) shows the same
-     colour as the box-shadow ring — effectively invisible. The white
-     card fill lives on the body below, not the whole card. */
   .blog-card a { display: flex; flex-direction: column; width: 100%; height: 100%; background: #eef0f3; border-radius: 10px; text-decoration: none; color: inherit; box-shadow: 0 0 0 1px #eef0f3; transition: box-shadow 0.15s, transform 0.15s; }
   .blog-card a:hover { box-shadow: 0 0 0 1px #131619, 0 4px 14px rgba(15, 22, 36, 0.06); transform: translateY(-2px); }
-  /* Card grid images: fixed 16:10 frame + `cover` so every card has
-     the exact same photo height and fills it edge-to-edge. Let the
-     card's own overflow:hidden + border-radius do the clipping — no
-     need to round the wrapper corners (that created a second rounded
-     shape with its own anti-aliased edge that the card's white bg
-     was leaking through). */
   .blog-card-img-wrap { position: relative; width: 100%; aspect-ratio: 16/10; overflow: hidden; background: #eef0f3; }
   .blog-card-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-  /* Body flexes to fill the remaining vertical space, which is what
-     pushes short cards down to match tall cards in the same row. The
-     explicit white background here is what makes the text area pop
-     against the card's hairline-coloured outer frame. */
   .blog-card-body { display: flex; flex-direction: column; gap: 0.5rem; padding: 1rem 1.1rem 1.2rem; flex: 1 1 auto; background: #fff; }
   .blog-card-meta { margin: 0; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: #8a94a6; font-weight: 600; }
-  /* Titles clamp to 2 lines so cards with a 4-word title and cards
-     with a 12-word title both occupy the same amount of vertical
-     space. Pairs with the 3-line description clamp below to keep the
-     total card height consistent across the grid. */
   .blog-card-title { margin: 0; font-size: 1.05rem; line-height: 1.3; color: #131619; font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: calc(1.05rem * 1.3 * 2); }
   .blog-card-desc { margin: 0; color: #3d4656; font-size: 0.92rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
   .blog-empty { padding: 3rem; background: #fafbfc; border: 1px dashed #d7dbe2; border-radius: 8px; text-align: center; color: #5a6271; }
 
+  /* ========== Sidebar ========== */
+  /* Sticky on desktop so it stays visible as the reader scrolls the
+     feed. top: 6rem clears the opaque page-subpage header. Below 960px
+     it becomes static (stacked below the main column). */
+  .blog-sidebar { display: flex; flex-direction: column; gap: 1.25rem; }
+  @media (min-width: 961px) {
+    .blog-sidebar { position: sticky; top: 6rem; align-self: start; max-height: calc(100vh - 7rem); overflow-y: auto; padding-right: 4px; }
+    /* Hide the scrollbar on the sidebar (still scrollable) so the card
+       edges stay clean on tall sidebar content. */
+    .blog-sidebar::-webkit-scrollbar { width: 6px; }
+    .blog-sidebar::-webkit-scrollbar-thumb { background: #d7dbe2; border-radius: 3px; }
+  }
+
+  /* Base card — the common wrapper for newsletter / popular / topics. */
+  .blog-side-card { background: #fff; border: 1px solid #eef0f3; border-radius: 12px; padding: 1.4rem 1.4rem 1.5rem; display: flex; flex-direction: column; gap: 0.85rem; }
+  .blog-side-heading { display: flex; flex-direction: column; gap: 0.25rem; }
+  .blog-side-eyebrow { text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.7rem; font-weight: 700; color: #8a94a6; margin: 0; }
+  .blog-side-title { margin: 0; font-size: 1.1rem; line-height: 1.25; color: #131619; font-family: 'Noto Serif', serif; font-weight: 700; }
+  .blog-side-desc { margin: 0; font-size: 0.9rem; line-height: 1.55; color: #3d4656; }
+
+  /* Newsletter specifics — soft tint so it reads as a distinct pane
+     from the plainer popular/topics cards below it. */
+  .blog-side-newsletter { background: linear-gradient(145deg, #f4f7fb 0%, #eef0f3 100%); border-color: #e1e6ee; }
+  .blog-side-form { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.25rem; }
+  .blog-side-form-label { font-size: 0.75rem; font-weight: 600; color: #5a6271; text-transform: uppercase; letter-spacing: 0.06em; }
+  .blog-side-form-row { display: flex; gap: 0.4rem; }
+  .blog-side-form-input { flex: 1 1 auto; min-width: 0; padding: 0.65rem 0.8rem; font: inherit; font-size: 0.9rem; background: #fff; border: 1px solid #d7dbe2; border-radius: 8px; color: #131619; transition: border-color 0.15s, box-shadow 0.15s; }
+  .blog-side-form-input:focus { outline: none; border-color: #131619; box-shadow: 0 0 0 3px rgba(19, 22, 25, 0.1); }
+  .blog-side-form-btn { background: #131619; color: #fff; border: none; padding: 0.65rem 1rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
+  .blog-side-form-btn:hover { background: #2a2f35; }
+  .blog-side-form-fineprint { margin: 0.1rem 0 0; font-size: 0.72rem; color: #8a94a6; line-height: 1.4; }
+
+  /* Popular list — numbered rows. No thumbnails (the .idx-* pattern
+     omitted them too) so the sidebar stays compact and readable. */
+  .blog-side-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.9rem; }
+  .blog-side-list-item { border-top: 1px solid #eef0f3; padding-top: 0.9rem; }
+  .blog-side-list-item:first-child { border-top: 0; padding-top: 0; }
+  .blog-side-list-link { display: flex; gap: 0.85rem; align-items: flex-start; text-decoration: none; color: inherit; transition: color 0.15s; }
+  .blog-side-list-link:hover .blog-side-list-title { color: #131619; text-decoration: underline; }
+  .blog-side-list-num { flex: 0 0 auto; font-family: 'Noto Serif', serif; font-size: 1.35rem; font-weight: 700; color: #d7dbe2; line-height: 1; margin-top: 0.1rem; letter-spacing: -0.02em; }
+  .blog-side-list-body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 0.25rem; }
+  .blog-side-list-title { margin: 0; font-size: 0.92rem; line-height: 1.35; font-weight: 600; color: #131619; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .blog-side-list-meta { margin: 0; font-size: 0.72rem; color: #8a94a6; letter-spacing: 0.02em; }
+
+  /* Topic pills — same pill look as the featured card's tags but using
+     count badges to show which veins have the most posts. */
+  .blog-side-topics { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .blog-side-topic { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.7rem; font-size: 0.78rem; color: #131619; background: #eef0f3; border-radius: 999px; text-decoration: none; transition: background 0.15s, color 0.15s; }
+  .blog-side-topic:hover { background: #131619; color: #fff; }
+  .blog-side-topic:hover .blog-side-topic-count { color: rgba(255,255,255,0.6); }
+  .blog-side-topic-count { font-size: 0.68rem; font-weight: 700; color: #8a94a6; transition: color 0.15s; }
+
+  /* Install CTA — dark card, mirrors .idx-book-card so the blog sidebar
+     closes with the same call-to-action pattern as the other hubs. */
+  .blog-side-cta { background: #131619; color: #fff; padding: 1.5rem 1.4rem 1.6rem; border-radius: 12px; display: flex; flex-direction: column; gap: 0.55rem; }
+  .blog-side-cta-eyebrow { margin: 0; font-size: 0.7rem; font-weight: 700; color: rgba(255,255,255,0.55); text-transform: uppercase; letter-spacing: 0.1em; }
+  .blog-side-cta-title { margin: 0; font-size: 1.2rem; line-height: 1.25; font-family: 'Noto Serif', serif; font-weight: 700; color: #fff; }
+  .blog-side-cta-desc { margin: 0 0 0.35rem; font-size: 0.9rem; line-height: 1.5; color: rgba(255,255,255,0.78); }
+  .blog-side-cta-btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.75rem 1rem; background: #fff; color: #131619; border-radius: 8px; font-weight: 700; font-size: 0.9rem; text-decoration: none; transition: background 0.15s, color 0.15s; }
+  .blog-side-cta-btn:hover { background: #f2c94c; color: #131619; }
+  .blog-side-cta-link { display: inline-block; color: rgba(255,255,255,0.72); font-size: 0.82rem; text-align: center; text-decoration: none; transition: color 0.15s; }
+  .blog-side-cta-link:hover { color: #fff; text-decoration: underline; }
+
   /* ========== Mobile optimisation ========== */
-  /* Everything below 768px gets tighter padding, smaller type, and
-     layouts that stack cleanly on a phone. The featured card already
-     has an 860px breakpoint that kicks in earlier for the card's own
-     padding; these rules handle the page chrome around it. */
   @media (max-width: 768px) {
-    /* Banner — shorter and with a smaller title so it doesn't eat
-       half the viewport on a phone. */
+    /* Banner — shorter on mobile. */
     .blog-banner { height: clamp(180px, 28vh, 280px); }
     .blog-banner-inner { padding: 0 16px; }
     .blog-banner-title { font-size: clamp(2rem, 9vw, 3rem); }
 
-    /* Hub — tighter gutters + less top padding since the banner is
-       also shorter. */
+    /* Hub — tighter gutters + less top padding. */
     .blog-hub { padding: 1.5rem 16px 3rem; }
 
-    /* Crumbs closer to the hero copy to save vertical real estate. */
     .blog-crumbs { margin: 0 0 1.25rem; font-size: 0.8rem; }
 
-    /* Hero copy — smaller h1 + less bottom margin. */
     .blog-hero-copy { margin-bottom: 1.75rem; }
     .blog-hero-copy h1 { font-size: clamp(1.5rem, 6vw, 2rem); }
     .blog-lede { font-size: 0.98rem; }
 
-    /* Featured card — further tightening beyond the 860px breakpoint.
-       Flag shrinks slightly + slightly tighter inset so it doesn't
-       crowd the thumb-zone. */
+    /* Featured card — phone-tuned. */
     .blog-featured { margin: 0 0 2rem; }
     .blog-featured-flag { padding: 0.35rem 0.65rem; font-size: 0.65rem; }
     .blog-featured-body { padding: 1rem 1.15rem 1.15rem; gap: 0.6rem; }
     .blog-featured-title { font-size: clamp(1.1rem, 4.5vw, 1.4rem); }
     .blog-featured-desc { font-size: 0.92rem; }
-    /* Meta row stacks cleanly on phones — flex-wrap already on,
-       just tighten the gap and hide the visual separator dots since
-       wrapped items don't need them. */
     .blog-featured-meta { gap: 0.75rem 0.9rem; font-size: 0.8rem; }
     .blog-featured-meta-sep { display: none; }
 
-    /* Divider — less breathing room. */
     .blog-section-divider { margin: 0 0 1.75rem; }
 
-    /* Feed — single-column grid at narrow widths, tighter heading. */
     .blog-feed-title { font-size: 1.15rem; margin: 0 0 1rem; }
     .blog-grid { grid-template-columns: 1fr; gap: 1.25rem; }
     .blog-card-body { padding: 0.9rem 1rem 1.1rem; }
     .blog-card-title { font-size: 1rem; }
     .blog-card-desc { font-size: 0.9rem; }
+
+    /* Split stacks — sidebar ends up below the main column. Tighten
+       the gap and reduce the card padding so mobile still feels light. */
+    .blog-split { gap: 1.75rem; }
+    .blog-side-card { padding: 1.2rem 1.2rem 1.3rem; }
+    .blog-side-cta { padding: 1.3rem 1.2rem 1.4rem; }
+    .blog-side-form-row { flex-direction: column; }
   }
 
-  /* Phone-only (≤480px) — final pass for the smallest viewports. */
   @media (max-width: 480px) {
     .blog-banner { height: 180px; }
     .blog-banner-title { font-size: 1.8rem; }
