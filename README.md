@@ -19,34 +19,165 @@
 
 ## Table of contents
 
-1. [What this repo is](#what-this-repo-is)
-2. [Architecture at a glance](#architecture-at-a-glance)
-3. [Tech stack](#tech-stack)
-4. [Quick start](#quick-start)
-5. [Repository map](#repository-map)
-6. [Content model](#content-model)
-7. [Routes](#routes)
-8. [Authoring content](#authoring-content)
-9. [Layouts & design system](#layouts--design-system)
-10. [Image pipeline](#image-pipeline)
-11. [Admin dashboard](#admin-dashboard)
-12. [Decap CMS setup](#decap-cms-setup)
-13. [AI chat worker](#ai-chat-worker)
-14. [n8n form webhooks](#n8n-form-webhooks)
-15. [SEO & structured data](#seo--structured-data)
-16. [Accessibility](#accessibility)
-17. [Performance budgets](#performance-budgets)
-18. [Build, verify, ship](#build-verify-ship)
-19. [Cloudflare Pages setup](#cloudflare-pages-setup)
-20. [Environment variables & secrets](#environment-variables--secrets)
-21. [Scripts reference](#scripts-reference)
-22. [Git workflow](#git-workflow)
-23. [Troubleshooting](#troubleshooting)
-24. [Release checklist](#release-checklist)
-25. [Roadmap / known limitations](#roadmap--known-limitations)
-26. [Documentation index](#documentation-index)
-27. [Contributing](#contributing)
-28. [License](#license)
+1. [Clone the repo (Windows)](#clone-the-repo-windows)
+2. [What this repo is](#what-this-repo-is)
+3. [Architecture at a glance](#architecture-at-a-glance)
+4. [Tech stack](#tech-stack)
+5. [Quick start](#quick-start)
+6. [Repository map](#repository-map)
+7. [Content model](#content-model)
+8. [Routes](#routes)
+9. [Authoring content](#authoring-content)
+10. [Layouts & design system](#layouts--design-system)
+11. [Image pipeline](#image-pipeline)
+12. [Admin dashboard](#admin-dashboard)
+13. [Decap CMS setup](#decap-cms-setup)
+14. [AI chat worker](#ai-chat-worker)
+15. [n8n form webhooks](#n8n-form-webhooks)
+16. [SEO & structured data](#seo--structured-data)
+17. [Accessibility](#accessibility)
+18. [Performance budgets](#performance-budgets)
+19. [Build, verify, ship](#build-verify-ship)
+20. [Cloudflare Pages setup](#cloudflare-pages-setup)
+21. [Environment variables & secrets](#environment-variables--secrets)
+22. [Scripts reference](#scripts-reference)
+23. [Git workflow](#git-workflow)
+24. [Troubleshooting](#troubleshooting)
+25. [Release checklist](#release-checklist)
+26. [Roadmap / known limitations](#roadmap--known-limitations)
+27. [Documentation index](#documentation-index)
+28. [Contributing](#contributing)
+29. [License](#license)
+
+---
+
+## Clone the repo (Windows)
+
+Brand-new Windows machine? Run these from PowerShell or Command Prompt
+(either works — both commands below are identical). If you prefer the
+full graphical flow, scroll to [GitHub Desktop](#option-b--github-desktop-no-command-line).
+
+### Option A — Command line (recommended)
+
+**1. Install the prerequisites** (skip if you already have them):
+
+```powershell
+:: Git for Windows — includes git.exe and Git Bash
+winget install --id Git.Git -e
+
+:: Node.js LTS — includes node.exe and npm
+winget install --id OpenJS.NodeJS.LTS -e
+```
+
+Close and reopen your terminal after installing so `PATH` picks up the
+new tools. Verify:
+
+```powershell
+git --version
+node --version
+npm --version
+```
+
+If `git` is still "not recognized", Git for Windows was installed but
+Explorer's PATH is stale — sign out and back in, or run
+`refreshenv` if you have the Chocolatey shim.
+
+**2. Pick a folder and clone:**
+
+```powershell
+:: Move to where you want the project to live (adjust as needed)
+cd %USERPROFILE%\Documents
+
+:: Clone over HTTPS — GitHub will prompt for credentials on first push
+git clone https://github.com/PrompDev/brisbanetvs.git "Brisbane TVs"
+
+:: Enter the project
+cd "Brisbane TVs"
+```
+
+If you already have an SSH key on GitHub, you can clone via SSH instead:
+
+```powershell
+git clone git@github.com:PrompDev/brisbanetvs.git "Brisbane TVs"
+```
+
+**3. Install the Astro dependencies:**
+
+```powershell
+cd astro
+npm install
+cd ..
+```
+
+(This only needs to be done once, and `start-astro-dev.bat` will run it
+automatically the first time you launch the dev server.)
+
+**4. Launch the dev server:**
+
+Just double-click **`git.tools\start-astro-dev.bat`** from File
+Explorer. Or from the same terminal:
+
+```powershell
+git.tools\start-astro-dev.bat
+```
+
+It opens `http://localhost:4321` in your browser when ready.
+
+### Option B — GitHub Desktop (no command line)
+
+1. Install [GitHub Desktop](https://desktop.github.com/) and sign in
+   with the GitHub account that has access to `PrompDev/brisbanetvs`.
+2. **File → Clone repository → URL** tab.
+3. URL: `https://github.com/PrompDev/brisbanetvs.git`
+4. Local path: e.g. `C:\Users\<you>\Documents\Brisbane TVs`
+5. Click **Clone**.
+6. Install Node.js LTS from [nodejs.org](https://nodejs.org) if you
+   don't already have it.
+7. Open the cloned folder in File Explorer and double-click
+   `git.tools\start-astro-dev.bat`.
+
+GitHub Desktop handles fetch / pull / commit / push with buttons — no
+terminal needed. Commits still push to `main` (there's no branching
+convention in this repo).
+
+### First-time GitHub credentials
+
+When you run your first `git push` on Windows, Git will pop up the
+**Git Credential Manager** window asking you to sign in to GitHub in
+a browser. Sign in once and the credentials are cached for future
+pushes. If it doesn't pop up:
+
+```powershell
+git config --global credential.helper manager
+```
+
+### Working folder name has a space
+
+This repo's local folder is usually called `Brisbane TVs` (with a
+space). Always quote the path when using command-line tools:
+
+```powershell
+cd "Brisbane TVs"
+cd "C:\Users\<you>\Documents\Brisbane TVs\astro"
+```
+
+The `.bat` scripts already quote paths internally, so double-clicking
+them is always safe.
+
+### Daily workflow on Windows
+
+```powershell
+:: Start of work session — pull latest
+git.tools\sync-from-main.bat
+
+:: Edit files in your editor of choice
+
+:: Launch dev server (runs Astro + Decap proxy, opens localhost:4321)
+git.tools\start-astro-dev.bat
+
+:: When done editing — stage, commit, push, log
+git.tools\update-main.bat
+```
 
 ---
 
