@@ -485,3 +485,13 @@
   [+103/-0 lines] [+742/-0 chars]  functions/api/n8n/lead.js 
   [+58/-2 lines] [+248/-0 chars]  index.html 
  
+---------------------------------------- 
+[2026-05-11 18:17] 4 file(s) | commit: 054558b 
+---------------------------------------- 
+  Summary:  4 files changed, 134 insertions(+), 57 deletions(-) 
+ 
+  [+18/-18 lines] [+2082/-0 chars]  6 
+  [+18/-18 lines] [+2082/-0 chars]  7 
+  [+14/-9 lines] [+85/-0 chars]  astro/src/data/business.ts 
+  [+84/-12 lines] [+881/-0 chars]  astro/src/pages/quote.astro 
+ 

@@ -87,9 +87,19 @@ const contactLd = {
         class="qt-form"
         id="quote-form"
         data-webhook={BUSINESS.webhooks.photoQuote}
-        enctype="multipart/form-data"
+        novalidate
         aria-label="Photo quote form"
       >
+        {/* Honeypot — invisible to humans, bots fill every field */}
+        <input
+          type="text"
+          name="company_website"
+          tabindex="-1"
+          autocomplete="off"
+          aria-hidden="true"
+          style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;"
+        />
+
         <fieldset class="qt-fieldset">
           <legend class="qt-legend">1. Your TV</legend>
 
@@ -385,35 +395,97 @@ const contactLd = {
       });
     }
 
-    // ---- Submit handler: POST to n8n webhook ----
+    // ---- Submit handler: POST JSON to /api/n8n/lead ----
+    // The Pages Function proxy adds server-side fields (real IP, country,
+    // UA, referer) and forwards to the n8n lead webhook. The n8n Code node
+    // branches on `source` to format the email subject + body.
+    //
+    // NOTE on photos: file uploads are NOT included in the JSON payload yet
+    // (n8n flow doesn't handle Gmail attachments — Phase 2). We DO capture
+    // filenames + sizes as metadata so Tom can ask the customer to reply
+    // with the photos when he reaches out.
     const submitEl = document.getElementById("q-submit");
     const statusEl = document.getElementById("q-status");
 
+    function getUtm() {
+      const p = new URLSearchParams(location.search);
+      const out = {};
+      ["utm_source","utm_medium","utm_campaign","utm_term","utm_content"].forEach((k) => {
+        if (p.get(k)) out[k] = p.get(k);
+      });
+      return out;
+    }
+
     form.addEventListener("submit", async (ev) => {
       ev.preventDefault();
+
+      // Native validation (we used novalidate to control timing, but still
+      // want the browser's built-in checks for required + type=email etc.)
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+
       submitEl.disabled = true;
       submitEl.textContent = "Sending…";
       statusEl.textContent = "";
       statusEl.className = "qt-form-status";
 
-      try {
-        const fd = new FormData(form);
-        // Collect extras[] checkboxes as a comma-list (n8n unpacks cleaner).
-        const extras = fd.getAll("extras");
-        fd.delete("extras");
-        fd.append("extras", extras.join(","));
-        fd.append("source", "quote-page");
-        fd.append("submittedAt", new Date().toISOString());
+      const fd = new FormData(form);
+      const photoFiles = Array.from((fileInput && fileInput.files) || []);
 
+      // Map package id → human-readable label (matches /pricing/ copy)
+      const pkgId = (fd.get("package") || "").toString();
+      const pkgEl = document.querySelector(`#q-package option[value="${pkgId}"]`);
+      const pkgLabel = pkgEl ? pkgEl.textContent.trim() : pkgId;
+
+      const payload = {
+        source: "quote-page",
+        page_url: location.href,
+        lead: {
+          name: (fd.get("name") || "").toString().trim(),
+          phone: (fd.get("phone") || "").toString().trim(),
+          email: (fd.get("email") || "").toString().trim(),
+          suburb: (fd.get("suburb") || "").toString().trim(),
+          postcode: (fd.get("postcode") || "").toString().trim(),
+        },
+        job: {
+          package: pkgId,
+          package_label: pkgLabel,
+          tv_size: (fd.get("tvSize") || "").toString().trim(),
+          tv_brand: (fd.get("tvBrand") || "").toString().trim(),
+          wall_type: (fd.get("wallType") || "").toString().trim(),
+          addons: fd.getAll("extras").map((v) => v.toString()),
+          preferred_date: (fd.get("preferredDay") || "").toString().trim(),
+          notes: (fd.get("notes") || "").toString().trim(),
+          photos_attached: photoFiles.map((f) => ({
+            name: f.name,
+            size_kb: Math.round(f.size / 1024),
+          })),
+        },
+        tracking: Object.assign(
+          { referrer: document.referrer || "" },
+          getUtm()
+        ),
+        // Honeypot — if a bot filled this, the Pages Function silently 200s
+        company_website: (fd.get("company_website") || "").toString(),
+      };
+
+      try {
         const res = await fetch(webhook, {
           method: "POST",
-          body: fd,
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload),
         });
 
         if (!res.ok) throw new Error("Webhook returned " + res.status);
 
+        const photoNote =
+          photoFiles.length > 0
+            ? " We'll reply asking for the photo" + (photoFiles.length > 1 ? "s" : "") + "."
+            : "";
         statusEl.textContent =
-          "Thanks — your quote request is in. We'll be in touch inside the hour.";
+          "Thanks — your quote request is in. We'll be in touch inside the hour." + photoNote;
         statusEl.classList.add("qt-form-status-ok");
         form.reset();
         if (fileName) fileName.textContent = "No file chosen";

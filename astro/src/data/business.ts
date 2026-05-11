@@ -20,17 +20,22 @@ export const BUSINESS = {
   abn: "12 345 678 901",
   hoursDisplay: "7 days · 7 AM–7 PM",
   /**
-   * n8n webhook endpoints. These must be replaced with real URLs when the
-   * automations are wired up in n8n cloud. They are read by the form
-   * components and POST'd to via fetch(). The webhook path convention
-   * below matches what's listed in docs/n8n-automations.md.
+   * n8n webhook endpoints. All form types currently funnel through the
+   * single /api/n8n/lead Cloudflare Pages Function, which proxies to the
+   * "Brisbane TVs — Lead Webhook" n8n workflow. The flow's Code node
+   * branches on the `source` field in the JSON payload (set by each form)
+   * to differentiate "subscriber" vs "quote" vs "callback" etc.
+   *
+   * If individual flows are ever split out later, replace the relevant
+   * URL here — every form imports BUSINESS.webhooks.* so the routing
+   * change is a one-file edit.
    */
   webhooks: {
-    quickQuote: "/api/n8n/quick-quote",
-    photoQuote: "/api/n8n/photo-quote",
-    callBack: "/api/n8n/call-back",
-    emailSignup: "/api/n8n/email-signup",
-    bookingRequest: "/api/n8n/booking-request",
+    quickQuote: "/api/n8n/lead",
+    photoQuote: "/api/n8n/lead",
+    callBack: "/api/n8n/lead",
+    emailSignup: "/api/n8n/lead",
+    bookingRequest: "/api/n8n/lead",
   },
 } as const;
 
