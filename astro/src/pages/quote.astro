@@ -90,15 +90,12 @@ const contactLd = {
         novalidate
         aria-label="Photo quote form"
       >
-        {/* Honeypot — invisible to humans, bots fill every field */}
-        <input
-          type="text"
-          name="company_website"
-          tabindex="-1"
-          autocomplete="off"
-          aria-hidden="true"
-          style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;"
-        />
+        {/* Honeypot — display:none + gibberish name so browser autofill skips it. */}
+        <div aria-hidden="true" style="display:none !important;">
+          <label>Leave this field blank
+            <input type="text" name="_bts_check" tabindex="-1" autocomplete="off" />
+          </label>
+        </div>
 
         <fieldset class="qt-fieldset">
           <legend class="qt-legend">1. Your TV</legend>
@@ -468,7 +465,7 @@ const contactLd = {
           getUtm()
         ),
         // Honeypot — if a bot filled this, the Pages Function silently 200s
-        company_website: (fd.get("company_website") || "").toString(),
+        _bts_check: (fd.get("_bts_check") || "").toString(),
       };
 
       // -- DEBUG: log everything to console + show real status on page --

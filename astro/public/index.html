@@ -6357,8 +6357,10 @@
                 <div class="footer-signup-title">Book <em>before 10 AM</em><br>for same-day install.</div>
                 <p class="footer-signup-copy">Get a flat-rate quote in 60 seconds. No call-out fees, no hidden charges — just honest Brisbane pricing.</p>
                 <form class="footer-form" id="footerLeadForm" novalidate aria-label="Quote request">
-                    <!-- Honeypot: invisible to humans, bots fill every field -->
-                    <input type="text" name="company_website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;">
+                    <!-- Honeypot: display:none + gibberish name so browser autofill skips it -->
+                    <div aria-hidden="true" style="display:none !important;">
+                        <label>Leave this blank<input type="text" name="_bts_check" tabindex="-1" autocomplete="off"></label>
+                    </div>
                     <input type="email" name="email" placeholder="Your email address" aria-label="Email address" required>
                     <button type="submit" aria-label="Request quote">→</button>
                 </form>
@@ -6423,7 +6425,7 @@
             page_url: location.href,
             lead: { email: email },
             tracking: Object.assign({ referrer: document.referrer || '' }, getUtm()),
-            company_website: form.company_website ? form.company_website.value : ''
+            _bts_check: form._bts_check ? form._bts_check.value : ''
         };
 
         console.log('[lead] POST /api/n8n/lead', payload);

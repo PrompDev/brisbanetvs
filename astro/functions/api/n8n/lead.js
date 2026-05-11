@@ -50,10 +50,18 @@ export async function onRequestPost({ request, env }) {
   }
 
   // 2) Honeypot — silent 200 so the bot thinks it succeeded.
+  //    `_bts_check` is the primary trap; the field is wrapped in display:none
+  //    in the form HTML and named with a gibberish prefix so browser autofill
+  //    (Chrome/Edge ignore autocomplete="off" for real-sounding names like
+  //    "company_website") leaves it alone.
+  //
+  //    `company_website`, `honeypot`, `hp` are kept as belt-and-braces — bots
+  //    that blindly POST common field names still trip on them.
+  //
   //    Returns { ok: true, filtered: 'honeypot', tripped: <field> } so the
-  //    page can distinguish a real success from a silently-discarded
-  //    submission. Bots ignore the body; humans/developers see the truth.
+  //    page can distinguish a real success from a silently-discarded submit.
   const tripped =
+    body._bts_check ? '_bts_check' :
     body.company_website ? 'company_website' :
     body.honeypot ? 'honeypot' :
     body.hp ? 'hp' : null;

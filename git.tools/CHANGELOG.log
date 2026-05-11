@@ -526,3 +526,16 @@
   [+45/-15 lines] [+183/-0 chars]  astro/src/pages/quote.astro 
   [+23/-5 lines] [+112/-0 chars]  index.html 
  
+---------------------------------------- 
+[2026-05-11 19:25] 7 file(s) | commit: 5b44597 
+---------------------------------------- 
+  Summary:  7 files changed, 48 insertions(+), 37 deletions(-) 
+ 
+  [+8/-8 lines] [+67/-0 chars]  6 
+  [+8/-8 lines] [+67/-0 chars]  7 
+  [+10/-2 lines] [+4/-0 chars]  astro/functions/api/n8n/lead.js 
+  [+5/-3 lines] [+153/-0 chars]  astro/public/index.html 
+  [+5/-3 lines] [+153/-0 chars]  astro/src/components/Footer.astro 
+  [+7/-10 lines] [+207/-0 chars]  astro/src/pages/quote.astro 
+  [+5/-3 lines] [+153/-0 chars]  index.html 
+ 
