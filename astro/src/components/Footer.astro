@@ -133,26 +133,27 @@
                       } catch (err) {
                         console.error('[lead] network error', err);
                         if (btn) { btn.disabled = false; btn.textContent = origBtnText; }
-                        status.textContent = 'FAILED — network: ' + (err && err.message ? err.message : err);
+                        status.textContent = "Couldn't send — please call 0432 145 101.";
                         status.style.color = '#ff9b9b';
                         return;
                       }
                       if (bodyJson && bodyJson.filtered === 'honeypot') {
-                        console.warn('[lead] honeypot tripped:', bodyJson.tripped);
+                        console.warn('[lead] honeypot tripped:', bodyJson.tripped, '— email NOT sent');
                         if (btn) { btn.disabled = false; btn.textContent = origBtnText; }
-                        status.textContent = "FAILED — honeypot '" + bodyJson.tripped + "' filled (autofill?). Email NOT sent.";
+                        status.textContent = "Couldn't send — please call 0432 145 101.";
                         status.style.color = '#ff9b9b';
                         return;
                       }
                       if (!res.ok) {
+                        console.error('[lead] failed:', res.status, bodyJson || bodyText);
                         if (btn) { btn.disabled = false; btn.textContent = origBtnText; }
-                        var errCode = (bodyJson && bodyJson.error) ? bodyJson.error : 'unknown';
-                        status.textContent = 'FAILED — HTTP ' + res.status + ' · ' + errCode;
+                        status.textContent = "Couldn't send — please call 0432 145 101.";
                         status.style.color = '#ff9b9b';
                         return;
                       }
+                      console.log('[lead] sent OK');
                       form.style.display = 'none';
-                      status.textContent = 'SENT ✓ (HTTP ' + res.status + ") — we'll be in touch within 2 hours.";
+                      status.textContent = "Thanks — we'll be in touch within 2 hours.";
                       status.style.color = '#9be39b';
                     });
                   })();

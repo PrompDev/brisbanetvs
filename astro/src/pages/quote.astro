@@ -468,7 +468,12 @@ const contactLd = {
         _bts_check: (fd.get("_bts_check") || "").toString(),
       };
 
-      // -- DEBUG: log everything to console + show real status on page --
+      // Customer sees friendly text. Developer sees the full picture in
+      // the browser console (filter: [lead]) — payload, HTTP status,
+      // honeypot trips, and any upstream error code from the Pages Function.
+      const FALLBACK_TEXT =
+        "Hmm, that didn't send. Please call 0432 145 101 or email admin@brisbanetvs.com and we'll sort it manually.";
+
       console.log("[lead] POST", webhook, payload);
 
       let res, bodyText, bodyJson;
@@ -483,44 +488,42 @@ const contactLd = {
         console.log("[lead] response", res.status, bodyJson || bodyText);
       } catch (err) {
         console.error("[lead] network error", err);
-        statusEl.textContent = "FAILED — network error: " + (err && err.message ? err.message : err);
+        statusEl.textContent = FALLBACK_TEXT;
         statusEl.classList.add("qt-form-status-err");
         submitEl.disabled = false;
         submitEl.textContent = "Send my quote request →";
         return;
       }
 
-      // Honeypot trip (server returns ok:true but with filtered:'honeypot')
+      // Honeypot trip → silent for the customer (we don't tell bots they were caught),
+      // but loud in the console so a developer testing knows why nothing happened.
       if (bodyJson && bodyJson.filtered === "honeypot") {
-        console.warn("[lead] honeypot tripped on field:", bodyJson.tripped);
-        statusEl.textContent =
-          "FAILED — honeypot field '" + bodyJson.tripped +
-          "' had a value (browser autofill?). Email NOT sent.";
+        console.warn("[lead] honeypot tripped on field:", bodyJson.tripped, "— email NOT sent");
+        statusEl.textContent = FALLBACK_TEXT;
         statusEl.classList.add("qt-form-status-err");
         submitEl.disabled = false;
         submitEl.textContent = "Send my quote request →";
         return;
       }
 
-      // Real error from Pages Function or upstream
+      // Upstream/proxy error
       if (!res.ok) {
-        const errCode = bodyJson && bodyJson.error ? bodyJson.error : "unknown";
-        statusEl.textContent =
-          "FAILED — HTTP " + res.status + " · " + errCode +
-          " · raw: " + bodyText.slice(0, 200);
+        console.error("[lead] failed:", res.status, bodyJson || bodyText);
+        statusEl.textContent = FALLBACK_TEXT;
         statusEl.classList.add("qt-form-status-err");
         submitEl.disabled = false;
         submitEl.textContent = "Send my quote request →";
         return;
       }
 
-      // Real success
+      // Success
+      console.log("[lead] sent OK");
       const photoNote =
         photoFiles.length > 0
           ? " We'll reply asking for the photo" + (photoFiles.length > 1 ? "s" : "") + "."
           : "";
       statusEl.textContent =
-        "SENT ✓ (HTTP " + res.status + ") — your quote request is in. We'll be in touch inside the hour." + photoNote;
+        "Thanks — your quote request is in. We'll be in touch inside the hour." + photoNote;
       statusEl.classList.add("qt-form-status-ok");
       form.reset();
       if (fileName) fileName.textContent = "No file chosen";
