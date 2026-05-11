@@ -472,3 +472,16 @@
   [+6/-6 lines] [+67/-0 chars]  6 
   [+6/-6 lines] [+67/-0 chars]  7 
  
+---------------------------------------- 
+[2026-05-11 18:06] 7 file(s) | commit: cb28692 
+---------------------------------------- 
+  Summary:  7 files changed, 467 insertions(+), 34 deletions(-) 
+ 
+  [+9/-9 lines] [+67/-0 chars]  6 
+  [+9/-9 lines] [+67/-0 chars]  7 
+  [+58/-2 lines] [+248/-0 chars]  astro/public/index.html 
+  [+43/-12 lines] [+248/-0 chars]  astro/src/components/Footer.astro 
+  [+187/-0 lines] [+1207/-0 chars]  brisbane-tvs-lead-flow.n8n.json 
+  [+103/-0 lines] [+742/-0 chars]  functions/api/n8n/lead.js 
+  [+58/-2 lines] [+248/-0 chars]  index.html 
+ 

@@ -6350,10 +6350,13 @@
             <div class="footer-signup">
                 <div class="footer-signup-title">Book <em>before 10 AM</em><br>for same-day install.</div>
                 <p class="footer-signup-copy">Get a flat-rate quote in 60 seconds. No call-out fees, no hidden charges — just honest Brisbane pricing.</p>
-                <form class="footer-form" onsubmit="event.preventDefault();" aria-label="Quote request">
-                    <input type="email" placeholder="Your email address" aria-label="Email address" required>
+                <form class="footer-form" id="footerLeadForm" novalidate aria-label="Quote request">
+                    <!-- Honeypot: invisible to humans, bots fill every field -->
+                    <input type="text" name="company_website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;">
+                    <input type="email" name="email" placeholder="Your email address" aria-label="Email address" required>
                     <button type="submit" aria-label="Request quote">→</button>
                 </form>
+                <p class="footer-form-status" id="footerLeadStatus" role="status" aria-live="polite" style="min-height:1em;font-size:11px;color:#d8d8d8;margin:6px 0 0;"></p>
                 <p class="footer-signup-copy" style="font-size:11px;">Or call <a href="tel:+61432145101" style="color:#d8d8d8;text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.2);"><strong>0432 145 101</strong></a> — 7&nbsp;days, 7&nbsp;AM–7&nbsp;PM.</p>
             </div>
         </div>
@@ -6380,6 +6383,59 @@
         </div>
     </div>
 </footer>
+
+<!-- ============================================================
+     Footer lead form → /api/n8n/lead → n8n → Tom
+     ============================================================ -->
+<script>
+(function () {
+    var form = document.getElementById('footerLeadForm');
+    if (!form) return;
+    var status = document.getElementById('footerLeadStatus');
+    var btn = form.querySelector('button[type="submit"]');
+    var origBtnText = btn ? btn.textContent : '';
+
+    function getUtm() {
+        var p = new URLSearchParams(location.search);
+        var out = {};
+        ['utm_source','utm_medium','utm_campaign','utm_term','utm_content'].forEach(function (k) {
+            if (p.get(k)) out[k] = p.get(k);
+        });
+        return out;
+    }
+
+    form.addEventListener('submit', async function (ev) {
+        ev.preventDefault();
+        var email = (form.email.value || '').trim();
+        if (!email) return;
+
+        if (status) { status.textContent = 'Sending…'; status.style.color = '#d8d8d8'; }
+        if (btn) { btn.disabled = true; btn.textContent = '…'; }
+
+        var payload = {
+            source: 'footer-subscribe',
+            page_url: location.href,
+            lead: { email: email },
+            tracking: Object.assign({ referrer: document.referrer || '' }, getUtm()),
+            company_website: form.company_website ? form.company_website.value : ''
+        };
+
+        try {
+            var res = await fetch('/api/n8n/lead', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            form.style.display = 'none';
+            if (status) { status.textContent = "Thanks — we'll be in touch within 2 hours."; status.style.color = '#9be39b'; }
+        } catch (err) {
+            if (btn) { btn.disabled = false; btn.textContent = origBtnText; }
+            if (status) { status.textContent = "Couldn't send — please call 0432 145 101."; status.style.color = '#ff9b9b'; }
+        }
+    });
+})();
+</script>
 
 </body>
 </html>
