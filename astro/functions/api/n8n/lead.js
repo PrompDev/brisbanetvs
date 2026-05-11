@@ -12,6 +12,13 @@
  *   Cloudflare Pages environment variable. The site only ever talks to
  *   /api/n8n/lead (same-origin, no CORS).
  *
+ * Location note
+ *   This file MUST live at `astro/functions/...` (NOT `/functions/` at
+ *   the repo root) because CF Pages' "Root directory" setting for this
+ *   project is `/astro`. Pages looks for the functions folder relative
+ *   to that root. Moving this file back to the repo root will make it
+ *   invisible to the deploy and every form POST will 405.
+ *
  * Setup (Cloudflare dashboard)
  *   Pages → brisbanetvs → Settings → Environment variables
  *     Production:
