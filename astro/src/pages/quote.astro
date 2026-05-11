@@ -471,33 +471,63 @@ const contactLd = {
         company_website: (fd.get("company_website") || "").toString(),
       };
 
+      // -- DEBUG: log everything to console + show real status on page --
+      console.log("[lead] POST", webhook, payload);
+
+      let res, bodyText, bodyJson;
       try {
-        const res = await fetch(webhook, {
+        res = await fetch(webhook, {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify(payload),
         });
-
-        if (!res.ok) throw new Error("Webhook returned " + res.status);
-
-        const photoNote =
-          photoFiles.length > 0
-            ? " We'll reply asking for the photo" + (photoFiles.length > 1 ? "s" : "") + "."
-            : "";
-        statusEl.textContent =
-          "Thanks — your quote request is in. We'll be in touch inside the hour." + photoNote;
-        statusEl.classList.add("qt-form-status-ok");
-        form.reset();
-        if (fileName) fileName.textContent = "No file chosen";
-        submitEl.textContent = "Sent ✓";
+        bodyText = await res.text();
+        try { bodyJson = JSON.parse(bodyText); } catch (_) { bodyJson = null; }
+        console.log("[lead] response", res.status, bodyJson || bodyText);
       } catch (err) {
-        console.error(err);
-        statusEl.textContent =
-          "Hmm, that didn't send. Please call 0432 145 101 or email admin@brisbanetvs.com and we'll sort it manually.";
+        console.error("[lead] network error", err);
+        statusEl.textContent = "FAILED — network error: " + (err && err.message ? err.message : err);
         statusEl.classList.add("qt-form-status-err");
         submitEl.disabled = false;
         submitEl.textContent = "Send my quote request →";
+        return;
       }
+
+      // Honeypot trip (server returns ok:true but with filtered:'honeypot')
+      if (bodyJson && bodyJson.filtered === "honeypot") {
+        console.warn("[lead] honeypot tripped on field:", bodyJson.tripped);
+        statusEl.textContent =
+          "FAILED — honeypot field '" + bodyJson.tripped +
+          "' had a value (browser autofill?). Email NOT sent.";
+        statusEl.classList.add("qt-form-status-err");
+        submitEl.disabled = false;
+        submitEl.textContent = "Send my quote request →";
+        return;
+      }
+
+      // Real error from Pages Function or upstream
+      if (!res.ok) {
+        const errCode = bodyJson && bodyJson.error ? bodyJson.error : "unknown";
+        statusEl.textContent =
+          "FAILED — HTTP " + res.status + " · " + errCode +
+          " · raw: " + bodyText.slice(0, 200);
+        statusEl.classList.add("qt-form-status-err");
+        submitEl.disabled = false;
+        submitEl.textContent = "Send my quote request →";
+        return;
+      }
+
+      // Real success
+      const photoNote =
+        photoFiles.length > 0
+          ? " We'll reply asking for the photo" + (photoFiles.length > 1 ? "s" : "") + "."
+          : "";
+      statusEl.textContent =
+        "SENT ✓ (HTTP " + res.status + ") — your quote request is in. We'll be in touch inside the hour." + photoNote;
+      statusEl.classList.add("qt-form-status-ok");
+      form.reset();
+      if (fileName) fileName.textContent = "No file chosen";
+      submitEl.textContent = "Sent ✓";
     });
   })();
 </script>

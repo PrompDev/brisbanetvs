@@ -117,21 +117,41 @@
                         company_website: form.company_website ? form.company_website.value : ''
                       };
 
+                      console.log('[lead] POST', form.dataset.webhook, payload);
+                      var res, bodyText, bodyJson = null;
                       try {
-                        var res = await fetch(form.dataset.webhook, {
+                        res = await fetch(form.dataset.webhook, {
                           method: 'POST',
                           headers: { 'content-type': 'application/json' },
                           body: JSON.stringify(payload)
                         });
-                        if (!res.ok) throw new Error('HTTP ' + res.status);
-                        form.style.display = 'none';
-                        status.textContent = "Thanks — we'll be in touch within 2 hours.";
-                        status.style.color = '#9be39b';
+                        bodyText = await res.text();
+                        try { bodyJson = JSON.parse(bodyText); } catch (_) {}
+                        console.log('[lead] response', res.status, bodyJson || bodyText);
                       } catch (err) {
+                        console.error('[lead] network error', err);
                         if (btn) { btn.disabled = false; btn.textContent = origBtnText; }
-                        status.textContent = "Couldn't send — please call 0432 145 101.";
+                        status.textContent = 'FAILED — network: ' + (err && err.message ? err.message : err);
                         status.style.color = '#ff9b9b';
+                        return;
                       }
+                      if (bodyJson && bodyJson.filtered === 'honeypot') {
+                        console.warn('[lead] honeypot tripped:', bodyJson.tripped);
+                        if (btn) { btn.disabled = false; btn.textContent = origBtnText; }
+                        status.textContent = "FAILED — honeypot '" + bodyJson.tripped + "' filled (autofill?). Email NOT sent.";
+                        status.style.color = '#ff9b9b';
+                        return;
+                      }
+                      if (!res.ok) {
+                        if (btn) { btn.disabled = false; btn.textContent = origBtnText; }
+                        var errCode = (bodyJson && bodyJson.error) ? bodyJson.error : 'unknown';
+                        status.textContent = 'FAILED — HTTP ' + res.status + ' · ' + errCode;
+                        status.style.color = '#ff9b9b';
+                        return;
+                      }
+                      form.style.display = 'none';
+                      status.textContent = 'SENT ✓ (HTTP ' + res.status + ") — we'll be in touch within 2 hours.";
+                      status.style.color = '#9be39b';
                     });
                   })();
                 </script>
