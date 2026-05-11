@@ -495,3 +495,12 @@
   [+14/-9 lines] [+85/-0 chars]  astro/src/data/business.ts 
   [+84/-12 lines] [+881/-0 chars]  astro/src/pages/quote.astro 
  
+---------------------------------------- 
+[2026-05-11 18:26] 3 file(s) | commit: ae325d3 
+---------------------------------------- 
+  Summary:  3 files changed, 21 insertions(+), 25 deletions(-) 
+ 
+  [+8/-8 lines] [+67/-0 chars]  6 
+  [+8/-8 lines] [+67/-0 chars]  7 
+  [+5/-9 lines] [+0/-0 chars]  functions/api/n8n/lead.js 
+ 

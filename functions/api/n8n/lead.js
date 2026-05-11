@@ -92,12 +92,8 @@ export async function onRequestPost({ request, env }) {
   return json({ ok: true });
 }
 
-// Anything other than POST → 405
-export async function onRequest({ request }) {
-  if (request.method !== 'POST') {
-    return new Response('Method Not Allowed', {
-      status: 405,
-      headers: { allow: 'POST' }
-    });
-  }
-}
+// (No onRequest export — when only onRequestPost is exported, Cloudflare
+//  Pages automatically returns 405 Method Not Allowed for any other HTTP
+//  method. Exporting both caused onRequest to intercept POSTs and return
+//  undefined, which Pages handled as 405. Don't add onRequest back unless
+//  you call next() for the methods you want to fall through.)
