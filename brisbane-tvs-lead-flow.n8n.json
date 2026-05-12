@@ -14,13 +14,13 @@
         -400,
         300
       ],
-      "id": "2ed6091b-6456-4569-bb12-ecc1f5510cef",
+      "id": "28871fba-7e29-422b-93a2-0ea73a93a24d",
       "name": "Webhook",
-      "webhookId": "ceddbdbe-df63-4260-96df-7965a43c978e"
+      "webhookId": "677b8130-711c-4fd2-b318-8be6974274cb"
     },
     {
       "parameters": {
-        "jsCode": "// Brisbane TVs \u2014 normalize lead, detect spam, build email\nconst i = ($input.first() || {}).json || {};\n\n// Honeypot \u2014 any non-empty value in these fields means bot\nconst isSpam = !!(i.company_website || i.honeypot || i.hp);\nif (isSpam) {\n  return [{ json: { isSpam: true } }];\n}\n\nconst safe = (v, d = '') => (v === undefined || v === null) ? d : String(v).trim();\nconst lead = i.lead || {};\nconst job = i.job || {};\nconst tracking = i.tracking || {};\nconst server = i.server || {};\n\nconst name     = safe(lead.name, '(no name)');\nconst phone    = safe(lead.phone);\nconst email    = safe(lead.email);\nconst suburb   = safe(lead.suburb);\nconst postcode = safe(lead.postcode);\n\nconst tvCount   = job.tv_count || 1;\nconst sizeTier  = safe(job.size_tier);\nconst sizeLabel = safe(job.size_label, sizeTier);\nconst addons    = Array.isArray(job.addons) ? job.addons : [];\nconst wall      = safe(job.wall_type);\nconst date      = safe(job.preferred_date);\nconst estimate  = job.estimate_aud;\nconst notes     = safe(job.notes);\n\nconst source  = safe(i.source, 'unknown');\nconst pageUrl = safe(i.page_url);\n\nconst isSubscribe = source === 'newsletter' || source === 'subscribe';\n\n// Subject line\nlet subject;\nif (isSubscribe) {\n  subject = `New subscriber \u2014 ${email || name || 'no email'}`;\n} else {\n  const parts = [];\n  if (sizeLabel) parts.push(sizeLabel);\n  if (suburb)    parts.push(suburb);\n  if (estimate)  parts.push(`$${estimate}`);\n  subject = `New lead \u2014 ${parts.join(' \u00b7 ') || 'Brisbane TVs'}`;\n}\n\n// Click-to-call / mailto links\nconst esc = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;');\nconst telHref = phone ? phone.replace(/[^\\d+]/g, '') : '';\nconst phoneLine = phone\n  ? `<a href=\"tel:${esc(telHref)}\" style=\"color:#403ed0;text-decoration:none;font-weight:600;\">${esc(phone)}</a>`\n  : '<span style=\"color:#999;\">(not provided)</span>';\nconst emailLine = email\n  ? `<a href=\"mailto:${esc(email)}\" style=\"color:#403ed0;text-decoration:none;\">${esc(email)}</a>`\n  : '<span style=\"color:#999;\">(not provided)</span>';\n\nconst hasJob = sizeLabel || tvCount > 1 || addons.length || wall || date || notes || estimate;\n\nconst html = `<!doctype html>\n<html><body style=\"margin:0;padding:0;background:#f4f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1a1a1a;\">\n  <div style=\"max-width:560px;margin:0 auto;padding:24px;\">\n    <div style=\"background:#fff;border-radius:12px;padding:28px 28px 24px;box-shadow:0 1px 4px rgba(0,0,0,0.06);\">\n      <div style=\"font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#403ed0;font-weight:700;margin-bottom:6px;\">${isSubscribe ? 'New Subscriber' : 'New Lead'}</div>\n      <h1 style=\"margin:0 0 20px;font-size:22px;font-weight:700;color:#1a1a1a;\">${esc(name)}</h1>\n      <table cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;font-size:14px;line-height:1.5;border-collapse:collapse;\">\n        <tr><td style=\"padding:8px 0;color:#666;width:120px;\">Phone</td><td style=\"padding:8px 0;\">${phoneLine}</td></tr>\n        <tr><td style=\"padding:8px 0;color:#666;\">Email</td><td style=\"padding:8px 0;\">${emailLine}</td></tr>\n        ${(suburb || postcode) ? `<tr><td style=\"padding:8px 0;color:#666;\">Suburb</td><td style=\"padding:8px 0;\">${esc([suburb, postcode].filter(Boolean).join(' '))}</td></tr>` : ''}\n      </table>\n      ${hasJob ? `\n      <div style=\"height:1px;background:#eee;margin:20px 0;\"></div>\n      <div style=\"font-size:12px;letter-spacing:0.8px;text-transform:uppercase;color:#999;font-weight:600;margin-bottom:10px;\">Job Details</div>\n      <table cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;font-size:14px;line-height:1.5;border-collapse:collapse;\">\n        ${(sizeLabel || tvCount > 1) ? `<tr><td style=\"padding:6px 0;color:#666;width:120px;\">TV</td><td style=\"padding:6px 0;\">${tvCount} \u00d7 ${esc(sizeLabel || 'unspecified size')}</td></tr>` : ''}\n        ${addons.length ? `<tr><td style=\"padding:6px 0;color:#666;\">Add-ons</td><td style=\"padding:6px 0;\">${esc(addons.join(', '))}</td></tr>` : ''}\n        ${wall  ? `<tr><td style=\"padding:6px 0;color:#666;\">Wall type</td><td style=\"padding:6px 0;\">${esc(wall)}</td></tr>` : ''}\n        ${date  ? `<tr><td style=\"padding:6px 0;color:#666;\">Preferred date</td><td style=\"padding:6px 0;\">${esc(date)}</td></tr>` : ''}\n        ${estimate ? `<tr><td style=\"padding:6px 0;color:#666;\">Estimate</td><td style=\"padding:6px 0;font-weight:600;\">$${esc(estimate)}</td></tr>` : ''}\n        ${notes ? `<tr><td style=\"padding:6px 0;color:#666;vertical-align:top;\">Notes</td><td style=\"padding:6px 0;white-space:pre-wrap;\">${esc(notes)}</td></tr>` : ''}\n      </table>` : ''}\n      <div style=\"height:1px;background:#eee;margin:20px 0;\"></div>\n      <div style=\"font-size:11px;color:#999;line-height:1.5;\">\n        <div><strong style=\"color:#666;\">Source:</strong> ${esc(source)}${pageUrl ? ` \u00b7 <a href=\"${esc(pageUrl)}\" style=\"color:#999;\">${esc(pageUrl)}</a>` : ''}</div>\n        ${(tracking.utm_source || tracking.utm_campaign) ? `<div><strong style=\"color:#666;\">UTM:</strong> ${esc([tracking.utm_source, tracking.utm_medium, tracking.utm_campaign].filter(Boolean).join(' / '))}</div>` : ''}\n        ${tracking.referrer ? `<div><strong style=\"color:#666;\">Referrer:</strong> ${esc(tracking.referrer)}</div>` : ''}\n        ${server.ip ? `<div><strong style=\"color:#666;\">IP:</strong> ${esc(server.ip)}${server.country ? ` (${esc(server.country)})` : ''}</div>` : ''}\n      </div>\n    </div>\n    <div style=\"text-align:center;font-size:11px;color:#aaa;margin-top:14px;\">Brisbane TVs \u00b7 automated lead notification</div>\n  </div>\n</body></html>`;\n\nreturn [{\n  json: {\n    isSpam: false,\n    subject,\n    html,\n    name, phone, email, suburb, postcode,\n    source, pageUrl,\n    tvCount, sizeTier, sizeLabel, addons, wall, date, estimate, notes\n  }\n}];\n"
+        "jsCode": "// Brisbane TVs \u2014 normalize lead, detect spam, build email\n//\n// n8n Webhook v2 wraps the POST under .body; unwrap defensively.\nconst raw = ($input.first() || {}).json || {};\nconst i = (raw && raw.body && typeof raw.body === 'object') ? raw.body : raw;\n\n// Honeypot \u2014 `_bts_check` is the primary trap; legacy names belt-and-braces.\nconst isSpam = !!(i._bts_check || i.company_website || i.honeypot || i.hp);\nif (isSpam) {\n  return [{ json: { isSpam: true } }];\n}\n\nconst safe = (v, d = '') => (v === undefined || v === null) ? d : String(v).trim();\nconst esc  = (s) => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;');\n\nconst lead = i.lead || {};\nconst job = i.job || {};\nconst tracking = i.tracking || {};\nconst server = i.server || {};\n\nconst name     = safe(lead.name, '(no name provided)');\nconst phone    = safe(lead.phone);\nconst email    = safe(lead.email);\nconst suburb   = safe(lead.suburb);\nconst postcode = safe(lead.postcode);\n\nconst tvCount    = job.tv_count || 1;\nconst sizeTier   = safe(job.size_tier);\nconst sizeLabel  = safe(job.size_label, sizeTier);\nconst pkgLabel   = safe(job.package_label);\nconst tvSize     = safe(job.tv_size);\nconst tvBrand    = safe(job.tv_brand);\nconst addons     = Array.isArray(job.addons) ? job.addons : [];\nconst wall       = safe(job.wall_type);\nconst date       = safe(job.preferred_date);\nconst estimate   = job.estimate_aud;\nconst notes      = safe(job.notes);\nconst photos     = Array.isArray(job.photos_attached) ? job.photos_attached : [];\n\nconst source  = safe(i.source, 'unknown');\nconst pageUrl = safe(i.page_url);\n\nconst isSubscribe = source === 'newsletter' || source === 'subscribe';\n\n// ---------- Subject line ----------\nlet subject;\nif (isSubscribe) {\n  subject = `New subscriber \u2014 ${email || name || 'no email'}`;\n} else {\n  const parts = [];\n  if (pkgLabel)         parts.push(pkgLabel.replace(/\u2014.*$/, '').trim());\n  else if (sizeLabel)   parts.push(sizeLabel);\n  if (suburb)           parts.push(suburb);\n  if (estimate)         parts.push(`$${estimate}`);\n  subject = `\ud83d\udfe3 New lead${parts.length ? ' \u2014 ' + parts.join(' \u00b7 ') : ''}`;\n}\n\n// ---------- Preheader (inbox preview text) ----------\nconst preheaderParts = [];\nif (phone) preheaderParts.push(phone);\nif (suburb) preheaderParts.push(suburb);\nif (pkgLabel) preheaderParts.push(pkgLabel.replace(/\u2014.*$/, '').trim());\nconst preheader = esc(preheaderParts.join(' \u00b7 ') || 'New lead from brisbanetvs.com');\n\n// ---------- Tap-to-call link ----------\nconst telHref = phone ? phone.replace(/[^\\d+]/g, '') : '';\n\n// ---------- Wall type label (humanize the slug) ----------\nconst wallLabels = {\n  'plasterboard':       'Plasterboard (timber stud)',\n  'plasterboard-steel': 'Plasterboard (steel stud)',\n  'brick':              'Exposed / rendered brick',\n  'concrete':           'Concrete / cement block',\n  'fibro':              'Fibro / weatherboard',\n  'tile':               'Tiled / feature wall',\n  'not-sure':           'Customer not sure'\n};\nconst wallLabel = wallLabels[wall] || wall;\n\n// ---------- Add-on labels ----------\nconst addonLabels = {\n  'cable-concealment': 'In-wall cable concealment',\n  'soundbar':          'Soundbar mount',\n  'above-fireplace':   'Above-fireplace lift',\n  'power-relocation':  'New power point behind TV',\n  'outdoor':           'Outdoor / alfresco install',\n  'remove-old':        'Remove or relocate existing TV'\n};\nconst addonsPretty = addons.map(a => addonLabels[a] || a);\n\n// ---------- Preferred-date label ----------\nconst dateLabels = {\n  'asap':                'ASAP \u2014 same day if possible',\n  'weekday-morning':     'Weekday mornings',\n  'weekday-afternoon':   'Weekday afternoons',\n  'saturday':            'Saturday',\n  'next-week':           'Next week',\n  'flexible':            'Flexible'\n};\nconst dateLabel = dateLabels[date] || date;\n\n// ---------- Build the job-details rows ----------\nconst jobRows = [];\nif (pkgLabel)\n  jobRows.push(['Package', esc(pkgLabel)]);\nif (tvSize || tvBrand)\n  jobRows.push(['TV', esc([tvSize ? tvSize + '\"' : '', tvBrand].filter(Boolean).join(' \u00b7 ')) + (tvCount > 1 ? ` <span style=\"color:#94a3b8;\">(\u00d7${tvCount})</span>` : '')]);\nelse if (tvCount > 1)\n  jobRows.push(['TV count', String(tvCount)]);\nif (!pkgLabel && sizeLabel)\n  jobRows.push(['Size tier', esc(sizeLabel)]);\nif (wallLabel)\n  jobRows.push(['Wall', esc(wallLabel)]);\nif (addonsPretty.length)\n  jobRows.push(['Add-ons', '<ul style=\"margin:0;padding:0 0 0 18px;\">' + addonsPretty.map(a => `<li>${esc(a)}</li>`).join('') + '</ul>']);\nif (dateLabel)\n  jobRows.push(['Preferred', esc(dateLabel)]);\nif (estimate)\n  jobRows.push(['Estimate', `<strong style=\"color:#0f172a;\">$${esc(estimate)}</strong>`]);\nif (photos.length)\n  jobRows.push(['Photos', `${photos.length} attached <em style=\"color:#94a3b8;\">\u2014 reply to ask for them</em><div style=\"margin-top:4px;font-size:12px;color:#94a3b8;\">${photos.map(p => esc(p.name + ' (' + p.size_kb + ' KB)')).join('<br>')}</div>`]);\n\nconst jobRowsHtml = jobRows.map(([k, v]) =>\n  `<tr><td style=\"padding:7px 0;color:#64748b;width:110px;vertical-align:top;\">${k}</td><td style=\"padding:7px 0;color:#0f172a;\">${v}</td></tr>`\n).join('');\n\n// ---------- Phone & email buttons ----------\nconst phoneBtn = phone\n  ? `<a href=\"tel:${esc(telHref)}\" style=\"display:inline-block;padding:13px 20px;background:#0f172a;color:#ffffff;text-decoration:none;border-radius:8px;font-size:15px;font-weight:600;margin:0 6px 6px 0;mso-padding-alt:0;\">\ud83d\udcde ${esc(phone)}</a>`\n  : '';\nconst emailBtn = email\n  ? `<a href=\"mailto:${esc(email)}\" style=\"display:inline-block;padding:13px 20px;background:#f1f5f9;color:#0f172a;text-decoration:none;border-radius:8px;font-size:15px;font-weight:600;border:1px solid #e2e8f0;margin:0 6px 6px 0;mso-padding-alt:0;\">\u2709\ufe0f Reply to ${esc(email.split('@')[0])}</a>`\n  : '';\n\n// ---------- Final HTML ----------\nconst html = `<!doctype html>\n<html lang=\"en\">\n<head>\n<meta charset=\"utf-8\">\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<meta name=\"color-scheme\" content=\"light\">\n<title>New lead \u2014 Brisbane TVs</title>\n</head>\n<body style=\"margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#0f172a;-webkit-text-size-adjust:100%;\">\n<div style=\"display:none;max-height:0;overflow:hidden;font-size:1px;color:#f3f4f6;line-height:1px;mso-hide:all;\">${preheader}</div>\n<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"background:#f3f4f6;\">\n  <tr><td align=\"center\" style=\"padding:28px 16px;\">\n    <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"max-width:580px;\">\n\n      <!-- Brand strip -->\n      <tr><td style=\"padding:0 4px 14px 4px;\">\n        <div style=\"font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#403ed0;\">\n          \u25b8 Brisbane TVs \u00b7 Lead Notification\n        </div>\n      </td></tr>\n\n      <!-- Main card -->\n      <tr><td style=\"background:#ffffff;border-radius:14px;box-shadow:0 1px 3px rgba(15,23,42,0.06);overflow:hidden;\">\n\n        <!-- Customer header -->\n        <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">\n          <tr><td style=\"padding:28px 28px 20px 28px;\">\n            <div style=\"font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:${isSubscribe ? '#64748b' : '#16a34a'};font-weight:700;margin-bottom:6px;\">\n              ${isSubscribe ? '\u2605 New subscriber' : '\u2605 New lead'}\n            </div>\n            <h1 style=\"margin:0 0 6px 0;font-size:28px;font-weight:700;color:#0f172a;line-height:1.15;letter-spacing:-0.01em;\">\n              ${esc(name)}\n            </h1>\n            ${(suburb || postcode) ? `<div style=\"font-size:14px;color:#64748b;\">\ud83d\udccd ${esc([suburb, postcode].filter(Boolean).join(' \u00b7 '))}</div>` : ''}\n\n            <!-- Contact buttons -->\n            <div style=\"margin-top:18px;\">\n              ${phoneBtn}${emailBtn}\n            </div>\n          </td></tr>\n        </table>\n\n        ${jobRowsHtml ? `\n        <!-- Job details -->\n        <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">\n          <tr><td style=\"padding:0 28px;\">\n            <div style=\"border-top:1px solid #e2e8f0;\"></div>\n          </td></tr>\n          <tr><td style=\"padding:20px 28px 8px 28px;\">\n            <div style=\"font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:#94a3b8;font-weight:700;margin-bottom:12px;\">\n              Job details\n            </div>\n            <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size:14px;line-height:1.55;\">\n              ${jobRowsHtml}\n            </table>\n          </td></tr>\n        </table>` : ''}\n\n        ${notes ? `\n        <!-- Customer notes \u2014 highlighted -->\n        <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">\n          <tr><td style=\"padding:10px 28px 14px 28px;\">\n            <div style=\"background:#fef3c7;border-left:3px solid #f59e0b;padding:14px 16px;border-radius:6px;\">\n              <div style=\"font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#92400e;font-weight:700;margin-bottom:4px;\">\n                Customer notes\n              </div>\n              <div style=\"font-size:14px;line-height:1.55;color:#451a03;white-space:pre-wrap;\">${esc(notes)}</div>\n            </div>\n          </td></tr>\n        </table>` : ''}\n\n        <!-- Metadata footer -->\n        <table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">\n          <tr><td style=\"padding:0 28px;\">\n            <div style=\"border-top:1px solid #e2e8f0;\"></div>\n          </td></tr>\n          <tr><td style=\"padding:16px 28px 24px 28px;\">\n            <div style=\"font-size:11px;color:#94a3b8;line-height:1.75;\">\n              <strong style=\"color:#64748b;font-weight:600;\">Source:</strong> ${esc(source)}${pageUrl ? ` \u00b7 <a href=\"${esc(pageUrl)}\" style=\"color:#94a3b8;text-decoration:underline;\">${esc(pageUrl.replace(/^https?:\\/\\//, ''))}</a>` : ''}<br>\n              ${(tracking.utm_source || tracking.utm_campaign) ? `<strong style=\"color:#64748b;font-weight:600;\">UTM:</strong> ${esc([tracking.utm_source, tracking.utm_medium, tracking.utm_campaign].filter(Boolean).join(' / '))}<br>` : ''}\n              ${tracking.referrer ? `<strong style=\"color:#64748b;font-weight:600;\">Referrer:</strong> ${esc(tracking.referrer)}<br>` : ''}\n              ${server.ip ? `<strong style=\"color:#64748b;font-weight:600;\">IP:</strong> ${esc(server.ip)}${server.country ? ` (${esc(server.country)})` : ''}` : ''}\n            </div>\n          </td></tr>\n        </table>\n\n      </td></tr>\n\n      <!-- Tagline footer -->\n      <tr><td align=\"center\" style=\"padding:16px 0 4px 0;font-size:11px;color:#94a3b8;letter-spacing:0.3px;\">\n        Brisbane TVs \u00b7 automated lead notification\n      </td></tr>\n\n    </table>\n  </td></tr>\n</table>\n</body>\n</html>`;\n\nreturn [{\n  json: {\n    isSpam: false,\n    subject,\n    preheader,\n    html,\n    name, phone, email, suburb, postcode,\n    source, pageUrl,\n    tvCount, sizeTier, sizeLabel, pkgLabel, tvSize, tvBrand, addons, wall, date, estimate, notes, photos\n  }\n}];\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -28,7 +28,7 @@
         -160,
         300
       ],
-      "id": "f4f545c5-01fb-40ce-9419-750da8d3fcb6",
+      "id": "b17f9955-51c9-4660-a689-54243c3f7c23",
       "name": "Build Email"
     },
     {
@@ -42,7 +42,7 @@
           },
           "conditions": [
             {
-              "id": "ec384a0a-2dd1-457e-8c1c-260555a099e8",
+              "id": "549b32fe-f8ef-4066-89b8-dce95ab30bd8",
               "leftValue": "={{ $json.isSpam }}",
               "rightValue": "",
               "operator": {
@@ -62,7 +62,7 @@
         80,
         300
       ],
-      "id": "a1431d1c-a9cb-49f9-8f19-c0a85ea0dcef",
+      "id": "32bd8bc0-e3a7-45c6-943f-7bbf7bcdef70",
       "name": "Spam?"
     },
     {
@@ -77,30 +77,32 @@
         320,
         460
       ],
-      "id": "6bc033be-6f99-45e0-99de-264d4098da43",
+      "id": "093150c5-f35e-4ad5-b13c-beac8430c6e1",
       "name": "Respond Silently (spam)"
     },
     {
       "parameters": {
-        "sendTo": "tomdavie016@gmail.com, drdeandrehyde@gmail.com",
+        "toRecipients": "tomdavie016@gmail.com, drdeandrehyde@gmail.com",
         "subject": "={{ $('Build Email').first().json.subject }}",
-        "emailType": "html",
-        "message": "={{ $('Build Email').first().json.html }}",
-        "options": {}
+        "bodyContent": "={{ $('Build Email').first().json.html }}",
+        "additionalFields": {
+          "bodyContentType": "html",
+          "saveToSentItems": true
+        }
       },
-      "type": "n8n-nodes-base.gmail",
-      "typeVersion": 2.2,
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
       "position": [
         320,
         140
       ],
-      "id": "dd87cfa7-e4e0-443e-88a5-487569ba1e76",
-      "name": "Email Tom",
-      "webhookId": "e09e05ca-73e7-46e2-9658-3cfb9301e736",
+      "id": "94c2f319-829e-4886-b402-b919dbd7989b",
+      "name": "Send a message",
+      "webhookId": "1736b677-703c-432f-8177-9bbe334c4f69",
       "credentials": {
-        "gmailOAuth2": {
-          "id": "REPLACE_WITH_YOUR_GMAIL_CRED_ID",
-          "name": "Gmail OAuth2 API"
+        "microsoftOutlookOAuth2Api": {
+          "id": "n6InrJ8j5I9AYM8q",
+          "name": "Microsoft Outlook OAuth2 API"
         }
       }
     },
@@ -116,7 +118,7 @@
         560,
         140
       ],
-      "id": "a4f3405e-5f46-4b4f-9ae4-6e19075cd9d2",
+      "id": "20cfcb14-a9a2-424c-acec-abbb19246e05",
       "name": "Respond OK"
     }
   ],
@@ -155,14 +157,14 @@
         ],
         [
           {
-            "node": "Email Tom",
+            "node": "Send a message",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Email Tom": {
+    "Send a message": {
       "main": [
         [
           {
@@ -178,10 +180,10 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "d734b2e9-df6e-4225-b67c-8d81b05757de",
+  "versionId": "adbf8376-d8e7-4de6-a061-650272d409ca",
   "meta": {
     "templateCredsSetupCompleted": false
   },
-  "id": "5a7a23055c2b42c0",
+  "id": "596eeaad203147b1",
   "tags": []
 }

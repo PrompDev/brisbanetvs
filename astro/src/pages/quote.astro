@@ -311,7 +311,7 @@ const contactLd = {
             </li>
             <li>
               <span class="qt-step-k">2. You get a flat-rate quote</span>
-              <span class="qt-step-v">Emailed (and SMS'd if you give us a mobile) — usually inside the hour.</span>
+              <span class="qt-step-v">Emailed (and SMS'd if you give us a mobile) — usually within the hour.</span>
             </li>
             <li>
               <span class="qt-step-k">3. You pick a time</span>
@@ -523,7 +523,7 @@ const contactLd = {
           ? " We'll reply asking for the photo" + (photoFiles.length > 1 ? "s" : "") + "."
           : "";
       statusEl.textContent =
-        "Thanks — your quote request is in. We'll be in touch inside the hour." + photoNote;
+        "Thanks — your quote request is in. We'll be in touch within the hour." + photoNote;
       statusEl.classList.add("qt-form-status-ok");
       form.reset();
       if (fileName) fileName.textContent = "No file chosen";
