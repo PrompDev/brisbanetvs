@@ -1,0 +1,194 @@
+========================================
+  BRISBANE TVs - Change Log
+========================================
+
+----------------------------------------
+[2026-04-16 18:11] 36 file(s) | commit: a9fad30
+  Initial commit - Brisbane TVs website
+----------------------------------------
+  Summary: 36 files changed, 6490 insertions(+)
+
+  [+17/-0 lines]     .gitignore
+  [+120/-0 lines]    about.html
+  [+234/-0 lines]    aspley.html
+  [+234/-0 lines]    banyo.html
+  [+192/-0 lines]    book.html
+  [+234/-0 lines]    boondall.html
+  [+234/-0 lines]    carseldine.html
+  [+234/-0 lines]    chermside-west.html
+  [+234/-0 lines]    chermside.html
+  [+234/-0 lines]    clayfield.html
+  [+575/-0 lines]    css/style.css
+  [+234/-0 lines]    fitzgibbon.html
+  [+234/-0 lines]    geebung.html
+  [+414/-0 lines]    generate-areas.js
+  [+234/-0 lines]    hendra.html
+  [binary 146KB]     img/apartment-install.jpg
+  [binary 2.7MB]     img/before-after.png
+  [binary 152KB]     img/bracket-closeup.jpg
+  [binary 208KB]     img/clean-wall-mount.jpg
+  [binary 54KB]      img/hero-banner.jpg
+  [binary 131KB]     img/living-room-mount.jpg
+  [binary 107KB]     img/tech-installing.jpg
+  [binary 117KB]     img/tv-above-fireplace.jpg
+  [binary 153KB]     img/tv-soundbar-mount.jpg
+  [+324/-0 lines]    index.html
+  [+234/-0 lines]    kedron.html
+  [+234/-0 lines]    northgate.html
+  [+234/-0 lines]    nudgee.html
+  [+234/-0 lines]    nundah.html
+  [+168/-0 lines]    services.html
+  [+234/-0 lines]    taigum.html
+  [+234/-0 lines]    toombul.html
+  [+234/-0 lines]    virginia.html
+  [+234/-0 lines]    wavell-heights.html
+  [+234/-0 lines]    wooloowin.html
+  [+234/-0 lines]    zillmere.html
+
+----------------------------------------
+[2026-04-16 18:14] 36 file(s) | commit: 2b37421
+  Move site files to repo root, remove nested folders
+----------------------------------------
+  Summary: 36 files changed, 0 insertions(+), 0 deletions(-) [renames only]
+
+  [renamed]  brisbanetvs-local/brisbanetvs-local/.gitignore -> .gitignore
+  [renamed]  brisbanetvs-local/brisbanetvs-local/about.html -> about.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/aspley.html -> aspley.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/banyo.html -> banyo.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/book.html -> book.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/boondall.html -> boondall.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/carseldine.html -> carseldine.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/chermside-west.html -> chermside-west.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/chermside.html -> chermside.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/clayfield.html -> clayfield.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/css/style.css -> css/style.css
+  [renamed]  brisbanetvs-local/brisbanetvs-local/fitzgibbon.html -> fitzgibbon.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/geebung.html -> geebung.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/generate-areas.js -> generate-areas.js
+  [renamed]  brisbanetvs-local/brisbanetvs-local/hendra.html -> hendra.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/img/* -> img/*
+  [renamed]  brisbanetvs-local/brisbanetvs-local/index.html -> index.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/kedron.html -> kedron.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/northgate.html -> northgate.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/nudgee.html -> nudgee.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/nundah.html -> nundah.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/services.html -> services.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/taigum.html -> taigum.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/toombul.html -> toombul.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/virginia.html -> virginia.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/wavell-heights.html -> wavell-heights.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/wooloowin.html -> wooloowin.html
+  [renamed]  brisbanetvs-local/brisbanetvs-local/zillmere.html -> zillmere.html
+
+----------------------------------------
+[2026-04-16 18:24] 4 file(s) | commit: d1429a3
+  Add git.tools batch files and README
+----------------------------------------
+  Summary: 4 files changed, 276 insertions(+)
+
+  [+95/-0 lines]     README.md
+  [+43/-0 lines]     git.tools/start-dev-server.bat
+  [+39/-0 lines]     git.tools/sync-from-main.bat
+  [+99/-0 lines]     git.tools/update-main.bat
+
+---------------------------------------- 
+[2026-04-16 18:33] 3 file(s) | commit: f24c3dc 
+---------------------------------------- 
+  Summary:  3 files changed, 154 insertions(+), 8 deletions(-) 
+ 
+  [+1/-0 lines] [+0/-0 chars]  .gitignore 
+  [+93/-0 lines] [+232/-0 chars]  git.tools/CHANGELOG.log 
+  [+60/-8 lines] [+929/-0 chars]  git.tools/update-main.bat 
+ 
+---------------------------------------- 
+[2026-04-17 03:26] 91 file(s) | commit: 2069f93 
+---------------------------------------- 
+  Summary:  91 files changed, 25550 insertions(+), 589 deletions(-) 
+ 
+  [binary]  SEO-Optimization-Report.docx 
+  [+152/-3 lines] [+1408/-0 chars]  about.html 
+---------------------------------------- 
+[2026-04-17 03:33] 5 file(s) | commit: e9628d6 
+---------------------------------------- 
+  Summary:  5 files changed, 226 insertions(+), 14 deletions(-) 
+ 
+  [+109/-0 lines] [+2713/-0 chars]  6 
+  [+90/-0 lines] [+2698/-0 chars]  7 
+  [+0/-0 lines] [+0/-0 chars]  TV 
+  [+7/-0 lines] [+91/-0 chars]  git.tools/CHANGELOG.log 
+  [+20/-14 lines] [+113/-0 chars]  git.tools/update-main.bat 
+ 
+---------------------------------------- 
+[2026-04-17 03:35] 3 file(s) | commit: 97c04dd 
+---------------------------------------- 
+  Summary:  3 files changed, 199 deletions(-) 
+ 
+  [+0/-109 lines] [+0/-0 chars]  6 
+  [+0/-90 lines] [+0/-0 chars]  7 
+  [+0/-0 lines] [+0/-0 chars]  TV 
+ 
+---------------------------------------- 
+[2026-04-17 18:00] 15 file(s) | commit: 77e2d5e 
+---------------------------------------- 
+  Summary:  15 files changed, 3339 insertions(+), 244 deletions(-) 
+ 
+  [+67/-0 lines] [+2673/-0 chars]  6 
+  [+67/-0 lines] [+2673/-0 chars]  7 
+  [+24/-0 lines] [+0/-0 chars]  astro-site/.gitignore 
+  [+46/-0 lines] [+225/-0 chars]  astro-site/README.md 
+  [+5/-0 lines] [+20/-0 chars]  astro-site/astro.config.mjs 
+  [+17/-0 lines] [+63/-0 chars]  astro-site/package.json 
+  [binary]  astro-site/public/favicon.ico 
+  [+9/-0 lines] [+24/-0 chars]  astro-site/public/favicon.svg 
+  [+1/-0 lines] [+0/-0 chars]  astro-site/src/assets/astro.svg 
+  [+1/-0 lines] [+0/-0 chars]  astro-site/src/assets/background.svg 
+  [+210/-0 lines] [+992/-0 chars]  astro-site/src/components/Welcome.astro 
+  [+23/-0 lines] [+13/-0 chars]  astro-site/src/layouts/Layout.astro 
+  [+11/-0 lines] [+0/-0 chars]  astro-site/src/pages/index.astro 
+  [+5/-0 lines] [+66/-0 chars]  astro-site/tsconfig.json 
+  [+2853/-244 lines] [+19791/-0 chars]  v3/index.html 
+ 
+---------------------------------------- 
+[2026-04-17 20:18] 3 file(s) | commit: cc3c81c 
+---------------------------------------- 
+  Summary:  3 files changed, 737 insertions(+), 665 deletions(-) 
+ 
+  [+17/-17 lines] [+67/-0 chars]  6 
+  [+17/-17 lines] [+67/-0 chars]  7 
+  [+703/-631 lines] [+8745/-0 chars]  v3/index.html 
+ 
+---------------------------------------- 
+[2026-04-17 21:32] 4 file(s) | commit: 27d7f56 
+---------------------------------------- 
+  Summary:  4 files changed, 3543 insertions(+), 793 deletions(-) 
+ 
+  [+10/-10 lines] [+67/-0 chars]  6 
+  [+10/-10 lines] [+67/-0 chars]  7 
+  [+3497/-751 lines] [+25872/-0 chars]  index.html 
+  [+26/-22 lines] [+294/-0 chars]  v3/index.html 
+ 
+---------------------------------------- 
+[2026-04-19 04:19] 7 file(s) | commit: a156390 
+---------------------------------------- 
+  Summary:  7 files changed, 7333 insertions(+), 854 deletions(-) 
+ 
+  [+8/-8 lines] [+67/-0 chars]  6 
+  [+8/-8 lines] [+67/-0 chars]  7 
+  [+148/-0 lines] [+890/-0 chars]  api/chat.js 
+  [+385/-0 lines] [+1405/-0 chars]  font-preview.html 
+  [+394/-0 lines] [+2932/-0 chars]  image-resizer.html 
+  [+3195/-419 lines] [+33468/-0 chars]  index.html 
+  [+3195/-419 lines] [+33559/-0 chars]  v3/index.html 
+ 
+---------------------------------------- 
+[2026-04-19 05:17] 6 file(s) | commit: f14ac93 
+---------------------------------------- 
+  Summary:  6 files changed, 5988 insertions(+), 318 deletions(-) 
+ 
+  [+17/-16 lines] [+67/-0 chars]  6 
+  [+17/-16 lines] [+67/-0 chars]  7 
+  [+0/-0 lines] [+0/-0 chars]  Or 
+  [+141/-143 lines] [+6860/-0 chars]  index.html 
+  [+5672/-0 lines] [+0/-0 chars]  v3/blank 
+  [+141/-143 lines] [+6860/-0 chars]  v3/index.html 
+ 

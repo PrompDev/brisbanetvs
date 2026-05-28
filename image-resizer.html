@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Image Resizer — 1200/800 WebP</title>
+    <style>
+        :root {
+            --bg: #f5f3ee;
+            --panel: #ffffff;
+            --ink: #1a1a1a;
+            --muted: #6a6a6a;
+            --line: #e4e0d7;
+            --accent: #403ed0;
+            --accent-hover: #302dc0;
+            --ok: #2d7a3d;
+            --err: #b03030;
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { min-height: 100vh; padding: 40px 20px 80px; }
+        .wrap { max-width: 880px; margin: 0 auto; }
+
+        h1 { font-family: 'Fraunces', Georgia, serif; font-weight: 300; font-size: 2.4rem; letter-spacing: -0.5px; margin: 0 0 8px; }
+        .sub { color: var(--muted); font-size: 14px; margin: 0 0 28px; }
+
+        .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 24px; }
+
+        .drop {
+            border: 2px dashed var(--line);
+            border-radius: 6px;
+            padding: 48px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            background: #fafaf8;
+        }
+        .drop.is-over { border-color: var(--accent); background: #f0efff; }
+        .drop strong { display: block; font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .drop span { color: var(--muted); font-size: 13px; }
+        .drop input[type="file"] { display: none; }
+
+        .controls { display: flex; align-items: center; gap: 20px; margin-top: 20px; flex-wrap: wrap; }
+        .control { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+        .control input[type="range"] { accent-color: var(--accent); width: 140px; }
+        .control .val { min-width: 40px; color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+        .toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); cursor: pointer; user-select: none; }
+        .toggle input { accent-color: var(--accent); }
+
+        .actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        button {
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            padding: 12px 22px;
+            border-radius: 4px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s;
+        }
+        button.primary { background: var(--accent); color: #fff; }
+        button.primary:hover:not(:disabled) { background: var(--accent-hover); }
+        button.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+        button.ghost:hover:not(:disabled) { border-color: var(--ink); }
+        button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .queue { margin-top: 28px; }
+        .queue:empty { display: none; }
+        .row {
+            display: grid;
+            grid-template-columns: 56px 1fr auto auto;
+            gap: 14px;
+            align-items: center;
+            padding: 10px 12px;
+            border: 1px solid var(--line);
+            border-radius: 4px;
+            margin-bottom: 6px;
+            background: #fff;
+            font-size: 13px;
+        }
+        .thumb {
+            width: 56px;
+            height: 56px;
+            border-radius: 3px;
+            background: #eee8dd;
+            object-fit: cover;
+            display: block;
+        }
+        .meta { min-width: 0; }
+        .meta .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .meta .desc { color: var(--muted); font-size: 12px; margin-top: 2px; }
+        .status { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; padding: 4px 8px; border-radius: 3px; }
+        .status.queued { background: #f0ede3; color: var(--muted); }
+        .status.processing { background: #fff4d6; color: #8a6d1a; }
+        .status.done { background: #dff0e2; color: var(--ok); }
+        .status.error { background: #fadada; color: var(--err); }
+        .links { display: flex; gap: 6px; }
+        .links a {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            padding: 4px 8px;
+            border: 1px solid var(--line);
+            border-radius: 3px;
+            color: var(--ink);
+            text-decoration: none;
+            transition: border-color 0.15s;
+        }
+        .links a:hover { border-color: var(--ink); }
+
+        .summary { margin-top: 18px; font-size: 13px; color: var(--muted); }
+        .summary strong { color: var(--ink); }
+
+        footer { margin-top: 32px; font-size: 12px; color: var(--muted); text-align: center; }
+        footer code { background: #ebe7dc; padding: 1px 6px; border-radius: 3px; font-size: 11px; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <h1>Bulk image resizer</h1>
+    <p class="sub">Drop in any number of images. The tool spits out 1200&times;1200 and 800&times;800 <strong>.webp</strong> versions, center-cropped, filenames preserved. Example: <code style="background:#ebe7dc;padding:1px 6px;border-radius:3px;font-size:12px;">install-ashgrove.jpg</code> &rarr; <code style="background:#ebe7dc;padding:1px 6px;border-radius:3px;font-size:12px;">install-ashgrove1200x1200.webp</code> + <code style="background:#ebe7dc;padding:1px 6px;border-radius:3px;font-size:12px;">install-ashgrove800x800.webp</code>.</p>
+
+    <div class="panel">
+        <label class="drop" id="drop">
+            <strong>Drop images here or click to select</strong>
+            <span>JPG, PNG, WebP, HEIC&hellip; any browser-decodable image</span>
+            <input type="file" id="file" accept="image/*" multiple>
+        </label>
+
+        <div class="controls">
+            <div class="control">
+                <label for="quality">Quality</label>
+                <input type="range" id="quality" min="0.6" max="1" step="0.02" value="0.9">
+                <span class="val" id="qualityVal">0.90</span>
+            </div>
+            <label class="toggle">
+                <input type="checkbox" id="makeBoth" checked>
+                Generate both 1200 and 800
+            </label>
+        </div>
+
+        <div class="actions">
+            <button class="primary" id="download" disabled>Download ZIP</button>
+            <button class="ghost" id="clear" disabled>Clear</button>
+        </div>
+
+        <div class="queue" id="queue"></div>
+        <div class="summary" id="summary"></div>
+    </div>
+
+    <footer>Runs entirely in your browser — images never leave your device. &middot; Uses native <code>canvas.toBlob('image/webp')</code> and JSZip.</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+(() => {
+    const dropEl = document.getElementById('drop');
+    const fileInput = document.getElementById('file');
+    const qualityEl = document.getElementById('quality');
+    const qualityValEl = document.getElementById('qualityVal');
+    const makeBothEl = document.getElementById('makeBoth');
+    const downloadBtn = document.getElementById('download');
+    const clearBtn = document.getElementById('clear');
+    const queueEl = document.getElementById('queue');
+    const summaryEl = document.getElementById('summary');
+
+    /** @type {Array<{file: File, base: string, row: HTMLElement, statusEl: HTMLElement, linksEl: HTMLElement, outputs: Array<{name:string, blob:Blob}>, status: string}>} */
+    const items = [];
+
+    qualityEl.addEventListener('input', () => {
+        qualityValEl.textContent = Number(qualityEl.value).toFixed(2);
+    });
+
+    // ---------- drag + drop ----------
+    ['dragenter', 'dragover'].forEach(evt => {
+        dropEl.addEventListener(evt, e => {
+            e.preventDefault();
+            dropEl.classList.add('is-over');
+        });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+        dropEl.addEventListener(evt, e => {
+            e.preventDefault();
+            dropEl.classList.remove('is-over');
+        });
+    });
+    dropEl.addEventListener('drop', e => {
+        if (e.dataTransfer?.files?.length) {
+            ingest(e.dataTransfer.files);
+        }
+    });
+    fileInput.addEventListener('change', e => {
+        if (e.target.files?.length) {
+            ingest(e.target.files);
+            fileInput.value = '';
+        }
+    });
+    window.addEventListener('paste', e => {
+        const files = [...(e.clipboardData?.files ?? [])];
+        if (files.length) ingest(files);
+    });
+
+    clearBtn.addEventListener('click', () => {
+        items.length = 0;
+        queueEl.innerHTML = '';
+        summaryEl.textContent = '';
+        downloadBtn.disabled = true;
+        clearBtn.disabled = true;
+    });
+
+    downloadBtn.addEventListener('click', async () => {
+        const ready = items.filter(it => it.status === 'done' && it.outputs.length);
+        if (!ready.length) return;
+        downloadBtn.disabled = true;
+        downloadBtn.textContent = 'Zipping\u2026';
+        try {
+            const zip = new JSZip();
+            for (const it of ready) {
+                for (const out of it.outputs) {
+                    zip.file(out.name, out.blob);
+                }
+            }
+            const blob = await zip.generateAsync({ type: 'blob' }, (meta) => {
+                downloadBtn.textContent = `Zipping\u2026 ${Math.round(meta.percent)}%`;
+            });
+            const ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+            triggerDownload(blob, `resized-images-${ts}.zip`);
+        } finally {
+            downloadBtn.textContent = 'Download ZIP';
+            downloadBtn.disabled = false;
+        }
+    });
+
+    // ---------- ingestion pipeline ----------
+    async function ingest(fileList) {
+        const files = [...fileList].filter(f => f.type.startsWith('image/') || /\.(png|jpe?g|webp|gif|avif|heic|heif|bmp|tiff?)$/i.test(f.name));
+        if (!files.length) return;
+        clearBtn.disabled = false;
+        for (const file of files) {
+            const item = addRow(file);
+            items.push(item);
+        }
+        updateSummary();
+        // process sequentially so big batches don't thrash memory
+        for (const item of items.filter(i => i.status === 'queued')) {
+            await processItem(item);
+            updateSummary();
+            refreshDownloadBtn();
+        }
+    }
+
+    function addRow(file) {
+        const base = stripExt(file.name);
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = `
+            <img class="thumb" alt="">
+            <div class="meta">
+                <div class="name"></div>
+                <div class="desc"></div>
+            </div>
+            <span class="status queued">Queued</span>
+            <div class="links"></div>
+        `;
+        const thumb = row.querySelector('.thumb');
+        const nameEl = row.querySelector('.name');
+        const descEl = row.querySelector('.desc');
+        const statusEl = row.querySelector('.status');
+        const linksEl = row.querySelector('.links');
+        nameEl.textContent = file.name;
+        descEl.textContent = `${formatBytes(file.size)}`;
+        const url = URL.createObjectURL(file);
+        thumb.src = url;
+        thumb.onload = () => URL.revokeObjectURL(url);
+        queueEl.appendChild(row);
+        return { file, base, row, statusEl, linksEl, descEl, outputs: [], status: 'queued' };
+    }
+
+    async function processItem(item) {
+        item.status = 'processing';
+        setStatus(item, 'processing', 'Resizing');
+        try {
+            const img = await loadImage(item.file);
+            const sizes = makeBothEl.checked ? [1200, 800] : [1200];
+            const q = Number(qualityEl.value);
+            for (const size of sizes) {
+                const blob = await resizeToWebp(img, size, q);
+                const name = `${item.base}${size}x${size}.webp`;
+                item.outputs.push({ name, blob });
+                appendLink(item.linksEl, name, blob);
+            }
+            item.status = 'done';
+            const sizeText = item.outputs.map(o => `${o.name.split('.').slice(0, -1).join('.').match(/\d+x\d+$/)?.[0] ?? '?'} \u2192 ${formatBytes(o.blob.size)}`).join(' \u00b7 ');
+            item.descEl.textContent = sizeText;
+            setStatus(item, 'done', 'Ready');
+        } catch (err) {
+            console.error(err);
+            item.status = 'error';
+            item.descEl.textContent = err?.message || 'Failed';
+            setStatus(item, 'error', 'Failed');
+        }
+    }
+
+    // ---------- helpers ----------
+    function setStatus(item, kind, label) {
+        item.statusEl.className = `status ${kind}`;
+        item.statusEl.textContent = label;
+    }
+
+    function appendLink(container, name, blob) {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = name;
+        // show just the size suffix for brevity
+        const m = name.match(/(\d+x\d+)\.webp$/);
+        a.textContent = m ? m[1] : name;
+        a.title = `Download ${name}`;
+        container.appendChild(a);
+    }
+
+    function stripExt(name) {
+        const i = name.lastIndexOf('.');
+        return i > 0 ? name.slice(0, i) : name;
+    }
+
+    function formatBytes(n) {
+        if (n < 1024) return `${n} B`;
+        if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+        return `${(n / 1024 / 1024).toFixed(2)} MB`;
+    }
+
+    function triggerDownload(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+
+    function loadImage(file) {
+        return new Promise((resolve, reject) => {
+            const url = URL.createObjectURL(file);
+            const img = new Image();
+            img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+            img.onerror = () => { URL.revokeObjectURL(url); reject(new Error(`Browser can't decode ${file.name}`)); };
+            img.src = url;
+        });
+    }
+
+    function resizeToWebp(img, size, quality) {
+        return new Promise((resolve, reject) => {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d', { alpha: true });
+            // center-crop to square, then scale to target
+            const srcSize = Math.min(img.naturalWidth || img.width, img.naturalHeight || img.height);
+            const sx = ((img.naturalWidth || img.width) - srcSize) / 2;
+            const sy = ((img.naturalHeight || img.height) - srcSize) / 2;
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(img, sx, sy, srcSize, srcSize, 0, 0, size, size);
+            canvas.toBlob(
+                blob => blob ? resolve(blob) : reject(new Error('WebP encoder returned nothing')),
+                'image/webp',
+                quality
+            );
+        });
+    }
+
+    function refreshDownloadBtn() {
+        const anyReady = items.some(it => it.status === 'done' && it.outputs.length);
+        downloadBtn.disabled = !anyReady;
+    }
+
+    function updateSummary() {
+        const total = items.length;
+        const done = items.filter(i => i.status === 'done').length;
+        const failed = items.filter(i => i.status === 'error').length;
+        const outputs = items.reduce((sum, i) => sum + i.outputs.length, 0);
+        const bytes = items.reduce((sum, i) => sum + i.outputs.reduce((s, o) => s + o.blob.size, 0), 0);
+        if (!total) { summaryEl.textContent = ''; return; }
+        summaryEl.innerHTML = `<strong>${done}/${total}</strong> processed \u00b7 <strong>${outputs}</strong> files generated \u00b7 <strong>${formatBytes(bytes)}</strong> total${failed ? ` \u00b7 <span style="color:var(--err)">${failed} failed</span>` : ''}`;
+    }
+})();
+</script>
+</body>
+</html>
