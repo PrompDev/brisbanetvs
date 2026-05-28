@@ -1,0 +1,2 @@
+# Redirect form submission to thank you page
+/thank-you /thank-you.html 200

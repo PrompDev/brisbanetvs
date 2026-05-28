@@ -1,0 +1,15 @@
+{
+  "name": "brisbanetvs-main",
+  "version": "1.0.0",
+  "description": "Professional TV wall mounting and Starlink installation service for North Brisbane.",
+  "main": "generate-areas.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "sharp": "^0.34.5"
+  }
+}
