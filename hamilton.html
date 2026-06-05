@@ -303,10 +303,7 @@
                 </div>
             </div>
 
-            <form class="booking-form" action="https://formsubmit.co/hello@brisbanetvs.com" method="POST">
-                <input type="hidden" name="_subject" value="New Booking Request - Hamilton - Brisbane TVs">
-                <input type="hidden" name="_captcha" value="false">
-                <input type="hidden" name="_next" value="">
+            <form class="booking-form" action="/api/website-lead" method="POST" enctype="multipart/form-data" data-crm-lead>
                 <div class="form-group">
                     <label for="fullname">Full Name</label>
                     <input type="text" id="fullname" name="fullname" placeholder="Your full name" required>
@@ -356,6 +353,11 @@
                 <div class="form-group">
                     <label for="message">Message / Details</label>
                     <textarea id="message" name="message" placeholder="Any additional details about your installation..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="images">Photos of the wall or room</label>
+                    <input type="file" id="images" name="images" accept="image/*" multiple>
+                    <small style="display:block;color:#64748b;margin-top:0.35rem;">Upload up to 6 photos so we can quote accurately.</small>
                 </div>
                 <button type="submit" class="btn btn-primary btn-lg" style="width:100%;">Get My Fixed Price</button>
                 <p class="form-disclaimer">By clicking you agree to be contacted via text or phone for a fixed price quote.</p>
@@ -466,5 +468,6 @@
     </div>
 </footer>
 
+<script src="js/contact-form.js" defer></script>
 </body>
 </html>

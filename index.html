@@ -6351,10 +6351,12 @@
             <div class="footer-signup">
                 <div class="footer-signup-title">Book <em>before 10 AM</em><br>for same-day install.</div>
                 <p class="footer-signup-copy">Get a flat-rate quote in 60 seconds. No call-out fees, no hidden charges — just honest Brisbane pricing.</p>
-                <form class="footer-form" action="https://formsubmit.co/hello@brisbanetvs.com" method="POST" aria-label="Quote request">
-                    <input type="hidden" name="_subject" value="Newsletter Signup - Brisbane TVs">
-                    <input type="hidden" name="_captcha" value="false">
-                    <input type="hidden" name="_next" value="https://brisbanetvs.com/thank-you">
+                <form class="footer-form" action="/api/website-lead" method="POST" enctype="multipart/form-data" aria-label="Quote request" data-crm-lead>
+                    <input type="hidden" name="name" value="Website footer lead">
+                    <input type="hidden" name="phone" value="Email only">
+                    <input type="hidden" name="suburb" value="Unknown">
+                    <input type="hidden" name="service" value="Quote request">
+                    <input type="hidden" name="tvsize" value="Unknown">
                     <input type="email" name="email" placeholder="Your email address" aria-label="Email address" required>
                     <button type="submit" aria-label="Request quote">→</button>
                 </form>
@@ -6387,5 +6389,6 @@
     </div>
 </footer>
 
+<script src="js/contact-form.js" defer></script>
 </body>
 </html>
