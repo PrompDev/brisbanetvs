@@ -6350,8 +6350,14 @@
             <div class="footer-signup">
                 <div class="footer-signup-title">Book <em>before 10 AM</em><br>for same-day install.</div>
                 <p class="footer-signup-copy">Get a flat-rate quote in 60 seconds. No call-out fees, no hidden charges — just honest Brisbane pricing.</p>
-                <form class="footer-form" onsubmit="event.preventDefault();" aria-label="Quote request">
-                    <input type="email" placeholder="Your email address" aria-label="Email address" required>
+                <form class="footer-form" action="/api/website-lead" method="POST" enctype="multipart/form-data" aria-label="Quote request" data-crm-lead>
+                    <input type="hidden" name="name" value="Website footer lead">
+                    <input type="hidden" name="phone" value="Email only">
+                    <input type="hidden" name="suburb" value="Unknown">
+                    <input type="hidden" name="service" value="Quote request">
+                    <input type="hidden" name="tvsize" value="Unknown">
+                    <input type="email" name="email" placeholder="Your email address" aria-label="Email address" required>
+                    <input type="file" name="images" accept="image/*" multiple aria-label="Optional photos" style="grid-column:1 / -1;color:#d8d8d8;font-size:12px;">
                     <button type="submit" aria-label="Request quote">→</button>
                 </form>
                 <p class="footer-signup-copy" style="font-size:11px;">Or call <a href="tel:+61730000000" style="color:#d8d8d8;text-decoration:none;border-bottom:1px solid rgba(255,255,255,0.2);"><strong>(07) 3000 0000</strong></a> — 7&nbsp;days, 7&nbsp;AM–7&nbsp;PM.</p>
@@ -6381,5 +6387,6 @@
     </div>
 </footer>
 
+<script src="js/contact-form.js" defer></script>
 </body>
 </html>
