@@ -1,0 +1,12 @@
+name = "brisbanetvs-lead-worker"
+main = "lead-worker.js"
+compatibility_date = "2026-06-05"
+account_id = "8d813ed7931872a79e12d13a6669b601"
+route = "brisbanetvs.com/api/*"
+
+[vars]
+TWENTY_API_URL = "https://api.twenty.com"
+
+[[r2_buckets]]
+binding = "LEAD_UPLOADS"
+bucket_name = "brisbanetvs-lead-uploads"
