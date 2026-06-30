@@ -13,7 +13,7 @@ readTime: 7
 draft: false
 ---
 
-A flush-mounted TV looks finished when you can't see a single cable. Achieving that look in a Brisbane home is not just about aesthetics — it's about doing it safely, legally, and in a way that doesn't void the warranty on your $3,500 QLED. Here is exactly how we do it, on every job, across 109 suburbs.
+A flush-mounted TV looks finished when you can't see a single cable. Achieving that look in a Brisbane home is not just about aesthetics — it's about doing it safely, legally, and in a way that doesn't void the warranty on your $3,500 QLED. Here is exactly how we do it, on every job, across 300+ suburbs.
 
 ## The two methods we use
 

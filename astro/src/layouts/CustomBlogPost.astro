@@ -184,16 +184,16 @@ const breadcrumbLd = {
         <div class="cp-share">
           <p class="cp-toc-label">Share</p>
           <div class="cp-share-row">
-            <a href="#" data-share="twitter" aria-label="Share on Twitter / X">
+            <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(postUrl)}&text=${encodeURIComponent(frontmatter.title)}`} data-share="twitter" aria-label="Share on Twitter / X" target="_blank" rel="noopener">
               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2H21l-6.52 7.446L22 22h-6.828l-4.49-5.87L5.44 22H2.68l6.987-7.98L2 2h6.98l4.06 5.378L18.244 2zm-1.197 18.188h1.88L7.05 3.72H5.04l12.007 16.468z"/></svg>
             </a>
-            <a href="#" data-share="facebook" aria-label="Share on Facebook">
+            <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`} data-share="facebook" aria-label="Share on Facebook" target="_blank" rel="noopener">
               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg>
             </a>
-            <a href="#" data-share="linkedin" aria-label="Share on LinkedIn">
+            <a href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(postUrl)}&title=${encodeURIComponent(frontmatter.title)}`} data-share="linkedin" aria-label="Share on LinkedIn" target="_blank" rel="noopener">
               <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.36V9h3.41v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43c-1.14 0-2.06-.93-2.06-2.07 0-1.14.92-2.06 2.06-2.06 1.14 0 2.07.92 2.07 2.06 0 1.14-.93 2.07-2.07 2.07zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.8 0 0 .77 0 1.73v20.54C0 23.23.8 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>
             </a>
-            <a href="#" data-share="copy" aria-label="Copy link">
+            <a href={postUrl} data-share="copy" aria-label="Copy link">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
             </a>
           </div>
@@ -236,7 +236,7 @@ const breadcrumbLd = {
               <div class="cp-author-body">
                 <p class="cp-author-name">{frontmatter.author}</p>
                 <p class="cp-author-bio">
-                  The Brisbane TVs field team installs TVs, soundbars, and home theatres across 109 Brisbane suburbs. If you've got a question about your space, call <a href="tel:0432145101">0432 145 101</a> — the installers answer the phone.
+                  The Brisbane TVs field team installs TVs, soundbars, and home theatres across 300+ Greater Brisbane suburbs. If you've got a question about your space, call <a href="tel:0432145101">0432 145 101</a> — the installers answer the phone.
                 </p>
               </div>
             </div>
@@ -261,7 +261,7 @@ const breadcrumbLd = {
               <p class="cp-endcard-eyebrow">Ready to book?</p>
               <p class="cp-endcard-title">Same-day TV mounting from $179</p>
               <p class="cp-endcard-copy">
-                Brisbane's highest-rated installers. 5-year warranty. Covering 109 suburbs across Greater Brisbane.
+                Brisbane's highest-rated installers. 5-year warranty. Covering 300+ suburbs across Greater Brisbane.
               </p>
             </div>
             <a class="cp-endcard-btn" href="tel:0432145101">Book now →</a>

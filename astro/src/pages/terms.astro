@@ -1,0 +1,49 @@
+---
+import MarketingLayout from "~/layouts/MarketingLayout.astro";
+---
+<MarketingLayout
+  title="Terms of Service | Brisbane TVs"
+  description="Booking, quote, installation, warranty and access terms for Brisbane TVs installation services."
+  canonical="https://brisbanetvs.com/terms/"
+  bodyClass="page-legal"
+>
+  <main class="legal-page">
+    <div class="legal-wrap">
+      <p class="legal-eyebrow">Brisbane TVs</p>
+      <h1>Terms of Service</h1>
+      <p class="legal-intro">These terms apply when you request a quote, make a booking, or engage Brisbane TVs for TV mounting, cable concealment, soundbar, Starlink or related installation work.</p>
+      <article class="legal-card">
+        <h2>Quotes and bookings</h2>
+        <p>Quotes are based on the information, photos and access details provided before booking. If the wall type, TV size, bracket, access or scope is different on arrival, we will explain any change before work proceeds.</p>
+        <h2>Access and site readiness</h2>
+        <ul>
+          <li>The work area should be clear and safe before we arrive.</li>
+          <li>Apartment, lift, loading bay or building manager requirements must be disclosed before booking.</li>
+          <li>For rental properties, you are responsible for landlord or agent approval before drilling or wall modifications.</li>
+        </ul>
+        <h2>Electrical work</h2>
+        <p>Power relocation, new power points and other regulated electrical work must be performed by a licensed electrician. We will tell you when electrical work is required for a compliant finish.</p>
+        <h2>Warranty</h2>
+        <p>Brisbane TVs provides a workmanship warranty on installation labour. Product, bracket and TV warranties remain subject to the relevant manufacturer or supplier terms.</p>
+        <h2>Cancellations and changes</h2>
+        <p>Please contact us as early as possible if you need to move a booking. Same-day changes may be limited by installer scheduling and travel routes.</p>
+        <h2>Liability</h2>
+        <p>We take reasonable care during installation and carry public liability insurance. We are not responsible for pre-existing wall defects, hidden services, undisclosed asbestos risk, faulty customer-supplied brackets, or damage caused by inaccurate information supplied before the job.</p>
+        <p class="legal-contact">Questions: call <a href="tel:0432145101">0432 145 101</a> or email <a href="mailto:admin@brisbanetvs.com">admin@brisbanetvs.com</a>.</p>
+      </article>
+    </div>
+  </main>
+</MarketingLayout>
+<style>
+  .legal-page { padding: 7rem 0 4rem; background: #f7f5f0; color: #151515; }
+  .legal-wrap { width: min(900px, calc(100% - 2rem)); margin: 0 auto; }
+  .legal-eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .78rem; color: #8b6f47; margin: 0 0 1rem; }
+  .legal-page h1 { font-size: clamp(2.3rem, 5vw, 4.8rem); line-height: .98; margin: 0 0 1.5rem; font-family: var(--font-display, Georgia, serif); }
+  .legal-intro { font-size: 1.12rem; line-height: 1.7; color: #4f4a43; max-width: 760px; margin-bottom: 2.25rem; }
+  .legal-card { background: #fff; border: 1px solid #e5ded2; border-radius: 8px; padding: clamp(1.25rem, 3vw, 2rem); box-shadow: 0 18px 45px rgba(30,24,16,.07); }
+  .legal-card h2 { font-size: 1.25rem; margin: 1.75rem 0 .65rem; }
+  .legal-card h2:first-child { margin-top: 0; }
+  .legal-card p, .legal-card li { line-height: 1.72; color: #4b4740; }
+  .legal-card ul { padding-left: 1.2rem; }
+  .legal-contact { margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid #ece5d8; }
+</style>
