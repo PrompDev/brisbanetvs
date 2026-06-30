@@ -1,6 +1,6 @@
 name = "brisbanetvs"
 compatibility_date = "2026-06-05"
-pages_build_output_dir = "."
+pages_build_output_dir = "astro/dist"
 
 [[r2_buckets]]
 binding = "LEAD_UPLOADS"
