@@ -3,11 +3,16 @@ import { json, requireOperationsAccess } from "./_lib/auth.js";
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GA4_DATA_API_BASE = "https://analyticsdata.googleapis.com/v1beta/properties/";
-const GA4_READ_SCOPE = "https://www.googleapis.com/auth/analytics.readonly";
+const SEARCH_CONSOLE_API_BASE = "https://www.googleapis.com/webmasters/v3/sites/";
+const GOOGLE_READ_SCOPES = [
+  "https://www.googleapis.com/auth/analytics.readonly",
+  "https://www.googleapis.com/auth/webmasters.readonly",
+].join(" ");
 const REQUEST_TIMEOUT_MS = 12_000;
 const MAX_SERVICE_ACCOUNT_JSON_BYTES = 32 * 1024;
 const MAX_TOKEN_RESPONSE_BYTES = 32 * 1024;
 const MAX_REPORT_RESPONSE_BYTES = 64 * 1024;
+const MAX_SEARCH_CONSOLE_RESPONSE_BYTES = 64 * 1024;
 const MAX_COUNT = Number.MAX_SAFE_INTEGER;
 
 // Session default channel groups are a controlled GA4 taxonomy. Deliberately
@@ -76,10 +81,34 @@ function configuredServiceAccount(value) {
   }
 }
 
+function configuredSearchConsoleSiteUrl(value) {
+  const siteUrl = nonEmptyString(value, 512);
+  if (!siteUrl) return null;
+  if (siteUrl === "sc-domain:brisbanetvs.com") return siteUrl;
+
+  try {
+    const url = new URL(siteUrl);
+    const allowedHost = url.hostname === "brisbanetvs.com" || url.hostname === "www.brisbanetvs.com";
+    return url.protocol === "https:"
+      && allowedHost
+      && url.pathname === "/"
+      && !url.username
+      && !url.password
+      && !url.search
+      && !url.hash
+      ? siteUrl
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 function analyticsConfig(env) {
   const propertyId = configuredPropertyId(env?.GA4_PROPERTY_ID);
   const serviceAccount = configuredServiceAccount(env?.GA4_SERVICE_ACCOUNT_JSON);
-  return propertyId && serviceAccount ? { propertyId, serviceAccount } : null;
+  return propertyId && serviceAccount
+    ? { propertyId, serviceAccount, searchConsoleSiteUrl: configuredSearchConsoleSiteUrl(env?.SEARCH_CONSOLE_SITE_URL) }
+    : null;
 }
 
 function isRecord(value) {
@@ -91,11 +120,21 @@ function safeCount(value) {
   return Number.isSafeInteger(numeric) && numeric >= 0 && numeric <= MAX_COUNT ? numeric : 0;
 }
 
-function metricFromFirstRow(payload, metricIndex) {
+function safeDecimal(value) {
+  const numeric = typeof value === "string" || typeof value === "number" ? Number(value) : Number.NaN;
+  return Number.isFinite(numeric) && numeric >= 0 && numeric <= MAX_COUNT ? numeric : 0;
+}
+
+function metricFromFirstRow(payload, metricIndex, parseValue = safeCount) {
   if (!isRecord(payload) || !Array.isArray(payload.rows) || !isRecord(payload.rows[0])) return 0;
   const metrics = payload.rows[0].metricValues;
   if (!Array.isArray(metrics) || !isRecord(metrics[metricIndex])) return 0;
-  return safeCount(metrics[metricIndex].value);
+  return parseValue(metrics[metricIndex].value);
+}
+
+function metricFromRow(row, metricIndex, parseValue = safeCount) {
+  if (!isRecord(row) || !Array.isArray(row.metricValues) || !isRecord(row.metricValues[metricIndex])) return 0;
+  return parseValue(row.metricValues[metricIndex].value);
 }
 
 async function parseLimitedJson(response, maximumBytes) {
@@ -171,7 +210,7 @@ async function getAccessToken(config) {
   const now = Math.floor(Date.now() / 1_000);
   let assertion;
   try {
-    assertion = await new SignJWT({ scope: GA4_READ_SCOPE })
+    assertion = await new SignJWT({ scope: GOOGLE_READ_SCOPES })
       .setProtectedHeader({ alg: "RS256", typ: "JWT" })
       .setIssuer(config.serviceAccount.clientEmail)
       .setAudience(GOOGLE_TOKEN_URL)
@@ -220,6 +259,27 @@ async function runReport(config, accessToken, reportRequest) {
   return payload;
 }
 
+async function runSearchConsoleReport(config, accessToken, reportRequest) {
+  if (!config.searchConsoleSiteUrl) throw new AnalyticsUpstreamError("search_console_not_configured");
+
+  const payload = await requestJson(
+    `${SEARCH_CONSOLE_API_BASE}${encodeURIComponent(config.searchConsoleSiteUrl)}/searchAnalytics/query`,
+    {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        "content-type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify(reportRequest),
+    },
+    "search_console_request_failed",
+    MAX_SEARCH_CONSOLE_RESPONSE_BYTES,
+  );
+
+  if (!isRecord(payload)) throw new AnalyticsUpstreamError("search_console_request_failed");
+  return payload;
+}
+
 function trafficReport(dateRange) {
   return {
     dateRanges: [dateRange],
@@ -227,6 +287,7 @@ function trafficReport(dateRange) {
       { name: "sessions" },
       { name: "activeUsers" },
       { name: "screenPageViews" },
+      { name: "averageSessionDuration" },
     ],
   };
 }
@@ -254,13 +315,125 @@ function topChannelsReport() {
   };
 }
 
+function topPagesReport(dateRange) {
+  return {
+    dateRanges: [dateRange],
+    dimensions: [{ name: "unifiedPagePathScreen" }],
+    metrics: [{ name: "screenPageViews" }, { name: "userEngagementDuration" }],
+    orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }],
+    limit: "20",
+  };
+}
+
+function searchConsoleQueryReport() {
+  return {
+    startDate: dateInPacificTime(30),
+    endDate: dateInPacificTime(3),
+    dimensions: ["query", "page"],
+    type: "web",
+    dataState: "final",
+    rowLimit: 10,
+  };
+}
+
+function dateInPacificTime(daysAgo) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/Los_Angeles",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1_000));
+  const value = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+  return `${value.year}-${value.month}-${value.day}`;
+}
+
 function safeTraffic(payload, generateLeads) {
   return {
     sessions: metricFromFirstRow(payload, 0),
     activeUsers: metricFromFirstRow(payload, 1),
     pageViews: metricFromFirstRow(payload, 2),
+    averageSessionDuration: metricFromFirstRow(payload, 3, safeDecimal),
     generateLeads,
   };
+}
+
+function safePagePath(value) {
+  const path = nonEmptyString(value, 512);
+  return path && path.startsWith("/") && !/[?#\r\n]/.test(path) ? path : null;
+}
+
+function safeTopPages(currentPayload, previousPayload) {
+  const previousViews = new Map();
+  const previousRows = isRecord(previousPayload) && Array.isArray(previousPayload.rows) ? previousPayload.rows : [];
+  previousRows.forEach((row) => {
+    const path = isRecord(row?.dimensionValues?.[0]) ? safePagePath(row.dimensionValues[0].value) : null;
+    if (path) previousViews.set(path, metricFromRow(row, 0));
+  });
+
+  const currentRows = isRecord(currentPayload) && Array.isArray(currentPayload.rows) ? currentPayload.rows : [];
+  return currentRows.slice(0, 20).flatMap((row) => {
+    const path = isRecord(row?.dimensionValues?.[0]) ? safePagePath(row.dimensionValues[0].value) : null;
+    const pageViews = metricFromRow(row, 0);
+    const engagementSeconds = metricFromRow(row, 1, safeDecimal);
+    if (!path || pageViews < 1) return [];
+
+    return [{
+      path,
+      pageViews,
+      averageEngagementSeconds: engagementSeconds / pageViews,
+      changeFromPreviousWeek: pageViews - (previousViews.get(path) || 0),
+    }];
+  }).slice(0, 5);
+}
+
+function safeSearchQuery(value) {
+  const query = nonEmptyString(value, 120);
+  return query
+    && !/[\r\n\t@]/.test(query)
+    && !/https?:|www\.|\d{7,}/i.test(query)
+    && /^[\p{L}\p{N}\s&'’.,+()\-/]+$/u.test(query)
+    ? query
+    : null;
+}
+
+function safeSearchQueries(payload) {
+  if (!isRecord(payload) || !Array.isArray(payload.rows)) return [];
+
+  return payload.rows.slice(0, 10).flatMap((row) => {
+    const query = Array.isArray(row?.keys) ? safeSearchQuery(row.keys[0]) : null;
+    const page = Array.isArray(row?.keys) ? safeSearchPage(row.keys[1]) : null;
+    const clicks = safeCount(row?.clicks);
+    const impressions = safeCount(row?.impressions);
+    if (!query || !page || (clicks < 1 && impressions < 1)) return [];
+    return [{ query, page, clicks, impressions, position: safeDecimal(row?.position) }];
+  });
+}
+
+function safeSearchPage(value) {
+  const pageUrl = nonEmptyString(value, 1_024);
+  if (!pageUrl) return null;
+
+  try {
+    const url = new URL(pageUrl);
+    const allowedHost = url.hostname === "brisbanetvs.com" || url.hostname === "www.brisbanetvs.com";
+    return url.protocol === "https:" && allowedHost && !url.search && !url.hash ? url.pathname : null;
+  } catch {
+    return null;
+  }
+}
+
+async function searchConsoleSummary(config, accessToken) {
+  if (!config.searchConsoleSiteUrl) return { status: "not_configured", queries: [] };
+
+  try {
+    const report = await runSearchConsoleReport(config, accessToken, searchConsoleQueryReport());
+    return { status: "ready", queries: safeSearchQueries(report) };
+  } catch (error) {
+    const stage = error instanceof AnalyticsUpstreamError ? error.stage : "request_failed";
+    const upstreamStatus = error instanceof AnalyticsUpstreamError ? error.status : null;
+    console.error(JSON.stringify({ event: "operations_search_console_unavailable", stage, upstreamStatus }));
+    return { status: "unavailable", queries: [] };
+  }
 }
 
 function safeTopSources(payload) {
@@ -296,15 +469,19 @@ export async function onRequestGet({ request, env }) {
 
   const today = { startDate: "today", endDate: "today" };
   const last7Days = { startDate: "6daysAgo", endDate: "today" };
+  const previous7Days = { startDate: "13daysAgo", endDate: "7daysAgo" };
 
   try {
     const accessToken = await getAccessToken(config);
-    const [todayTraffic, last7DaysTraffic, todayLeads, last7DaysLeads, topChannels] = await Promise.all([
+    const [todayTraffic, last7DaysTraffic, todayLeads, last7DaysLeads, topChannels, topPages, previousTopPages, searchConsole] = await Promise.all([
       runReport(config, accessToken, trafficReport(today)),
       runReport(config, accessToken, trafficReport(last7Days)),
       runReport(config, accessToken, generateLeadReport(today)),
       runReport(config, accessToken, generateLeadReport(last7Days)),
       runReport(config, accessToken, topChannelsReport()),
+      runReport(config, accessToken, topPagesReport(last7Days)),
+      runReport(config, accessToken, topPagesReport(previous7Days)),
+      searchConsoleSummary(config, accessToken),
     ]);
 
     return json({
@@ -313,6 +490,8 @@ export async function onRequestGet({ request, env }) {
         today: safeTraffic(todayTraffic, metricFromFirstRow(todayLeads, 0)),
         last7Days: safeTraffic(last7DaysTraffic, metricFromFirstRow(last7DaysLeads, 0)),
         topSources: safeTopSources(topChannels),
+        topPages: safeTopPages(topPages, previousTopPages),
+        searchConsole,
       },
     });
   } catch (error) {

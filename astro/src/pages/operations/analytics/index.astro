@@ -5,15 +5,15 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
 <OperationsLayout
   active="analytics"
   title="Website analytics"
-  description="Protected consent-aware Google Analytics reporting for Brisbane TVs staff."
+  description="Protected consent-aware website reporting for Brisbane TVs staff."
 >
   <section class="operations-page-header" aria-labelledby="analytics-title">
     <div>
-      <p class="operations-eyebrow">Google Analytics</p>
-      <h1 id="analytics-title" class="operations-title">Website activity.</h1>
-      <p class="operations-copy">A separate, aggregate-only view of consented GA4 activity. Lead records remain in the protected register, so customer identity is never mixed into these website figures.</p>
+      <p class="operations-eyebrow">Website insights</p>
+      <h1 id="analytics-title" class="operations-title">What is working.</h1>
+      <p class="operations-copy">A practical, aggregate-only view of consented website activity: the pages attracting attention, time spent on site, traffic sources and the Google searches that lead to Brisbane TVs.</p>
     </div>
-    <p class="operations-status" data-analytics-status role="status">Connecting to secure GA4 reporting...</p>
+    <p class="operations-status" data-analytics-status role="status">Connecting to secure reporting...</p>
   </section>
 
   <section class="operations-grid operations-breakdown-grid" aria-label="Website activity periods">
@@ -22,7 +22,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       <h2 class="operations-section-title">Current activity</h2>
       <div class="operations-grid operations-analytics-metrics" style="margin-top: 1.2rem;">
         <div class="operations-metric"><p class="operations-metric-label">Sessions</p><strong class="operations-metric-value" data-today-sessions>—</strong><span class="operations-metric-copy">Consent-aware visits</span></div>
-        <div class="operations-metric"><p class="operations-metric-label">Active users</p><strong class="operations-metric-value" data-today-users>—</strong><span class="operations-metric-copy">GA4 aggregate</span></div>
+        <div class="operations-metric"><p class="operations-metric-label">Avg. session</p><strong class="operations-metric-value" data-today-duration>—</strong><span class="operations-metric-copy">Time on site</span></div>
         <div class="operations-metric"><p class="operations-metric-label">Page views</p><strong class="operations-metric-value" data-today-views>—</strong><span class="operations-metric-copy">Viewed pages</span></div>
         <div class="operations-metric"><p class="operations-metric-label">Lead events</p><strong class="operations-metric-value" data-today-leads>—</strong><span class="operations-metric-copy">Successful form events</span></div>
       </div>
@@ -33,14 +33,14 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       <h2 class="operations-section-title">Recent direction</h2>
       <div class="operations-grid operations-analytics-metrics" style="margin-top: 1.2rem;">
         <div class="operations-metric"><p class="operations-metric-label">Sessions</p><strong class="operations-metric-value" data-week-sessions>—</strong><span class="operations-metric-copy">Consent-aware visits</span></div>
-        <div class="operations-metric"><p class="operations-metric-label">Active users</p><strong class="operations-metric-value" data-week-users>—</strong><span class="operations-metric-copy">GA4 aggregate</span></div>
+        <div class="operations-metric"><p class="operations-metric-label">Avg. session</p><strong class="operations-metric-value" data-week-duration>—</strong><span class="operations-metric-copy">Time on site</span></div>
         <div class="operations-metric"><p class="operations-metric-label">Page views</p><strong class="operations-metric-value" data-week-views>—</strong><span class="operations-metric-copy">Viewed pages</span></div>
         <div class="operations-metric"><p class="operations-metric-label">Lead events</p><strong class="operations-metric-value" data-week-leads>—</strong><span class="operations-metric-copy">Successful form events</span></div>
       </div>
     </article>
   </section>
 
-  <section class="operations-grid operations-breakdown-grid" aria-label="Analytics detail">
+  <section class="operations-grid operations-breakdown-grid" aria-label="Traffic detail" style="margin-top: 1rem;">
     <article class="operations-panel">
       <div class="operations-panel-heading">
         <div>
@@ -55,21 +55,51 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       </ul>
     </article>
 
+    <article class="operations-panel">
+      <div class="operations-panel-heading">
+        <div>
+          <p class="operations-eyebrow">Popular pages</p>
+          <h2 class="operations-section-title">Top and trending pages</h2>
+        </div>
+        <span class="operations-pill is-muted">7 days</span>
+      </div>
+      <p class="operations-panel-copy">Page views, average engagement time and movement against the previous seven days.</p>
+      <ul class="operations-list" data-analytics-pages aria-live="polite">
+        <li class="operations-list-loading">Loading page trends...</li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="operations-grid operations-breakdown-grid" aria-label="Organic search and reporting connection" style="margin-top: 1rem;">
+    <article class="operations-panel">
+      <div class="operations-panel-heading">
+        <div>
+          <p class="operations-eyebrow">Google Search</p>
+          <h2 class="operations-section-title">Searches bringing people in</h2>
+        </div>
+        <span class="operations-pill is-muted" data-search-pill>Checking</span>
+      </div>
+      <p class="operations-panel-copy" data-search-copy>Loading aggregated Google Search queries and landing pages...</p>
+      <ul class="operations-list" data-analytics-queries aria-live="polite">
+        <li class="operations-list-loading">Loading search terms...</li>
+      </ul>
+    </article>
+
     <article class="operations-panel" data-analytics-setup>
       <p class="operations-eyebrow">Reporting connection</p>
-      <h2 class="operations-section-title">What is needed</h2>
+      <h2 class="operations-section-title">Private by design</h2>
       <p class="operations-panel-copy" data-analytics-setup-copy>Checking the server-side reporting connection...</p>
       <ul class="operations-setup-list">
         <li>GA4 tracking remains consent-aware on the public website.</li>
-        <li>A restricted service-account credential is kept only in Cloudflare’s encrypted environment settings.</li>
-        <li>The account has GA4 Viewer access only; this page requests fixed aggregate reports, not visitor-level data.</li>
+        <li>A restricted service-account credential is kept only in Cloudflare's encrypted environment settings.</li>
+        <li>Google Search queries require a verified Search Console property and read-only access for that reporting account.</li>
       </ul>
     </article>
   </section>
 
   <section class="operations-privacy-note">
     <span aria-hidden="true">✓</span>
-    <p>Analytics stays aggregate-only: no visitor emails, phone numbers, form answers, campaign text or user-supplied URLs are requested or displayed in this workspace.</p>
+    <p>Analytics stays aggregate-only: no visitor emails, phone numbers, form answers, campaign text or user-supplied URLs are requested or displayed. Search terms are limited to privacy-filtered, aggregated Google Search data.</p>
   </section>
 
   <script>
@@ -79,13 +109,17 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
     const copy = document.querySelector("[data-analytics-copy]");
     const setupCopy = document.querySelector("[data-analytics-setup-copy]");
     const sourceList = document.querySelector("[data-analytics-sources]");
+    const pageList = document.querySelector("[data-analytics-pages]");
+    const queryList = document.querySelector("[data-analytics-queries]");
+    const searchPill = document.querySelector("[data-search-pill]");
+    const searchCopy = document.querySelector("[data-search-copy]");
     const values = {
       todaySessions: document.querySelector("[data-today-sessions]"),
-      todayUsers: document.querySelector("[data-today-users]"),
+      todayDuration: document.querySelector("[data-today-duration]"),
       todayViews: document.querySelector("[data-today-views]"),
       todayLeads: document.querySelector("[data-today-leads]"),
       weekSessions: document.querySelector("[data-week-sessions]"),
-      weekUsers: document.querySelector("[data-week-users]"),
+      weekDuration: document.querySelector("[data-week-duration]"),
       weekViews: document.querySelector("[data-week-views]"),
       weekLeads: document.querySelector("[data-week-leads]"),
     };
@@ -100,16 +134,27 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       return { response, payload };
     }
 
+    function formatDuration(value) {
+      const seconds = Math.max(0, Math.round(Number(value) || 0));
+      const minutes = Math.floor(seconds / 60);
+      return minutes ? `${minutes}m ${seconds % 60}s` : `${seconds}s`;
+    }
+
+    function emptyList(list, message) {
+      list.replaceChildren();
+      const item = document.createElement("li");
+      item.className = "operations-list-loading";
+      item.textContent = message;
+      list.append(item);
+    }
+
     function renderSources(sources) {
-      sourceList.replaceChildren();
       if (!sources?.length) {
-        const item = document.createElement("li");
-        item.className = "operations-list-loading";
-        item.textContent = "No traffic sources recorded in this period.";
-        sourceList.append(item);
+        emptyList(sourceList, "No traffic sources recorded in this period.");
         return;
       }
 
+      sourceList.replaceChildren();
       sources.forEach((source) => {
         const item = document.createElement("li");
         const label = document.createElement("span");
@@ -121,26 +166,99 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       });
     }
 
+    function renderPages(pages) {
+      if (!pages?.length) {
+        emptyList(pageList, "No page activity recorded in this period.");
+        return;
+      }
+
+      pageList.replaceChildren();
+      pages.forEach((page) => {
+        const item = document.createElement("li");
+        const path = document.createElement("span");
+        const value = document.createElement("strong");
+        const views = numberFormat.format(Number(page.pageViews) || 0);
+        const change = Number(page.changeFromPreviousWeek) || 0;
+        const trend = change > 0 ? `↑ ${numberFormat.format(change)}` : change < 0 ? `↓ ${numberFormat.format(Math.abs(change))}` : "No change";
+        path.textContent = page.path;
+        value.textContent = `${views} views · ${formatDuration(page.averageEngagementSeconds)} avg. engagement · ${trend}`;
+        item.append(path, value);
+        pageList.append(item);
+      });
+    }
+
+    function renderSearch(searchConsole) {
+      const search = searchConsole || { status: "not_configured", queries: [] };
+      const statusName = search.status;
+      const isReady = statusName === "ready";
+      searchPill.classList.toggle("is-muted", !isReady);
+      searchPill.textContent = isReady ? "Live" : statusName === "not_configured" ? "Setup needed" : "Unavailable";
+      searchCopy.textContent = isReady
+        ? "Top Google Search queries and landing pages from the last 28 completed days. Search data normally arrives a few days behind."
+        : statusName === "not_configured"
+          ? "Connect a verified Google Search Console property to see the searches and pages that bring visitors in."
+          : "Google Search data is temporarily unavailable. GA4 website activity remains available above.";
+
+      if (!isReady || !search.queries?.length) {
+        emptyList(queryList, isReady ? "No Google Search queries recorded in this period." : "Search terms will appear here once connected.");
+        return;
+      }
+
+      queryList.replaceChildren();
+      search.queries.forEach((result) => {
+        const item = document.createElement("li");
+        const label = document.createElement("span");
+        const value = document.createElement("strong");
+        label.textContent = `${result.query} · ${result.page}`;
+        value.textContent = `${numberFormat.format(Number(result.clicks) || 0)} clicks · ${numberFormat.format(Number(result.impressions) || 0)} impressions`;
+        item.append(label, value);
+        queryList.append(item);
+      });
+    }
+
     function setValue(target, value) {
       target.textContent = numberFormat.format(Number(value) || 0);
     }
 
+    function setDuration(target, value) {
+      target.textContent = formatDuration(value);
+    }
+
     function renderAnalytics(analytics) {
       setValue(values.todaySessions, analytics.today?.sessions);
-      setValue(values.todayUsers, analytics.today?.activeUsers);
+      setDuration(values.todayDuration, analytics.today?.averageSessionDuration);
       setValue(values.todayViews, analytics.today?.pageViews);
       setValue(values.todayLeads, analytics.today?.generateLeads);
       setValue(values.weekSessions, analytics.last7Days?.sessions);
-      setValue(values.weekUsers, analytics.last7Days?.activeUsers);
+      setDuration(values.weekDuration, analytics.last7Days?.averageSessionDuration);
       setValue(values.weekViews, analytics.last7Days?.pageViews);
       setValue(values.weekLeads, analytics.last7Days?.generateLeads);
       renderSources(analytics.topSources);
-      status.textContent = "Secure GA4 reporting is live.";
+      renderPages(analytics.topPages);
+      renderSearch(analytics.searchConsole);
+      status.textContent = "Secure website reporting is live.";
       status.classList.add("is-ready");
       pill.textContent = "Live";
       pill.classList.remove("is-muted");
-      copy.textContent = "Fixed aggregate GA4 reports, refreshed when this page opens.";
+      copy.textContent = "Fixed aggregate reports, refreshed when this page opens.";
       setupCopy.textContent = "Connected. The reporting credential stays server-side and is never exposed to this page.";
+    }
+
+    function renderUnavailable(needsSetup) {
+      status.textContent = needsSetup
+        ? "GA4 is collecting consented website activity; secure reporting access still needs its server-side credential."
+        : "Analytics reporting is temporarily unavailable. Please refresh shortly.";
+      status.classList.toggle("is-warning", needsSetup);
+      pill.textContent = needsSetup ? "Setup needed" : "Unavailable";
+      copy.textContent = needsSetup
+        ? "Tracking is separate from reporting. Once the restricted GA4 service credential is stored in Cloudflare, figures will populate here."
+        : "No traffic sources are available while reporting is unavailable.";
+      setupCopy.textContent = needsSetup
+        ? "One read-only reporting credential remains to be stored securely in Cloudflare; it is not committed to the website or sent to staff browsers."
+        : "Check the restricted reporting connection and refresh this page.";
+      renderSources([]);
+      renderPages([]);
+      renderSearch({ status: needsSetup ? "not_configured" : "unavailable", queries: [] });
     }
 
     async function loadAnalytics() {
@@ -151,27 +269,18 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
           return;
         }
 
-        const needsSetup = payload?.error === "analytics_not_configured";
-        status.textContent = response.status === 403
-          ? "Your secure session has expired. Sign in again to view Analytics."
-          : needsSetup
-            ? "GA4 is collecting consented website activity; secure reporting access still needs its server-side credential."
-            : "Analytics reporting is temporarily unavailable. Please refresh shortly.";
-        status.classList.toggle("is-warning", needsSetup);
-        pill.textContent = needsSetup ? "Setup needed" : "Unavailable";
-        copy.textContent = needsSetup
-          ? "Tracking is separate from reporting. Once the restricted GA4 service credential is stored in Cloudflare, figures will populate here."
-          : "No traffic sources are available while reporting is unavailable.";
-        setupCopy.textContent = needsSetup
-          ? "One reporting credential remains to be stored securely in Cloudflare; it is not committed to the website or sent to staff browsers."
-          : "Check the restricted reporting connection and refresh this page.";
-        renderSources([]);
+        if (response.status === 403) {
+          status.textContent = "Your secure session has expired. Sign in again to view Analytics.";
+          pill.textContent = "Sign in needed";
+          renderSources([]);
+          renderPages([]);
+          renderSearch({ status: "unavailable", queries: [] });
+          return;
+        }
+
+        renderUnavailable(payload?.error === "analytics_not_configured");
       } catch {
-        status.textContent = "Analytics reporting is temporarily unavailable. Please refresh shortly.";
-        pill.textContent = "Unavailable";
-        copy.textContent = "No traffic sources are available while reporting is unavailable.";
-        setupCopy.textContent = "Check the restricted reporting connection and refresh this page.";
-        renderSources([]);
+        renderUnavailable(false);
       }
     }
 

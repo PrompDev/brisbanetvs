@@ -126,6 +126,29 @@ together.
 
 ---
 
+## Operations analytics
+
+The staff-only `/operations/analytics/` page reports aggregate, consent-aware
+website activity. It is protected by Cloudflare Access and its Google
+credential is never delivered to a staff browser or committed to the repo.
+
+To connect it in Cloudflare Pages, set these production environment values:
+
+| Setting | Purpose |
+|---|---|
+| `GA4_PROPERTY_ID` | GA4 property number (already configured in `wrangler.toml`). |
+| `GA4_SERVICE_ACCOUNT_JSON` | **Secret** containing a restricted Google service-account JSON key. Give that account GA4 Viewer access. |
+| `SEARCH_CONSOLE_SITE_URL` | Optional non-secret exact Search Console property: `sc-domain:brisbanetvs.com` for a Domain property, or `https://brisbanetvs.com/` for a URL-prefix property. |
+
+For the Google Search panel, the same service account also needs read-only
+access to the verified Search Console property. Enable the Google Analytics
+Data API and Google Search Console API in the service account's Google Cloud
+project. Search data is deliberately isolated from the GA4 summary: if Search
+Console is not configured or temporarily unavailable, page and session
+reporting still works.
+
+---
+
 ## Troubleshooting
 
 **`npm install` fails with esbuild SIGSEGV inside Cowork's sandbox.**
