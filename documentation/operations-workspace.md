@@ -19,7 +19,9 @@ in the pages where it is actually needed.
 ## What is connected now
 
 - Public website and lead-sheet submissions are stored in the protected
-  Operations D1 database.
+  Operations D1 database. The lead register exposes the stable external lead
+  ID plus the retained quote, service, TV, wall, date, notes, campaign,
+  consent and stored-photo-count fields to approved staff.
 - Website submissions are copied server-side into the private spreadsheet's
   normal `Leads` tab, with stable IDs and a five-minute retry queue. They enter
   the same calendar follow-up workflow as Facebook and Instagram leads, while
@@ -39,6 +41,10 @@ in the pages where it is actually needed.
 GA4 and Search Console reporting are connected. Public GA4 tracking waits for
 visitor consent and records aggregate use plus successful `generate_lead`
 events; names, emails, phone numbers and form answers are never sent to GA4.
+The Analytics page labels these figures as consented traffic and uses the GA4
+Realtime API for a separate last-30-minutes collection health signal. Saved
+lead counts come from D1 and include every accepted enquiry regardless of the
+visitor's analytics choice.
 
 Facebook/Instagram campaign attribution is retained for the browser session,
 so a visitor can move from an ad landing page to `/quote/` without losing the

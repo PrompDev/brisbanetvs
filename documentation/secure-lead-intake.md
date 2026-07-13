@@ -23,10 +23,12 @@ Together they create:
 - mail_messages, mail_drafts, and mail_attachments as an empty mailbox
   foundation only.
 
-leads is the portal's canonical query surface. Its stable fields are id,
-source, external_id, received_at, received_day, full_name, email, phone,
-postcode, platform, tv_size, and status. The unique pair is
-(source, external_id).
+leads is the portal's canonical query surface. It retains the stable internal
+and external IDs, received time/day, contact fields, source/platform, TV size,
+suburb, service/package label, wall type, preferred date, customer notes,
+submitted page, campaign, structured attribution, structured quote details,
+consent and status. Add-ons, TV count/brand, package code and form source live
+inside the bounded details JSON. The unique pair is (source, external_id).
 
 ## Public form endpoints
 
@@ -41,6 +43,14 @@ D1 uses that value as the website lead's external ID, so a browser retry cannot
 create a second lead. After D1 accepts the lead, the Worker queues a private
 copy for Google Apps Script. The form does not receive the Apps Script secret
 and does not post customer details directly to Google.
+
+The multipart quote endpoint validates the same core requirements as the
+browser: name, valid email, usable phone, suburb, service/package, TV size from
+30–130 inches, wall type and quote-contact consent. An optional postcode must
+be four digits. The Worker rejects malformed values instead of storing a
+partially valid quote. The compact JSON endpoint remains suitable for the
+email-only footer form and does not invent fields that the customer never
+supplied.
 
 ## Website leads copied to Google Sheets
 
@@ -72,10 +82,12 @@ reference, status, retry timestamps and a bounded error code.
 
 The Sheet keeps the compact 18-field `Leads` input schema used by Meta. Website
 campaign, form, platform, mounting intent, TV-size band and contact fields are
-placed in the matching columns. Sizes below 40 inches use the truthful
-`under_40"` option. Rich quote details, including the selected package/service,
-notes and private photo references remain available in Operations D1 rather
-than widening the shared Sheet contract.
+placed in the matching columns. Mounting intent is set to `yes` only when the
+submission contains TV/mounting evidence; an email-only footer enquiry leaves
+it blank. Sizes below 40 inches use the truthful `under_40"` option. Rich quote
+details, including the selected package/service, notes, attribution and private
+photo references remain in Operations D1 and are visible in the protected lead
+drawer rather than widening the shared Sheet contract.
 
 Production was checked before activation and had no pre-existing website
 leads, so no historical backfill is required. Do not bulk-copy old rows through

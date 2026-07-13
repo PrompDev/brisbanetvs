@@ -281,6 +281,49 @@ async function runSearchConsoleReport(config, accessToken, reportRequest) {
   return payload;
 }
 
+async function runRealtimeReport(config, accessToken, reportRequest) {
+  const payload = await requestJson(
+    `${GA4_DATA_API_BASE}${config.propertyId}:runRealtimeReport`,
+    {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${accessToken}`,
+        "content-type": "application/json; charset=utf-8",
+      },
+      body: JSON.stringify(reportRequest),
+    },
+    "realtime_report_request_failed",
+    MAX_REPORT_RESPONSE_BYTES,
+  );
+
+  if (!isRecord(payload)) throw new AnalyticsUpstreamError("realtime_report_request_failed");
+  return payload;
+}
+
+async function realtimeSummary(config, accessToken) {
+  try {
+    const payload = await runRealtimeReport(config, accessToken, {
+      metrics: [{ name: "activeUsers" }],
+    });
+    return {
+      status: "ready",
+      activeUsersLast30Minutes: metricFromFirstRow(payload, 0),
+      windowMinutes: 30,
+    };
+  } catch (error) {
+    console.error(JSON.stringify({
+      event: "operations_analytics_realtime_unavailable",
+      stage: error instanceof AnalyticsUpstreamError ? error.stage : "request_failed",
+      upstreamStatus: error instanceof AnalyticsUpstreamError ? error.status : null,
+    }));
+    return {
+      status: "unavailable",
+      activeUsersLast30Minutes: null,
+      windowMinutes: 30,
+    };
+  }
+}
+
 function trafficReport(dateRange) {
   return {
     dateRanges: [dateRange],
@@ -611,6 +654,12 @@ async function operationalLeadSignals(env) {
 function analyticsWithoutGa(gaStatus, searchStatus, leadSignals) {
   return {
     gaStatus,
+    measurementBasis: "consented_visitors_only",
+    realtime: {
+      status: gaStatus === "not_configured" ? "not_configured" : "unavailable",
+      activeUsersLast30Minutes: null,
+      windowMinutes: 30,
+    },
     today: null,
     last7Days: null,
     topSources: [],
@@ -645,7 +694,7 @@ export async function onRequestGet({ request, env }) {
 
   try {
     const accessToken = await getAccessToken(config);
-    const [todayTraffic, last7DaysTraffic, todayLeads, last7DaysLeads, topChannels, topPages, previousTopPages, searchConsole] = await Promise.all([
+    const [todayTraffic, last7DaysTraffic, todayLeads, last7DaysLeads, topChannels, topPages, previousTopPages, searchConsole, realtime] = await Promise.all([
       runReport(config, accessToken, trafficReport(today)),
       runReport(config, accessToken, trafficReport(last7Days)),
       runReport(config, accessToken, generateLeadReport(today)),
@@ -654,12 +703,15 @@ export async function onRequestGet({ request, env }) {
       runReport(config, accessToken, topPagesReport(last7Days)),
       runReport(config, accessToken, topPagesReport(previous7Days)),
       searchConsoleSummary(config, accessToken),
+      realtimeSummary(config, accessToken),
     ]);
 
     return json({
       ok: true,
       analytics: {
         gaStatus: "ready",
+        measurementBasis: "consented_visitors_only",
+        realtime,
         today: safeTraffic(todayTraffic, metricFromFirstRow(todayLeads, 0)),
         last7Days: safeTraffic(last7DaysTraffic, metricFromFirstRow(last7DaysLeads, 0)),
         topSources: safeTopSources(topChannels),

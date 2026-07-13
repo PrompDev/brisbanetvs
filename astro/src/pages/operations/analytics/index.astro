@@ -18,8 +18,14 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
 
   <section class="operations-grid operations-breakdown-grid" aria-label="Website activity periods">
     <article class="operations-panel">
-      <p class="operations-eyebrow">Today</p>
-      <h2 class="operations-section-title">Current activity</h2>
+      <div class="operations-panel-heading">
+        <div>
+          <p class="operations-eyebrow">Consented GA4: Today</p>
+          <h2 class="operations-section-title">Current activity</h2>
+        </div>
+        <span class="operations-pill is-muted" data-realtime-pill>Checking</span>
+      </div>
+      <p class="operations-panel-copy" data-realtime-copy>Checking whether consented visits are reaching Google Analytics...</p>
       <div class="operations-grid operations-analytics-metrics" style="margin-top: 1.2rem;">
         <div class="operations-metric"><p class="operations-metric-label">Sessions</p><strong class="operations-metric-value" data-today-sessions>—</strong><span class="operations-metric-copy">Consent-aware visits</span></div>
         <div class="operations-metric"><p class="operations-metric-label">Avg. session</p><strong class="operations-metric-value" data-today-duration>—</strong><span class="operations-metric-copy">Time on site</span></div>
@@ -29,7 +35,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
     </article>
 
     <article class="operations-panel">
-      <p class="operations-eyebrow">Last 7 days</p>
+      <p class="operations-eyebrow">Consented GA4: Last 7 days</p>
       <h2 class="operations-section-title">Recent direction</h2>
       <div class="operations-grid operations-analytics-metrics" style="margin-top: 1.2rem;">
         <div class="operations-metric"><p class="operations-metric-label">Sessions</p><strong class="operations-metric-value" data-week-sessions>—</strong><span class="operations-metric-copy">Consent-aware visits</span></div>
@@ -49,7 +55,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
         </div>
         <span class="operations-pill is-muted" data-lead-signal-pill>Checking</span>
       </div>
-      <p class="operations-panel-copy" data-lead-signal-copy>Loading the protected Operations lead register...</p>
+      <p class="operations-panel-copy" data-lead-signal-copy>Loading the protected Operations lead register. Saved leads include every successful submission, regardless of analytics consent.</p>
       <div class="operations-grid operations-analytics-metrics" style="margin-top: 1.2rem;">
         <div class="operations-metric"><p class="operations-metric-label">Saved today</p><strong class="operations-metric-value" data-saved-today>—</strong><span class="operations-metric-copy">All lead sources</span></div>
         <div class="operations-metric"><p class="operations-metric-label">Saved in 7 days</p><strong class="operations-metric-value" data-saved-week>—</strong><span class="operations-metric-copy">Real enquiries</span></div>
@@ -86,7 +92,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
         </div>
         <span class="operations-pill is-muted" data-analytics-pill>Checking</span>
       </div>
-      <p class="operations-panel-copy" data-analytics-copy>Only controlled GA4 channel groups are shown here.</p>
+      <p class="operations-panel-copy" data-analytics-copy>Only controlled GA4 channel groups from consented sessions are shown here.</p>
       <ul class="operations-list" data-analytics-sources aria-live="polite">
         <li class="operations-list-loading">Loading traffic sources...</li>
       </ul>
@@ -100,7 +106,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
         </div>
         <span class="operations-pill is-muted">7 days</span>
       </div>
-      <p class="operations-panel-copy">Page views, average engagement time and movement against the previous seven days.</p>
+      <p class="operations-panel-copy">Consented GA4 page views, average engagement time and movement against the previous seven days.</p>
       <ul class="operations-list" data-analytics-pages aria-live="polite">
         <li class="operations-list-loading">Loading page trends...</li>
       </ul>
@@ -155,6 +161,8 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
     const leadSourceList = document.querySelector("[data-lead-sources]");
     const leadCampaignList = document.querySelector("[data-lead-campaigns]");
     const leadPageList = document.querySelector("[data-lead-pages]");
+    const realtimePill = document.querySelector("[data-realtime-pill]");
+    const realtimeCopy = document.querySelector("[data-realtime-copy]");
     const values = {
       todaySessions: document.querySelector("[data-today-sessions]"),
       todayDuration: document.querySelector("[data-today-duration]"),
@@ -294,11 +302,33 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       leadSignalPill.classList.toggle("is-muted", !ready || waiting > 0);
       leadSignalPill.textContent = !ready ? "Unavailable" : waiting > 0 ? "Check delivery" : "Live";
       leadSignalCopy.textContent = ready
-        ? `${numberFormat.format(Number(delivery.delivered) || 0)} website lead copies confirmed in the private Sheet. ${waiting ? `${numberFormat.format(waiting)} still need attention.` : "Nothing is waiting to sync."}`
+        ? `${numberFormat.format(Number(delivery.delivered) || 0)} website lead copies confirmed in the private Sheet. Saved leads include every successful submission, regardless of analytics consent. ${waiting ? `${numberFormat.format(waiting)} still need attention.` : "Nothing is waiting to sync."}`
         : "The protected lead signal summary is temporarily unavailable.";
       renderLeadList(leadSourceList, signals?.bySource, "No saved leads in this period.");
       renderLeadList(leadCampaignList, signals?.topCampaigns, "No tagged campaigns have produced a saved lead yet.");
       renderLeadList(leadPageList, signals?.topLandingPages, "No website form leads have been saved in this period.");
+    }
+
+    function renderRealtime(realtime) {
+      const realtimeStatus = realtime?.status || "unavailable";
+      const activeUsers = realtimeStatus === "ready"
+        ? Math.max(0, Number(realtime.activeUsersLast30Minutes) || 0)
+        : null;
+      const ready = realtimeStatus === "ready";
+      realtimePill.classList.toggle("is-muted", !ready || activeUsers === 0);
+
+      if (!ready) {
+        realtimePill.textContent = realtimeStatus === "not_configured" ? "Setup needed" : "Realtime unavailable";
+        realtimeCopy.textContent = realtimeStatus === "not_configured"
+          ? "Realtime collection will appear after the secure GA4 reporting connection is completed."
+          : "Realtime is temporarily unavailable; the standard consented GA4 reports below remain separate.";
+        return;
+      }
+
+      realtimePill.textContent = activeUsers > 0 ? `Receiving: ${numberFormat.format(activeUsers)} active` : "Connected";
+      realtimeCopy.textContent = activeUsers > 0
+        ? `${numberFormat.format(activeUsers)} consented active visitor${activeUsers === 1 ? "" : "s"} in the last 30 minutes.`
+        : "Connected, with no consented active visitors in the last 30 minutes.";
     }
 
     function setValue(target, value) {
@@ -327,6 +357,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       const gaReady = gaStatus === "ready";
       renderLeadSignals(analytics.leadSignals);
       renderSearch(analytics.searchConsole);
+      renderRealtime(analytics.realtime);
 
       if (!gaReady) {
         clearGaMetrics();
@@ -360,12 +391,12 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       setValue(values.weekLeads, analytics.last7Days?.generateLeads);
       renderSources(analytics.topSources);
       renderPages(analytics.topPages);
-      status.textContent = "Secure website reporting is live.";
+      status.textContent = "Secure consented website reporting is live.";
       status.classList.add("is-ready");
       status.classList.remove("is-warning");
       pill.textContent = "Live";
       pill.classList.remove("is-muted");
-      copy.textContent = "Fixed aggregate reports, refreshed when this page opens.";
+      copy.textContent = "Fixed aggregate reports for visitors who allowed analytics, refreshed when this page opens.";
       setupCopy.textContent = "Connected. The reporting credential stays server-side and is never exposed to this page.";
     }
 
@@ -384,6 +415,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       renderSources([]);
       renderPages([]);
       renderSearch({ status: needsSetup ? "not_configured" : "unavailable", queries: [] });
+      renderRealtime({ status: needsSetup ? "not_configured" : "unavailable" });
       renderLeadSignals({ status: "unavailable" });
     }
 
@@ -401,6 +433,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
           renderSources([]);
           renderPages([]);
           renderSearch({ status: "unavailable", queries: [] });
+          renderRealtime({ status: "unavailable" });
           renderLeadSignals({ status: "unavailable" });
           return;
         }

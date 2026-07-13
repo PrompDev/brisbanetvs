@@ -131,6 +131,11 @@ together.
 The staff-only `/operations/analytics/` page reports aggregate, consent-aware
 website activity. It is protected by Cloudflare Access and its Google
 credential is never delivered to a staff browser or committed to the repo.
+It also reports a separate GA4 Realtime last-30-minutes health signal. A zero
+means the connection is healthy but no consenting visitor is currently active;
+it does not mean that accepted website enquiries were lost. Actual lead counts
+come from Operations D1 and include accepted submissions independently of GA4
+consent.
 
 To connect it in Cloudflare Pages, set these production environment values:
 

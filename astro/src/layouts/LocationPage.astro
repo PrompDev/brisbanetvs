@@ -6,8 +6,10 @@ import { getCollection } from "astro:content";
  * Only link to nearby suburbs and services that actually exist as collection
  * entries — otherwise cross-links 404. Build lookup sets once per render.
  */
-const __existingLocations = new Set(
-  (await getCollection("locations", ({ data }) => !data.draft)).map((e) => e.slug),
+const __locationEntries = await getCollection("locations", ({ data }) => !data.draft);
+const __existingLocations = new Set(__locationEntries.map((entry) => entry.slug));
+const __locationNames = new Map(
+  __locationEntries.map((entry) => [entry.slug, entry.data.suburb]),
 );
 const __existingServices = new Set(
   (await getCollection("services", ({ data }) => !data.draft)).map((e) => e.slug),
@@ -17,13 +19,13 @@ const __existingServices = new Set(
  * LocationPage — suburb-level landing page for the `locations` collection.
  *
  * SEO payload:
- *   - schema.org/LocalBusiness JSON-LD with geo (lat/lng), postal address,
- *     and areaServed — these are what Google Maps uses to rank local packs.
+ *   - schema.org/Service JSON-LD linked to the one canonical business entity,
+ *     with the suburb and nearby service area made explicit.
  *   - BreadcrumbList JSON-LD for Home › Locations › <Suburb>.
  *   - FAQPage JSON-LD (only when entries have populated FAQs).
  *
- * Note on the GeoCoordinates block: Google will silently drop the whole
- * LocalBusiness if lat/lng is a string — coerce to Number before emitting.
+ * A suburb landing page is not a separate branch or shop. Emitting it as a
+ * LocalBusiness would create hundreds of conflicting business entities.
  */
 
 interface FaqItem { q: string; a: string; }
@@ -78,47 +80,30 @@ function formatServiceLabel(slug: string): string {
     .join(" ");
 }
 
-const hasGeo = typeof frontmatter.latitude === "number" && typeof frontmatter.longitude === "number";
-
-const localBusinessLd: Record<string, any> = {
+const locationServiceLd: Record<string, any> = {
   "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  "@id": pageUrl,
-  name: `${businessName} — ${frontmatter.suburb}`,
+  "@type": "Service",
+  "@id": `${pageUrl}#service`,
+  name: `TV mounting in ${frontmatter.suburb}`,
   description: frontmatter.description,
   url: pageUrl,
   image: new URL(frontmatter.heroImage, Astro.site).toString(),
-  telephone: "+61 7 0000 0000",
-  priceRange: "$$",
-  address: {
-    "@type": "PostalAddress",
-    addressLocality: frontmatter.suburb,
-    addressRegion: frontmatter.region ?? "QLD",
-    postalCode: frontmatter.postcode ?? "",
-    addressCountry: "AU",
+  provider: {
+    "@type": "LocalBusiness",
+    "@id": `${businessUrl}#business`,
+    name: businessName,
+    url: businessUrl,
   },
-  ...(hasGeo
-    ? {
-        geo: {
-          "@type": "GeoCoordinates",
-          latitude: Number(frontmatter.latitude),
-          longitude: Number(frontmatter.longitude),
-        },
-      }
-    : {}),
   areaServed: [
     { "@type": "Place", name: frontmatter.suburb },
-    ...frontmatter.nearbySuburbs.map((s) => ({
+    ...filteredNearbySuburbs.map((s) => ({
       "@type": "Place",
-      name: s,
+      name: __locationNames.get(s) ?? s,
     })),
   ],
-  ...(frontmatter.servicesOffered.length > 0
+  ...(filteredServicesOffered.length > 0
     ? {
-        makesOffer: frontmatter.servicesOffered.map((s) => ({
-          "@type": "Offer",
-          itemOffered: { "@type": "Service", name: s.replace(/-/g, " ") },
-        })),
+        serviceType: filteredServicesOffered.map(formatServiceLabel),
       }
     : {}),
 };
@@ -157,7 +142,7 @@ const faqLd =
   image={frontmatter.heroImage}
   canonical={pageUrl}
 >
-  <script type="application/ld+json" set:html={JSON.stringify(localBusinessLd)} />
+  <script type="application/ld+json" set:html={JSON.stringify(locationServiceLd)} />
   <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
   {faqLd && <script type="application/ld+json" set:html={JSON.stringify(faqLd)} />}
 

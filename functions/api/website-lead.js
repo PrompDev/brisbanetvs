@@ -435,16 +435,38 @@ async function parseWebsiteSubmission(request) {
 function validateWebsiteSubmission(fields, files) {
   const name = pickText(fields, ["name", "fullname", "full_name"], FIELD_LIMITS.name, "name");
   const phone = pickText(fields, ["phone", "mobile"], FIELD_LIMITS.phone, "phone");
+  const email = normalizeEmail(pickText(fields, ["email"], FIELD_LIMITS.email, "email"));
   const suburb = pickText(fields, ["suburb"], FIELD_LIMITS.suburb, "suburb");
   const service = pickText(fields, ["service"], FIELD_LIMITS.service, "service");
   const tvSize = pickText(fields, ["tv_size", "tvsize"], FIELD_LIMITS.tvSize, "tv_size");
+  const wallType = pickText(fields, ["wall", "wall_type", "wallType"], FIELD_LIMITS.wallType, "wall");
+  const postcode = pickText(fields, ["postcode"], FIELD_LIMITS.postcode, "postcode");
 
   requireText(name, "name");
   requireText(phone, "phone");
+  requireText(email, "email");
   requireText(suburb, "suburb");
   requireText(service, "service");
   requireText(tvSize, "tv_size");
-  normalizeEmail(pickText(fields, ["email"], FIELD_LIMITS.email, "email"));
+  requireText(wallType, "wall");
+
+  const phoneDigits = phone.replace(/\D/g, "");
+  if (phoneDigits.length < 8 || phoneDigits.length > 15) {
+    throw new InputError("Invalid phone number");
+  }
+
+  const numericTvSize = Number(tvSize);
+  if (!/^\d{2,3}$/.test(tvSize) || !Number.isInteger(numericTvSize) || numericTvSize < 30 || numericTvSize > 130) {
+    throw new InputError("Invalid field: tv_size");
+  }
+
+  if (postcode && !/^\d{4}$/.test(postcode)) {
+    throw new InputError("Invalid field: postcode");
+  }
+
+  if (!affirmative(fields.consent)) {
+    throw new InputError("Missing field: consent");
+  }
 
   if (files.length > MAX_FILES) {
     throw new InputError("Too many images. Maximum is " + MAX_FILES + ".");
@@ -899,6 +921,16 @@ function websiteSheetTvSize(value) {
   return "56\"–75\"";
 }
 
+function websiteSheetMountingIntent(lead, details) {
+  const evidence = [
+    lead?.tv_size,
+    lead?.service,
+    details?.package,
+    details?.form_source === "quote-page" ? "tv mounting" : "",
+  ].map((value) => String(value || "").toLowerCase()).join(" ");
+  return /\btv\b|mount/.test(evidence) || Boolean(String(lead?.tv_size || "").trim()) ? "yes" : "";
+}
+
 function websiteSheetConfig(env) {
   const secret = typeof env.GOOGLE_APPS_SCRIPT_SECRET === "string"
     ? env.GOOGLE_APPS_SCRIPT_SECRET.trim()
@@ -939,7 +971,7 @@ export function websiteSheetRow(lead) {
     value(details.form_source || details.intake, FIELD_LIMITS.platform),
     "",
     websiteSheetPlatform(lead.platform),
-    "yes",
+    websiteSheetMountingIntent(lead, details),
     websiteSheetTvSize(lead.tv_size),
     value(lead.email, FIELD_LIMITS.email),
     value(lead.full_name, FIELD_LIMITS.name),

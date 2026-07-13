@@ -11,7 +11,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
     <div>
       <p class="operations-eyebrow">Lead register</p>
       <h1 id="lead-list-title" class="operations-title">Customer contacts.</h1>
-      <p class="operations-copy">This is the master list for every imported customer enquiry. Search and follow up here; the overview remains aggregate-only.</p>
+      <p class="operations-copy">This is the master list for every imported customer enquiry. Open a row's details to see the complete website quote context retained in Operations.</p>
     </div>
     <p class="operations-status is-warning" role="status">Restricted customer information. This page is for approved staff only.</p>
   </section>
@@ -37,7 +37,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       </label>
       <label class="operations-field">
         <span>Find a customer</span>
-        <input class="operations-input" name="q" type="search" maxlength="80" autocomplete="off" placeholder="Name, email, phone or postcode" data-lead-search />
+        <input class="operations-input" name="q" type="search" maxlength="80" autocomplete="off" placeholder="Name, email, phone, postcode or lead ID" data-lead-search />
       </label>
       <button class="operations-button operations-primary-button" type="submit">Search</button>
     </form>
@@ -52,10 +52,11 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
             <th scope="col">TV</th>
             <th scope="col">Received</th>
             <th scope="col">Status</th>
+            <th scope="col">Details</th>
           </tr>
         </thead>
         <tbody data-leads-table>
-          <tr><td class="operations-empty-cell" colspan="6">Loading protected customer records...</td></tr>
+          <tr><td class="operations-empty-cell" colspan="7">Loading protected customer records...</td></tr>
         </tbody>
       </table>
     </div>
@@ -98,7 +99,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       const row = document.createElement("tr");
       const cell = document.createElement("td");
       cell.className = "operations-empty-cell";
-      cell.colSpan = 6;
+      cell.colSpan = 7;
       cell.textContent = message;
       row.append(cell);
       return row;
@@ -122,6 +123,59 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
         detail.textContent = secondary;
         cell.append(detail);
       }
+      return cell;
+    }
+
+    function addLeadDetail(list, label, value, wide = false) {
+      if (value === undefined || value === null || value === "" || (Array.isArray(value) && !value.length)) return;
+      const item = document.createElement("div");
+      if (wide) item.className = "operations-lead-detail-wide";
+      const term = document.createElement("dt");
+      const description = document.createElement("dd");
+      term.textContent = label;
+      description.textContent = Array.isArray(value) ? value.join(", ") : String(value);
+      item.append(term, description);
+      list.append(item);
+    }
+
+    function leadDetailsCell(lead) {
+      const cell = document.createElement("td");
+      const disclosure = document.createElement("details");
+      disclosure.className = "operations-lead-disclosure";
+      const summary = document.createElement("summary");
+      summary.textContent = "View details";
+      const list = document.createElement("dl");
+      list.className = "operations-lead-details";
+
+      addLeadDetail(list, "Lead ID", lead.externalId || lead.id);
+      addLeadDetail(list, "Form", lead.formSource);
+      addLeadDetail(list, "Suburb", lead.suburb);
+      addLeadDetail(list, "Service / package", lead.service);
+      addLeadDetail(list, "Package code", lead.packageId);
+      addLeadDetail(list, "TV count", lead.tvCount);
+      addLeadDetail(list, "TV brand / model", lead.tvBrand);
+      addLeadDetail(list, "Wall type", lead.wallType);
+      addLeadDetail(list, "Preferred day", lead.preferredDate);
+      addLeadDetail(list, "Add-ons", lead.addons);
+      addLeadDetail(list, "Photos stored", Number(lead.photoCount) || 0);
+      if (Number(lead.photoAttachmentCount) !== Number(lead.photoCount)) {
+        addLeadDetail(list, "Photos submitted", Number(lead.photoAttachmentCount) || 0);
+      }
+      addLeadDetail(list, "Campaign", lead.campaign);
+      addLeadDetail(list, "UTM source", lead.attribution?.source);
+      addLeadDetail(list, "UTM medium", lead.attribution?.medium);
+      addLeadDetail(list, "Campaign ID", lead.attribution?.campaignId);
+      addLeadDetail(list, "Search term", lead.attribution?.term);
+      addLeadDetail(list, "Ad / creative", lead.attribution?.content);
+      addLeadDetail(list, "Landing page", lead.attribution?.landingPage);
+      addLeadDetail(list, "Submitted page URL", lead.pageUrl);
+      addLeadDetail(list, "Referrer", lead.attribution?.referrer);
+      addLeadDetail(list, "Quote contact consent", lead.quoteContactConsent === null ? "Not recorded" : lead.quoteContactConsent ? "Yes" : "No");
+      addLeadDetail(list, "Marketing consent", lead.marketingConsent === null ? "Not recorded" : lead.marketingConsent ? "Yes" : "No");
+      addLeadDetail(list, "Customer notes", lead.message, true);
+
+      disclosure.append(summary, list);
+      cell.append(disclosure);
       return cell;
     }
 
@@ -150,6 +204,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
             textCell(lead.tvSize),
             textCell(lead.receivedAt ? dateFormat.format(new Date(lead.receivedAt)) : "—"),
             textCell(lead.status, "operations-table-status"),
+            leadDetailsCell(lead),
           );
           leadsTable.append(row);
         });

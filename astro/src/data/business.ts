@@ -17,7 +17,6 @@ export const BUSINESS = {
   phoneTel: "tel:0432145101", // href-safe form (no spaces)
   email: "admin@brisbanetvs.com",
   mailto: "mailto:admin@brisbanetvs.com",
-  abn: "12 345 678 901",
   hoursDisplay: "7 days · 7 AM–7 PM",
   /**
    * Standard forms use the canonical JSON intake. The photo quote uses the

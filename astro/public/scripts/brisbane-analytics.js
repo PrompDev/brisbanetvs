@@ -12,6 +12,14 @@
     "utm_content",
     "utm_id",
   ];
+  var GA_CAMPAIGN_FIELDS = {
+    utm_source: "campaign_source",
+    utm_medium: "campaign_medium",
+    utm_campaign: "campaign_name",
+    utm_term: "campaign_term",
+    utm_content: "campaign_content",
+    utm_id: "campaign_id",
+  };
   var tagRequested = false;
   var analyticsReady = false;
   var queuedEvents = [];
@@ -133,6 +141,21 @@
     }
 
     return stored;
+  }
+
+  function gaCampaignConfig(attribution) {
+    var config = {};
+    Object.keys(GA_CAMPAIGN_FIELDS).forEach(function (utmKey) {
+      var value = cleanAttributionValue(
+        attribution && attribution[utmKey] || "",
+        utmKey === "utm_id" ? 160 : 200,
+      );
+      var containsPii = /@|https?:\/\/|www\.|(?:email|phone|mobile|name|address|postcode)\s*[:=]/i.test(value)
+        || /(?:^|\D)(?:\+?61|0)4(?:[\s().-]*\d){8}(?:\D|$)/.test(value);
+      if (containsPii) value = "";
+      if (value) config[GA_CAMPAIGN_FIELDS[utmKey]] = value;
+    });
+    return config;
   }
 
   window.brisbaneAttribution = function () {
@@ -262,17 +285,20 @@
     tagRequested = true;
     window.gtag = gtag;
     gtag("consent", "default", deniedConsent);
+    gtag("js", new Date());
+
+    var gaConfig = Object.assign({
+      send_page_view: true,
+      page_location: window.location.origin + window.location.pathname,
+      page_referrer: cleanReferrer(document.referrer),
+    }, gaCampaignConfig(captureAttribution()));
 
     var script = document.createElement("script");
     script.async = true;
     script.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(measurementId);
     script.onload = function () {
       gtag("consent", "update", grantedConsent);
-      gtag("config", measurementId, {
-        send_page_view: true,
-        page_location: window.location.origin + window.location.pathname,
-        page_referrer: cleanReferrer(document.referrer),
-      });
+      gtag("config", measurementId, gaConfig);
       analyticsReady = true;
       flushEvents();
     };

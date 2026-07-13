@@ -195,17 +195,38 @@ import OperationsLayout from "../../components/operations/OperationsLayout.astro
       try {
         const { response, payload } = await requestJson("/operations/api/analytics");
         if (response.ok && payload?.ok && payload.analytics) {
-          const sessions = Number(payload.analytics.today?.sessions) || 0;
-          analyticsState.textContent = "Live";
-          analyticsState.classList.remove("is-muted");
-          analyticsCopy.textContent = `${numberFormat.format(sessions)} session${sessions === 1 ? "" : "s"} recorded today. Open Analytics for the full protected report.`;
+          const analytics = payload.analytics;
+          const gaStatus = analytics.gaStatus || "unavailable";
+          if (gaStatus !== "ready") {
+            analyticsState.textContent = gaStatus === "not_configured" ? "Setup needed" : "Unavailable";
+            analyticsState.classList.add("is-muted");
+            analyticsCopy.textContent = gaStatus === "not_configured"
+              ? "GA4 collection may be active, but secure reporting still needs its server-side connection."
+              : "GA4 reporting is temporarily unavailable; saved lead reporting is unaffected.";
+            return;
+          }
+
+          const sessions = Number(analytics.today?.sessions) || 0;
+          const realtime = analytics.realtime || {};
+          const activeUsers = realtime.status === "ready"
+            ? Math.max(0, Number(realtime.activeUsersLast30Minutes) || 0)
+            : null;
+          analyticsState.textContent = activeUsers > 0
+            ? "Receiving"
+            : activeUsers === 0
+              ? "Connected"
+              : "Reports live";
+          analyticsState.classList.toggle("is-muted", activeUsers === 0);
+          analyticsCopy.textContent = activeUsers > 0
+            ? `${numberFormat.format(activeUsers)} consented active visitor${activeUsers === 1 ? "" : "s"} in the last 30 minutes; ${numberFormat.format(sessions)} consented session${sessions === 1 ? "" : "s"} recorded today.`
+            : activeUsers === 0
+              ? `No consented active visitors in the last 30 minutes; ${numberFormat.format(sessions)} consented session${sessions === 1 ? "" : "s"} recorded today.`
+              : `${numberFormat.format(sessions)} consented session${sessions === 1 ? "" : "s"} recorded today. Realtime is temporarily unavailable.`;
           return;
         }
-        analyticsState.textContent = payload?.error === "analytics_not_configured" ? "Setup needed" : "Unavailable";
+        analyticsState.textContent = "Unavailable";
         analyticsState.classList.add("is-muted");
-        analyticsCopy.textContent = payload?.error === "analytics_not_configured"
-          ? "GA4 collection is active; secure reporting access still needs its server-side credential."
-          : "Analytics reporting is temporarily unavailable.";
+        analyticsCopy.textContent = "Analytics reporting is temporarily unavailable.";
       } catch {
         analyticsState.textContent = "Unavailable";
         analyticsCopy.textContent = "Analytics reporting is temporarily unavailable.";
