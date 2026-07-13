@@ -7,6 +7,13 @@
 - `/operations/api/summary` validates a Cloudflare Access JWT, calls the private Google Apps Script from the server, and applies a second allow-list before returning counts to the browser.
 - Public pages use consent-based Google Analytics. No Google tag is requested until a visitor allows analytics. Quote and footer forms send a `generate_lead` event only after their endpoint responds successfully, with no personal data.
 
+## Live status — 14 July 2026
+
+- Cloudflare Access protects `https://brisbanetvs.com/operations/` and its API. The **Brisbane TVs Staff Portal** policy allows only the two approved staff email addresses and signs them in with a one-time code.
+- The existing **Brisbane TVs Lead Ingest** Apps Script Web App now has the aggregate-only `portal_summary` endpoint and a separate `PORTAL_READ_SECRET` Script Property. No contact details are returned by this endpoint.
+- The matching `PORTAL_READ_SECRET` is stored as an encrypted Cloudflare Pages secret, not in Git. The non-sensitive Access, Apps Script URL, and GA4 configuration values are in the root `wrangler.toml`, which this Git-integrated Pages project uses as configuration source of truth.
+- A dedicated **Brisbane TVs** GA4 property and `https://brisbanetvs.com` web stream are active. The Google tag still waits for explicit visitor analytics consent.
+
 ## Activation order
 
 ### 1. Deploy the Google Apps Script update
@@ -40,10 +47,10 @@ In the Brisbane TVs Cloudflare Pages project, add these values in **Production**
 | `GA_MEASUREMENT_ID` | variable | Dedicated Brisbane TVs GA4 stream ID, e.g. `G-…` |
 | `PORTAL_ACCESS_TEAM_DOMAIN` | variable | Access team domain, including `https://` |
 | `PORTAL_ACCESS_AUD` | variable | Access application audience |
-| `PORTAL_APPS_SCRIPT_URL` | secret | Deployed Google Apps Script Web App URL |
+| `PORTAL_APPS_SCRIPT_URL` | variable | Deployed Google Apps Script Web App URL |
 | `PORTAL_READ_SECRET` | secret | Same distinct secret stored in Apps Script |
 
-Do not put these values in source files or `wrangler.toml`. The endpoint fails closed until every portal value is present.
+This Pages project uses the root `wrangler.toml` as its configuration source of truth, so its non-sensitive variables belong there. Keep `PORTAL_READ_SECRET` out of Git and store it only as an encrypted Pages secret. The endpoint fails closed until every portal value is present.
 
 ### 4. Create the correct GA4 property
 
