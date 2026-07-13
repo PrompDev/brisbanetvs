@@ -3,6 +3,7 @@ import {
   onN8nLeadPost,
   onRequestOptions,
   onRequestPost,
+  processPendingWebsiteSheetDeliveries,
 } from "../functions/api/website-lead.js";
 import { receiveInboundMail } from "./mail-ingest.js";
 
@@ -32,6 +33,9 @@ export default {
     }
 
     return notFound();
+  },
+  async scheduled(_controller, env, ctx) {
+    ctx.waitUntil(processPendingWebsiteSheetDeliveries(env));
   },
   email: receiveInboundMail,
 };

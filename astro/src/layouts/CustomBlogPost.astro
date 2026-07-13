@@ -242,17 +242,14 @@ const breadcrumbLd = {
             </div>
           </section>
 
-          {/* Newsletter card */}
+          {/* Advice card */}
           <section class="cp-newsletter">
             <div class="cp-newsletter-text">
-              <p class="cp-newsletter-eyebrow">Brisbane-only TV install tips</p>
-              <p class="cp-newsletter-title">One short email a month.</p>
-              <p class="cp-newsletter-copy">New install guides, pricing updates and mount-compatibility breakdowns. No spam — unsubscribe any time.</p>
+              <p class="cp-newsletter-eyebrow">Need advice for your room?</p>
+              <p class="cp-newsletter-title">Get a tailored install answer.</p>
+              <p class="cp-newsletter-copy">Tell us about the TV, wall and suburb. The Brisbane crew will confirm the right setup and price.</p>
             </div>
-            <form class="cp-newsletter-form" onsubmit="event.preventDefault(); this.querySelector('button').textContent='Subscribed ✓';" aria-label="Newsletter signup">
-              <input type="email" placeholder="you@email.com" aria-label="Email address" required />
-              <button type="submit">Subscribe</button>
-            </form>
+            <a class="cp-newsletter-action" href="/quote/">Start a quote →</a>
           </section>
 
           {/* Final CTA */}
@@ -971,26 +968,10 @@ const breadcrumbLd = {
       margin: 0;
       line-height: 1.5;
     }
-    .custom-post .cp-newsletter-form {
-      display: flex;
-      gap: 0.5rem;
-      font-family: var(--cp-sans);
-    }
-    .custom-post .cp-newsletter-form input {
-      width: 220px;
-      padding: 0.7rem 0.9rem;
-      border: 1px solid var(--cp-line);
-      border-radius: 6px;
-      font-size: 0.9rem;
-      font-family: inherit;
-      color: var(--cp-ink);
-    }
-    .custom-post .cp-newsletter-form input:focus {
-      outline: 2px solid var(--cp-accent);
-      outline-offset: 1px;
-      border-color: var(--cp-accent);
-    }
-    .custom-post .cp-newsletter-form button {
+    .custom-post .cp-newsletter-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       padding: 0.7rem 1.1rem;
       background: var(--cp-ink);
       color: #fff;
@@ -998,11 +979,12 @@ const breadcrumbLd = {
       font-weight: 600;
       font-size: 0.88rem;
       font-family: inherit;
-      cursor: pointer;
       border: 1px solid var(--cp-ink);
+      text-decoration: none;
+      white-space: nowrap;
       transition: background 0.15s;
     }
-    .custom-post .cp-newsletter-form button:hover { background: #000; }
+    .custom-post .cp-newsletter-action:hover { background: #000; }
 
     /* End-of-post CTA */
     .custom-post .cp-endcard {
@@ -1201,8 +1183,7 @@ const breadcrumbLd = {
       .custom-post .cp-newsletter {
         grid-template-columns: 1fr;
       }
-      .custom-post .cp-newsletter-form { flex-direction: column; }
-      .custom-post .cp-newsletter-form input { width: 100%; }
+      .custom-post .cp-newsletter-action { width: 100%; }
     }
     @media (max-width: 700px) {
       .cp-related-grid { grid-template-columns: 1fr; }

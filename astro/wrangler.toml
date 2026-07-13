@@ -12,6 +12,7 @@ PORTAL_ACCESS_AUD = "e7ed74c513f4596eff149b994d7454a8c011e5720c97aac7e14701b1ac4
 PORTAL_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-3UnBWEg2cYkx-QjM29GNE7A48eMYQ5Dm9fOBnb2AxW1Wgesrt9fKs_YjEdVAMDC0YA/exec"
 GA_MEASUREMENT_ID = "G-L23FNBTTBX"
 GA4_PROPERTY_ID = "545397141"
+GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-3UnBWEg2cYkx-QjM29GNE7A48eMYQ5Dm9fOBnb2AxW1Wgesrt9fKs_YjEdVAMDC0YA/exec"
 
 [[env.production.r2_buckets]]
 binding = "LEAD_UPLOADS"

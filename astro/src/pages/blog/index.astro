@@ -230,38 +230,16 @@ const blogLd = {
           the visitor scrolls the feed. On mobile it stacks below the
           main column (still useful, just non-sticky). */}
       <aside class="blog-sidebar" aria-label="Blog sidebar">
-        {/* Newsletter — editorial hook, single-field form. The form is
-            a mailto fallback so this still works on a static host; the
-            real integration (Buttondown, Mailchimp, etc.) can be wired
-            into the same markup later. */}
+        {/* Planning card — points readers to the real tracked quote flow. */}
         <section class="blog-side-card blog-side-newsletter" aria-labelledby="blog-news-h">
-          <p class="blog-side-eyebrow">Newsletter</p>
-          <h3 id="blog-news-h" class="blog-side-title">Install notes in your inbox.</h3>
+          <p class="blog-side-eyebrow">Planning an install?</p>
+          <h3 id="blog-news-h" class="blog-side-title">Get advice for your exact setup.</h3>
           <p class="blog-side-desc">
-            One short email a month. New posts, buying tips, and the real-world gotchas
-            our Brisbane crew hit on install days — no spam, unsubscribe anytime.
+            Share the TV, wall and suburb. The Brisbane crew will confirm the right
+            mounting approach and price.
           </p>
-          <form
-            class="blog-side-form"
-            action="mailto:hello@brisbanetvs.com"
-            method="post"
-            enctype="text/plain"
-          >
-            <label class="blog-side-form-label" for="blog-newsletter-email">Your email</label>
-            <div class="blog-side-form-row">
-              <input
-                id="blog-newsletter-email"
-                class="blog-side-form-input"
-                type="email"
-                name="email"
-                placeholder="you@example.com"
-                autocomplete="email"
-                required
-              />
-              <button type="submit" class="blog-side-form-btn">Subscribe</button>
-            </div>
-            <p class="blog-side-form-fineprint">By subscribing you agree to our privacy policy.</p>
-          </form>
+          <a class="blog-side-form-btn" href="/quote/">Start a quote →</a>
+          <p class="blog-side-form-fineprint">No obligation. We normally respond within two hours.</p>
         </section>
 
         {/* Popular posts — three compact rows with thumbnail + title. A
@@ -458,7 +436,7 @@ const blogLd = {
   .blog-side-form-row { display: flex; gap: 0.4rem; }
   .blog-side-form-input { flex: 1 1 auto; min-width: 0; padding: 0.65rem 0.8rem; font: inherit; font-size: 0.9rem; background: #fff; border: 1px solid #d7dbe2; border-radius: 8px; color: #131619; transition: border-color 0.15s, box-shadow 0.15s; }
   .blog-side-form-input:focus { outline: none; border-color: #131619; box-shadow: 0 0 0 3px rgba(19, 22, 25, 0.1); }
-  .blog-side-form-btn { background: #131619; color: #fff; border: none; padding: 0.65rem 1rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: background 0.15s; white-space: nowrap; }
+  .blog-side-form-btn { display: inline-flex; align-items: center; justify-content: center; align-self: flex-start; background: #131619; color: #fff; border: none; padding: 0.65rem 1rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; text-decoration: none; transition: background 0.15s; white-space: nowrap; }
   .blog-side-form-btn:hover { background: #2a2f35; }
   .blog-side-form-fineprint { margin: 0.1rem 0 0; font-size: 0.72rem; color: #8a94a6; line-height: 1.4; }
 

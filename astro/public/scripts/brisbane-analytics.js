@@ -2,10 +2,22 @@
   "use strict";
 
   var CONSENT_KEY = "brisbane_tvs_analytics_consent_v1";
+  var ATTRIBUTION_KEY = "brisbane_tvs_session_attribution_v1";
   var CONFIG_ENDPOINT = "/analytics-config";
+  var ATTRIBUTION_FIELDS = [
+    "utm_source",
+    "utm_medium",
+    "utm_campaign",
+    "utm_term",
+    "utm_content",
+    "utm_id",
+  ];
   var tagRequested = false;
   var analyticsReady = false;
   var queuedEvents = [];
+  var startedForms = typeof WeakSet === "function" ? new WeakSet() : null;
+  var erroredForms = typeof WeakSet === "function" ? new WeakSet() : null;
+  var calculatorTracked = false;
   var deniedConsent = {
     ad_storage: "denied",
     ad_user_data: "denied",
@@ -35,6 +47,104 @@
       // Analytics remains disabled if the preference cannot be persisted.
     }
   }
+
+  function cleanAttributionValue(value, maximumLength) {
+    if (typeof value !== "string") return "";
+    return value.replace(/[\u0000-\u001f\u007f]+/g, " ").replace(/\s+/g, " ").trim().slice(0, maximumLength);
+  }
+
+  function cleanLandingPath(value) {
+    if (typeof value !== "string" || !value.startsWith("/") || /[?#\r\n]/.test(value)) return "";
+    return value.slice(0, 512);
+  }
+
+  function cleanReferrer(value) {
+    if (!value) return "";
+    try {
+      var referrer = new URL(value);
+      if (referrer.protocol !== "https:" && referrer.protocol !== "http:") return "";
+      return (referrer.origin + referrer.pathname).slice(0, 512);
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function inferredPlatform(params, referrer) {
+    var source = cleanAttributionValue(params.get("utm_source") || "", 80).toLowerCase();
+    if (source === "ig" || source.indexOf("instagram") !== -1) return "instagram";
+    if (source === "fb" || source.indexOf("facebook") !== -1) return "facebook";
+    if (source.indexOf("meta") !== -1) return "meta";
+
+    try {
+      var hostname = referrer ? new URL(referrer).hostname.toLowerCase() : "";
+      if (hostname === "instagram.com" || hostname.endsWith(".instagram.com")) return "instagram";
+      if (hostname === "facebook.com" || hostname.endsWith(".facebook.com")) return "facebook";
+    } catch (_) {
+      // The sanitised referrer is optional.
+    }
+
+    return params.has("fbclid") ? "meta" : "";
+  }
+
+  function attributionFromPage() {
+    var params = new URLSearchParams(window.location.search);
+    var attribution = {
+      landing_page: cleanLandingPath(window.location.pathname),
+      referrer: cleanReferrer(document.referrer),
+    };
+
+    ATTRIBUTION_FIELDS.forEach(function (key) {
+      var value = cleanAttributionValue(params.get(key) || "", key === "utm_id" ? 160 : 200);
+      if (value) attribution[key] = value;
+    });
+
+    var platform = inferredPlatform(params, attribution.referrer);
+    if (platform) attribution.source_platform = platform;
+    return attribution;
+  }
+
+  function readStoredAttribution() {
+    try {
+      var value = window.sessionStorage.getItem(ATTRIBUTION_KEY);
+      var parsed = value ? JSON.parse(value) : null;
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function writeStoredAttribution(value) {
+    try {
+      window.sessionStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(value));
+    } catch (_) {
+      // Current-page attribution still works when session storage is blocked.
+    }
+  }
+
+  function captureAttribution() {
+    var current = attributionFromPage();
+    var stored = readStoredAttribution();
+    var hasCampaignTouch = ATTRIBUTION_FIELDS.some(function (key) { return Boolean(current[key]); })
+      || Boolean(current.source_platform);
+
+    if (!stored || hasCampaignTouch) {
+      writeStoredAttribution(current);
+      return current;
+    }
+
+    return stored;
+  }
+
+  window.brisbaneAttribution = function () {
+    return Object.assign({}, captureAttribution());
+  };
+
+  window.brisbaneNewSubmissionId = function () {
+    if (window.crypto && typeof window.crypto.randomUUID === "function") {
+      return window.crypto.randomUUID();
+    }
+    return "web-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 14);
+  };
 
   function gtag() {
     window.dataLayer = window.dataLayer || [];
@@ -80,6 +190,69 @@
     queuedEvents = [];
   }
 
+  function pageType() {
+    var first = window.location.pathname.split("/").filter(Boolean)[0] || "home";
+    return cleanAttributionValue(first.replace(/[^a-z0-9_-]/gi, "_"), 40) || "other";
+  }
+
+  function ctaLocation(element) {
+    if (element.closest("footer")) return "footer";
+    if (element.closest(".mobile-menu, [data-mobile-menu]")) return "mobile_menu";
+    if (element.closest("header, .main-header, .top-bar")) return "header";
+    if (element.closest(".ai-chat-panel, .ai-badge-wrapper, .floating-call-btn")) return "chat_widget";
+    if (element.closest("#pricingCalculator, .pricing-section")) return "pricing";
+    return "page_content";
+  }
+
+  function formLabel(form) {
+    var value = form.getAttribute("data-analytics-form") || form.id || form.className || "form";
+    return cleanAttributionValue(String(value).replace(/[^a-z0-9_-]+/gi, "_"), 60) || "form";
+  }
+
+  function trackPublicInteraction(event) {
+    var target = event.target instanceof Element ? event.target : null;
+    if (!target) return;
+
+    if (!calculatorTracked && target.closest("#pricingCalculator")) {
+      calculatorTracked = true;
+      window.brisbaneTrack("pricing_calculator_use", { page_type: pageType() });
+    }
+
+    if (target.closest("#aiBadge")) {
+      window.brisbaneTrack("chat_open", { page_type: pageType(), cta_location: "chat_widget" });
+    } else if (target.closest("#aiChatSend")) {
+      window.brisbaneTrack("chat_message", { page_type: pageType(), cta_location: "chat_widget" });
+    }
+
+    var link = target.closest("a[href]");
+    if (!link) return;
+    var href = link.getAttribute("href") || "";
+    var params = { page_type: pageType(), cta_location: ctaLocation(link) };
+
+    if (/^tel:/i.test(href)) {
+      window.brisbaneTrack("click_to_call", params);
+      return;
+    }
+    if (/^mailto:/i.test(href)) {
+      window.brisbaneTrack("click_email", params);
+      return;
+    }
+    if ((link.getAttribute("rel") || "").split(/\s+/).includes("sponsored")) {
+      window.brisbaneTrack("affiliate_click", params);
+      return;
+    }
+
+    try {
+      var destination = new URL(link.href, window.location.href);
+      if (destination.origin === window.location.origin
+        && (destination.pathname === "/quote/" || destination.hash === "#pricing")) {
+        window.brisbaneTrack("quote_cta_click", params);
+      }
+    } catch (_) {
+      // Ignore malformed, non-navigation href values.
+    }
+  }
+
   function measurementIdIsValid(value) {
     return typeof value === "string" && /^G-[A-Z0-9]+$/i.test(value);
   }
@@ -95,7 +268,11 @@
     script.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(measurementId);
     script.onload = function () {
       gtag("consent", "update", grantedConsent);
-      gtag("config", measurementId, { send_page_view: true });
+      gtag("config", measurementId, {
+        send_page_view: true,
+        page_location: window.location.origin + window.location.pathname,
+        page_referrer: cleanReferrer(document.referrer),
+      });
       analyticsReady = true;
       flushEvents();
     };
@@ -195,6 +372,7 @@
   }
 
   function start() {
+    captureAttribution();
     if (getChoice() === "granted") {
       loadAnalytics();
     } else if (getChoice() !== "denied") {
@@ -210,6 +388,30 @@
     event.preventDefault();
     showBanner();
   });
+
+  document.addEventListener("click", trackPublicInteraction);
+
+  document.addEventListener("focusin", function (event) {
+    var target = event.target instanceof Element ? event.target : null;
+    var form = target ? target.closest("form") : null;
+    if (!form || (startedForms && startedForms.has(form))) return;
+    if (startedForms) startedForms.add(form);
+    window.brisbaneTrack("form_start", { form_type: formLabel(form), page_type: pageType() });
+  });
+
+  document.addEventListener("input", function (event) {
+    var target = event.target instanceof Element ? event.target : null;
+    var form = target ? target.closest("form") : null;
+    if (form && erroredForms) erroredForms.delete(form);
+  });
+
+  document.addEventListener("invalid", function (event) {
+    var target = event.target instanceof Element ? event.target : null;
+    var form = target ? target.closest("form") : null;
+    if (!form || (erroredForms && erroredForms.has(form))) return;
+    if (erroredForms) erroredForms.add(form);
+    window.brisbaneTrack("form_error", { form_type: formLabel(form), page_type: pageType() });
+  }, true);
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", start, { once: true });

@@ -20,19 +20,12 @@ export const BUSINESS = {
   abn: "12 345 678 901",
   hoursDisplay: "7 days · 7 AM–7 PM",
   /**
-   * n8n webhook endpoints. All form types currently funnel through the
-   * single /api/n8n/lead Cloudflare Pages Function, which proxies to the
-   * "Brisbane TVs — Lead Webhook" n8n workflow. The flow's Code node
-   * branches on the `source` field in the JSON payload (set by each form)
-   * to differentiate "subscriber" vs "quote" vs "callback" etc.
-   *
-   * If individual flows are ever split out later, replace the relevant
-   * URL here — every form imports BUSINESS.webhooks.* so the routing
-   * change is a one-file edit.
+   * Standard forms use the canonical JSON intake. The photo quote uses the
+   * multipart intake so image bytes are stored privately in R2.
    */
   webhooks: {
     quickQuote: "/api/n8n/lead",
-    photoQuote: "/api/n8n/lead",
+    photoQuote: "/api/website-lead",
     callBack: "/api/n8n/lead",
     emailSignup: "/api/n8n/lead",
     bookingRequest: "/api/n8n/lead",

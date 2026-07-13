@@ -13,8 +13,8 @@ import { BUSINESS, PACKAGES } from "~/data/business";
  *
  * Two jobs on one page:
  *   1. Show Tom's packages with honest "from" prices.
- *   2. Instant quote calculator: TV size + wall type → matched package +
- *      tentative total, POST'd to BUSINESS.webhooks.quickQuote.
+ *   2. Instant quote calculator: TV size + add-ons → matched package +
+ *      tentative total, carried into the tracked /quote/ form.
  */
 
 const pageUrl = new URL("/pricing/", Astro.site).toString();
@@ -120,9 +120,9 @@ const FEATURED_ID = "living-room";
           <div class="calc-field">
             <label class="calc-label">Add-ons (per TV)</label>
             <div class="calc-addons" id="calcAddons">
-              <label class="calc-checkbox"><input type="checkbox" data-price="100" data-label="In-wall cable concealment"> <span>Cable concealment <em>+$100</em></span></label>
-              <label class="calc-checkbox"><input type="checkbox" data-price="80" data-label="Soundbar mount"> <span>Soundbar mount <em>+$80</em></span></label>
-              <label class="calc-checkbox"><input type="checkbox" data-price="50" data-label="Full-motion bracket upgrade"> <span>Full-motion bracket <em>+$50</em></span></label>
+              <label class="calc-checkbox"><input type="checkbox" data-addon="cable-concealment" data-price="100" data-label="In-wall cable concealment"> <span>Cable concealment <em>+$100</em></span></label>
+              <label class="calc-checkbox"><input type="checkbox" data-addon="soundbar" data-price="80" data-label="Soundbar mount"> <span>Soundbar mount <em>+$80</em></span></label>
+              <label class="calc-checkbox"><input type="checkbox" data-addon="full-motion-bracket" data-price="50" data-label="Full-motion bracket upgrade"> <span>Full-motion bracket <em>+$50</em></span></label>
             </div>
           </div>
         </div>
@@ -254,6 +254,7 @@ const FEATURED_ID = "living-room";
     const addons = calc.querySelectorAll("#calcAddons input");
     const totalEl = document.getElementById("calcTotal");
     const breakdownEl = document.getElementById("calcBreakdown");
+    const ctaEl = document.getElementById("calcCta");
     const cards = document.querySelectorAll(".pricing-card[data-tier]");
 
     let count = 1;
@@ -269,10 +270,12 @@ const FEATURED_ID = "living-room";
       let total = price;
       let addonSum = 0;
       const addonNames = [];
+      const addonIds = [];
       addons.forEach((a) => {
         if (a.checked) {
           addonSum += parseFloat(a.dataset.price || "0");
           addonNames.push(a.dataset.label);
+          if (a.dataset.addon) addonIds.push(a.dataset.addon);
         }
       });
       total = (total + addonSum) * count;
@@ -293,6 +296,11 @@ const FEATURED_ID = "living-room";
       if (tierId) {
         const matchedCard = document.querySelector('.pricing-card[data-tier="' + tierId + '"]');
         if (matchedCard) matchedCard.classList.add("is-matched");
+        if (ctaEl) {
+          const params = new URLSearchParams({ package: tierId, count: String(count) });
+          addonIds.forEach((addon) => params.append("extra", addon));
+          ctaEl.href = "/quote/?" + params.toString();
+        }
       }
     }
 

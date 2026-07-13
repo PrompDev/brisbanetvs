@@ -11,7 +11,7 @@
 
 - Cloudflare Access protects `https://brisbanetvs.com/operations/` and its API. The **Brisbane TVs Staff Portal** policy allows only the two approved staff email addresses and signs them in with a one-time code.
 - The existing **Brisbane TVs Lead Ingest** Apps Script Web App now has the aggregate-only `portal_summary` endpoint and a separate `PORTAL_READ_SECRET` Script Property. No contact details are returned by this endpoint.
-- The matching `PORTAL_READ_SECRET` is stored as an encrypted Cloudflare Pages secret, not in Git. The non-sensitive Access, Apps Script URL, and GA4 configuration values are in the root `wrangler.toml`, which this Git-integrated Pages project uses as configuration source of truth.
+- The matching `PORTAL_READ_SECRET` is stored as an encrypted Cloudflare Pages secret, not in Git. The Git-integrated project uses `astro/wrangler.toml` because `/astro` is its configured root; the root `wrangler.toml` mirrors non-sensitive values for local commands run from the repository root.
 - A dedicated **Brisbane TVs** GA4 property and `https://brisbanetvs.com` web stream are active. The Google tag still waits for explicit visitor analytics consent.
 
 ## Activation order
@@ -49,8 +49,10 @@ In the Brisbane TVs Cloudflare Pages project, add these values in **Production**
 | `PORTAL_ACCESS_AUD` | variable | Access application audience |
 | `PORTAL_APPS_SCRIPT_URL` | variable | Deployed Google Apps Script Web App URL |
 | `PORTAL_READ_SECRET` | secret | Same distinct secret stored in Apps Script |
+| `GOOGLE_APPS_SCRIPT_URL` | variable | Existing private lead-ingest Web App URL |
+| `GOOGLE_APPS_SCRIPT_SECRET` | secret | Existing lead receiver `INGEST_SECRET`; used only server-side |
 
-This Pages project uses the root `wrangler.toml` as its configuration source of truth, so its non-sensitive variables belong there. Keep `PORTAL_READ_SECRET` out of Git and store it only as an encrypted Pages secret. The endpoint fails closed until every portal value is present.
+This Pages project uses `astro/wrangler.toml` in Git-integrated production, with the root `wrangler.toml` kept in sync for repository-root commands. Keep `PORTAL_READ_SECRET` and `GOOGLE_APPS_SCRIPT_SECRET` out of Git and store them only as encrypted Pages secrets. The endpoints fail closed until their required values are present.
 
 ### 4. Create the correct GA4 property
 
@@ -66,8 +68,16 @@ Deploy the Pages build from the `astro` root as usual. Then verify:
 2. Signed in, the dashboard shows only counts, buckets and broad recency labels.
 3. In browser network tools, the summary response contains no contact information or raw form values.
 4. Before analytics consent, no request is made to Google’s tag service. After consent, a page view appears in GA4.
-5. A successful quote/footer submission triggers `generate_lead` with a `lead_source` only.
+5. A successful quote/footer submission triggers `generate_lead` with only a
+   form location and controlled source label, never contact or form values.
 
-## Important existing lead-path issue
+## Lead-path status
 
-The current production route owner responds to `/api/website-lead`, while the public quote and footer forms call `/api/n8n/lead`. The new Analytics conversion event correctly waits for a successful response, so it will not fire until that route mismatch is repaired. Treat that as a separate lead-delivery fix; do not change form endpoints blindly because their payloads need to be mapped to the live receiver first.
+The production route owner now handles both `/api/website-lead` and the
+historically named `/api/n8n/lead`. Both store canonical website leads in D1;
+the photo-quote route also saves selected images privately in R2. Pages preview
+fallbacks import those same canonical handlers rather than forwarding to n8n,
+so preview and production no longer split lead behaviour.
+Website leads are then copied to the private spreadsheet's separate
+`Website Leads` tab by a retry-safe Worker queue. The Meta `Leads` tab remains
+the input to the existing Sheet-to-D1 sync, so the two directions cannot loop.

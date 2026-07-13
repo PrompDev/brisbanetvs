@@ -40,6 +40,43 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
     </article>
   </section>
 
+  <section class="operations-grid operations-breakdown-grid" aria-label="Saved lead signals" style="margin-top: 1rem;">
+    <article class="operations-panel">
+      <div class="operations-panel-heading">
+        <div>
+          <p class="operations-eyebrow">Actual enquiries</p>
+          <h2 class="operations-section-title">Leads saved, not just clicks</h2>
+        </div>
+        <span class="operations-pill is-muted" data-lead-signal-pill>Checking</span>
+      </div>
+      <p class="operations-panel-copy" data-lead-signal-copy>Loading the protected Operations lead register...</p>
+      <div class="operations-grid operations-analytics-metrics" style="margin-top: 1.2rem;">
+        <div class="operations-metric"><p class="operations-metric-label">Saved today</p><strong class="operations-metric-value" data-saved-today>—</strong><span class="operations-metric-copy">All lead sources</span></div>
+        <div class="operations-metric"><p class="operations-metric-label">Saved in 7 days</p><strong class="operations-metric-value" data-saved-week>—</strong><span class="operations-metric-copy">Real enquiries</span></div>
+        <div class="operations-metric"><p class="operations-metric-label">Website forms</p><strong class="operations-metric-value" data-saved-website>—</strong><span class="operations-metric-copy">Last 7 days</span></div>
+        <div class="operations-metric"><p class="operations-metric-label">Sheet waiting</p><strong class="operations-metric-value" data-sheet-waiting>—</strong><span class="operations-metric-copy">0 means healthy</span></div>
+      </div>
+    </article>
+
+    <article class="operations-panel">
+      <p class="operations-eyebrow">Decision signals</p>
+      <h2 class="operations-section-title">What is producing enquiries</h2>
+      <p class="operations-panel-copy">Actual saved leads by source, campaign and website landing page for the last seven days.</p>
+      <p class="operations-metric-label" style="margin-top: 1rem;">Lead sources</p>
+      <ul class="operations-list" data-lead-sources aria-live="polite">
+        <li class="operations-list-loading">Loading lead sources...</li>
+      </ul>
+      <p class="operations-metric-label" style="margin-top: 1rem;">Campaigns</p>
+      <ul class="operations-list" data-lead-campaigns aria-live="polite">
+        <li class="operations-list-loading">Loading campaigns...</li>
+      </ul>
+      <p class="operations-metric-label" style="margin-top: 1rem;">Website lead pages</p>
+      <ul class="operations-list" data-lead-pages aria-live="polite">
+        <li class="operations-list-loading">Loading lead pages...</li>
+      </ul>
+    </article>
+  </section>
+
   <section class="operations-grid operations-breakdown-grid" aria-label="Traffic detail" style="margin-top: 1rem;">
     <article class="operations-panel">
       <div class="operations-panel-heading">
@@ -99,7 +136,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
 
   <section class="operations-privacy-note">
     <span aria-hidden="true">✓</span>
-    <p>Analytics stays aggregate-only: no visitor emails, phone numbers, form answers, campaign text or user-supplied URLs are requested or displayed. Search terms are limited to privacy-filtered, aggregated Google Search data.</p>
+    <p>Analytics stays aggregate-only: no visitor names, emails, phone numbers or free-text form answers are requested or displayed. Campaign labels and Brisbane TVs landing-page paths are privacy-filtered and shown only as grouped lead counts.</p>
   </section>
 
   <script>
@@ -113,6 +150,11 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
     const queryList = document.querySelector("[data-analytics-queries]");
     const searchPill = document.querySelector("[data-search-pill]");
     const searchCopy = document.querySelector("[data-search-copy]");
+    const leadSignalPill = document.querySelector("[data-lead-signal-pill]");
+    const leadSignalCopy = document.querySelector("[data-lead-signal-copy]");
+    const leadSourceList = document.querySelector("[data-lead-sources]");
+    const leadCampaignList = document.querySelector("[data-lead-campaigns]");
+    const leadPageList = document.querySelector("[data-lead-pages]");
     const values = {
       todaySessions: document.querySelector("[data-today-sessions]"),
       todayDuration: document.querySelector("[data-today-duration]"),
@@ -122,6 +164,10 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       weekDuration: document.querySelector("[data-week-duration]"),
       weekViews: document.querySelector("[data-week-views]"),
       weekLeads: document.querySelector("[data-week-leads]"),
+      savedToday: document.querySelector("[data-saved-today]"),
+      savedWeek: document.querySelector("[data-saved-week]"),
+      savedWebsite: document.querySelector("[data-saved-website]"),
+      sheetWaiting: document.querySelector("[data-sheet-waiting]"),
     };
 
     async function requestJson(path) {
@@ -216,6 +262,45 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       });
     }
 
+    function renderLeadList(list, entries, emptyMessage) {
+      if (!entries?.length) {
+        emptyList(list, emptyMessage);
+        return;
+      }
+
+      list.replaceChildren();
+      entries.forEach((entry) => {
+        const item = document.createElement("li");
+        const label = document.createElement("span");
+        const value = document.createElement("strong");
+        label.textContent = entry.label;
+        value.textContent = `${numberFormat.format(Number(entry.leads) || 0)} leads`;
+        item.append(label, value);
+        list.append(item);
+      });
+    }
+
+    function renderLeadSignals(signals) {
+      const ready = signals?.status === "ready";
+      const delivery = signals?.sheetDelivery || {};
+      const waiting = (Number(delivery.pending) || 0)
+        + (Number(delivery.failed) || 0)
+        + (Number(delivery.missing) || 0);
+      setValue(values.savedToday, signals?.today);
+      setValue(values.savedWeek, signals?.last7Days);
+      setValue(values.savedWebsite, signals?.websiteLast7Days);
+      setValue(values.sheetWaiting, waiting);
+
+      leadSignalPill.classList.toggle("is-muted", !ready || waiting > 0);
+      leadSignalPill.textContent = !ready ? "Unavailable" : waiting > 0 ? "Check delivery" : "Live";
+      leadSignalCopy.textContent = ready
+        ? `${numberFormat.format(Number(delivery.delivered) || 0)} website lead copies confirmed in the private Sheet. ${waiting ? `${numberFormat.format(waiting)} still need attention.` : "Nothing is waiting to sync."}`
+        : "The protected lead signal summary is temporarily unavailable.";
+      renderLeadList(leadSourceList, signals?.bySource, "No saved leads in this period.");
+      renderLeadList(leadCampaignList, signals?.topCampaigns, "No tagged campaigns have produced a saved lead yet.");
+      renderLeadList(leadPageList, signals?.topLandingPages, "No website form leads have been saved in this period.");
+    }
+
     function setValue(target, value) {
       target.textContent = numberFormat.format(Number(value) || 0);
     }
@@ -224,7 +309,47 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       target.textContent = formatDuration(value);
     }
 
+    function clearGaMetrics() {
+      [
+        values.todaySessions,
+        values.todayDuration,
+        values.todayViews,
+        values.todayLeads,
+        values.weekSessions,
+        values.weekDuration,
+        values.weekViews,
+        values.weekLeads,
+      ].forEach((target) => { target.textContent = "—"; });
+    }
+
     function renderAnalytics(analytics) {
+      const gaStatus = analytics.gaStatus || "ready";
+      const gaReady = gaStatus === "ready";
+      renderLeadSignals(analytics.leadSignals);
+      renderSearch(analytics.searchConsole);
+
+      if (!gaReady) {
+        clearGaMetrics();
+        emptyList(sourceList, gaStatus === "not_configured"
+          ? "Traffic sources will appear after the secure GA4 reporting connection is completed."
+          : "Traffic sources are temporarily unavailable.");
+        emptyList(pageList, gaStatus === "not_configured"
+          ? "Page trends will appear after the secure GA4 reporting connection is completed."
+          : "Page trends are temporarily unavailable.");
+        status.textContent = gaStatus === "not_configured"
+          ? "Saved enquiries and Sheet delivery are live. GA4 traffic reporting still needs its secure connection."
+          : "Saved enquiries and Sheet delivery are live. GA4 traffic reporting is temporarily unavailable.";
+        status.classList.remove("is-ready");
+        status.classList.toggle("is-warning", gaStatus === "not_configured");
+        pill.textContent = gaStatus === "not_configured" ? "Leads live · GA setup" : "Leads live · GA unavailable";
+        pill.classList.add("is-muted");
+        copy.textContent = "Lead totals, campaigns, landing pages and Sheet health remain available below.";
+        setupCopy.textContent = gaStatus === "not_configured"
+          ? "Complete the read-only GA4 reporting credential to add sessions, engagement and page trends."
+          : "The GA4 connection can be retried without affecting lead capture or Sheet delivery.";
+        return;
+      }
+
       setValue(values.todaySessions, analytics.today?.sessions);
       setDuration(values.todayDuration, analytics.today?.averageSessionDuration);
       setValue(values.todayViews, analytics.today?.pageViews);
@@ -235,9 +360,9 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       setValue(values.weekLeads, analytics.last7Days?.generateLeads);
       renderSources(analytics.topSources);
       renderPages(analytics.topPages);
-      renderSearch(analytics.searchConsole);
       status.textContent = "Secure website reporting is live.";
       status.classList.add("is-ready");
+      status.classList.remove("is-warning");
       pill.textContent = "Live";
       pill.classList.remove("is-muted");
       copy.textContent = "Fixed aggregate reports, refreshed when this page opens.";
@@ -259,6 +384,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       renderSources([]);
       renderPages([]);
       renderSearch({ status: needsSetup ? "not_configured" : "unavailable", queries: [] });
+      renderLeadSignals({ status: "unavailable" });
     }
 
     async function loadAnalytics() {
@@ -275,6 +401,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
           renderSources([]);
           renderPages([]);
           renderSearch({ status: "unavailable", queries: [] });
+          renderLeadSignals({ status: "unavailable" });
           return;
         }
 

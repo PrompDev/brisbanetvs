@@ -1,5 +1,6 @@
 import { importPKCS8, SignJWT } from "jose";
-import { json, requireOperationsAccess } from "./_lib/auth.js";
+import { hasOperationsDatabase, json, requireOperationsAccess } from "./_lib/auth.js";
+import { brisbaneDay, brisbaneDayDaysAgo } from "./_lib/dates.js";
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GA4_DATA_API_BASE = "https://analyticsdata.googleapis.com/v1beta/properties/";
@@ -452,6 +453,173 @@ function safeTopSources(payload) {
   }).slice(0, 5);
 }
 
+function operationalSourceLabel(value) {
+  const text = String(value || "").toLowerCase();
+  if (text === "ig" || text.includes("instagram")) return "Instagram";
+  if (text === "fb" || text.includes("facebook")) return "Facebook";
+  if (text.includes("meta")) return "Meta (unattributed)";
+  if (text.includes("google")) return "Google";
+  if (
+    text.includes("website")
+    || text.includes("web")
+    || text.includes("quote")
+    || text.includes("footer")
+  ) return "Website";
+  return "Other";
+}
+
+function aggregateOperationalSources(rows) {
+  const order = ["Facebook", "Instagram", "Meta (unattributed)", "Website", "Google", "Other"];
+  const counts = new Map(order.map((label) => [label, 0]));
+  for (const row of rows || []) {
+    const label = operationalSourceLabel(row.value);
+    counts.set(label, (counts.get(label) || 0) + safeCount(row.count));
+  }
+  return order
+    .map((label) => ({ label, leads: counts.get(label) || 0 }))
+    .filter((item) => item.leads > 0);
+}
+
+function safeCampaignLabel(value) {
+  const label = nonEmptyString(value, 100);
+  return label
+    && !/[@\r\n\t]|https?:|www\.|\d{7,}/i.test(label)
+    && /^[\p{L}\p{N}\s&'’.,+()\-_/]+$/u.test(label)
+    ? label
+    : null;
+}
+
+function safeOperationalPage(value) {
+  const pageUrl = nonEmptyString(value, 1_024);
+  if (!pageUrl) return null;
+  try {
+    const url = new URL(pageUrl);
+    const allowedHost = url.hostname === "brisbanetvs.com" || url.hostname === "www.brisbanetvs.com";
+    return url.protocol === "https:" && allowedHost ? safePagePath(url.pathname) : null;
+  } catch {
+    return safePagePath(pageUrl);
+  }
+}
+
+function aggregateSafeLabels(rows, labelFor, countKey) {
+  const counts = new Map();
+  for (const row of rows || []) {
+    const label = labelFor(row.value);
+    if (!label) continue;
+    counts.set(label, (counts.get(label) || 0) + safeCount(row.count));
+  }
+  return Array.from(counts, ([label, count]) => ({ label, [countKey]: count }))
+    .sort((left, right) => right[countKey] - left[countKey] || left.label.localeCompare(right.label))
+    .slice(0, 5);
+}
+
+async function operationalLeadSignals(env) {
+  if (!hasOperationsDatabase(env)) {
+    return {
+      status: "not_configured",
+      today: 0,
+      last7Days: 0,
+      websiteLast7Days: 0,
+      bySource: [],
+      topCampaigns: [],
+      topLandingPages: [],
+      sheetDelivery: { delivered: 0, pending: 0, failed: 0, missing: 0 },
+    };
+  }
+
+  const now = new Date();
+  const today = brisbaneDay(now);
+  const weekStart = brisbaneDayDaysAgo(6, now);
+
+  try {
+    const [todayRow, weekRow, websiteRow, sourceResult, campaignResult, pageResult, deliveryResult, missingDeliveryRow] = await Promise.all([
+      env.OPERATIONS_DB.prepare("SELECT COUNT(*) AS count FROM leads WHERE received_day = ?")
+        .bind(today)
+        .first(),
+      env.OPERATIONS_DB.prepare(
+        "SELECT COUNT(*) AS count FROM leads WHERE received_day >= ? AND received_day <= ?",
+      ).bind(weekStart, today).first(),
+      env.OPERATIONS_DB.prepare(
+        "SELECT COUNT(*) AS count FROM leads WHERE source = 'website' AND received_day >= ? AND received_day <= ?",
+      ).bind(weekStart, today).first(),
+      env.OPERATIONS_DB.prepare(
+        "SELECT platform AS value, COUNT(*) AS count FROM leads " +
+        "WHERE received_day >= ? AND received_day <= ? GROUP BY platform LIMIT 30",
+      ).bind(weekStart, today).all(),
+      env.OPERATIONS_DB.prepare(
+        "SELECT campaign AS value, COUNT(*) AS count FROM leads " +
+        "WHERE received_day >= ? AND received_day <= ? AND campaign <> '' " +
+        "GROUP BY campaign ORDER BY count DESC LIMIT 20",
+      ).bind(weekStart, today).all(),
+      env.OPERATIONS_DB.prepare(
+        "SELECT value, COUNT(*) AS count FROM (" +
+          "SELECT CASE WHEN json_valid(tracking_json) " +
+            "THEN COALESCE(NULLIF(CAST(json_extract(tracking_json, '$.landing_page') AS TEXT), ''), page_url) " +
+            "ELSE page_url END AS value FROM leads " +
+          "WHERE source = 'website' AND received_day >= ? AND received_day <= ?" +
+        ") WHERE value <> '' GROUP BY value ORDER BY count DESC LIMIT 20",
+      ).bind(weekStart, today).all(),
+      env.OPERATIONS_DB.prepare(
+        "SELECT status AS value, COUNT(*) AS count FROM lead_deliveries " +
+        "WHERE destination = 'google_sheet' GROUP BY status LIMIT 10",
+      ).all(),
+      env.OPERATIONS_DB.prepare(
+        "SELECT COUNT(*) AS count FROM leads " +
+        "LEFT JOIN lead_deliveries ON lead_deliveries.lead_id = leads.id " +
+          "AND lead_deliveries.destination = 'google_sheet' " +
+        "WHERE leads.source = 'website' AND lead_deliveries.id IS NULL",
+      ).first(),
+    ]);
+
+    const delivery = { delivered: 0, pending: 0, failed: 0, missing: safeCount(missingDeliveryRow?.count) };
+    for (const row of deliveryResult.results || []) {
+      const status = String(row.value || "");
+      const count = safeCount(row.count);
+      if (status === "delivered") delivery.delivered += count;
+      else if (status === "failed") delivery.failed += count;
+      else if (status === "pending" || status === "processing") delivery.pending += count;
+    }
+
+    return {
+      status: "ready",
+      today: safeCount(todayRow?.count),
+      last7Days: safeCount(weekRow?.count),
+      websiteLast7Days: safeCount(websiteRow?.count),
+      bySource: aggregateOperationalSources(sourceResult.results),
+      topCampaigns: aggregateSafeLabels(campaignResult.results, safeCampaignLabel, "leads"),
+      topLandingPages: aggregateSafeLabels(pageResult.results, safeOperationalPage, "leads"),
+      sheetDelivery: delivery,
+    };
+  } catch (error) {
+    console.error(JSON.stringify({
+      event: "operations_lead_signals_unavailable",
+      message: error instanceof Error ? error.message.slice(0, 160) : "unknown",
+    }));
+    return {
+      status: "unavailable",
+      today: 0,
+      last7Days: 0,
+      websiteLast7Days: 0,
+      bySource: [],
+      topCampaigns: [],
+      topLandingPages: [],
+      sheetDelivery: { delivered: 0, pending: 0, failed: 0, missing: 0 },
+    };
+  }
+}
+
+function analyticsWithoutGa(gaStatus, searchStatus, leadSignals) {
+  return {
+    gaStatus,
+    today: null,
+    last7Days: null,
+    topSources: [],
+    topPages: [],
+    searchConsole: { status: searchStatus, queries: [] },
+    leadSignals,
+  };
+}
+
 /**
  * Fixed, aggregate-only GA4 reporting for the protected Operations portal.
  * The service-account credential is used only server-side and the route does
@@ -461,10 +629,14 @@ export async function onRequestGet({ request, env }) {
   const access = await requireOperationsAccess(request, env);
   if (access.response) return access.response;
 
+  const leadSignals = await operationalLeadSignals(env);
   const config = analyticsConfig(env);
   if (!config) {
     console.error(JSON.stringify({ event: "operations_analytics_not_configured" }));
-    return json({ ok: false, error: "analytics_not_configured", analytics: null }, 503);
+    return json({
+      ok: true,
+      analytics: analyticsWithoutGa("not_configured", "not_configured", leadSignals),
+    });
   }
 
   const today = { startDate: "today", endDate: "today" };
@@ -487,11 +659,13 @@ export async function onRequestGet({ request, env }) {
     return json({
       ok: true,
       analytics: {
+        gaStatus: "ready",
         today: safeTraffic(todayTraffic, metricFromFirstRow(todayLeads, 0)),
         last7Days: safeTraffic(last7DaysTraffic, metricFromFirstRow(last7DaysLeads, 0)),
         topSources: safeTopSources(topChannels),
         topPages: safeTopPages(topPages, previousTopPages),
         searchConsole,
+        leadSignals,
       },
     });
   } catch (error) {
@@ -502,6 +676,9 @@ export async function onRequestGet({ request, env }) {
       stage,
       upstreamStatus,
     }));
-    return json({ ok: false, error: "analytics_unavailable", analytics: null }, 503);
+    return json({
+      ok: true,
+      analytics: analyticsWithoutGa("unavailable", "unavailable", leadSignals),
+    });
   }
 }

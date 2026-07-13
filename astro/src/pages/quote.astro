@@ -15,8 +15,8 @@ import { BUSINESS, PACKAGES } from "~/data/business";
  * the "bait" (Tom's word) that converts custom-quote cases which would
  * otherwise never phone.
  *
- * Submits to BUSINESS.webhooks.photoQuote (separate from quickQuote so
- * the n8n workflow can branch on lead quality / file upload presence).
+ * Submits through BUSINESS.webhooks.photoQuote to the canonical Operations
+ * intake, which retains the richer quote context and Sheet delivery state.
  */
 
 const pageUrl = new URL("/quote/", Astro.site).toString();
@@ -90,6 +90,7 @@ const contactLd = {
         novalidate
         aria-label="Photo quote form"
       >
+        <input id="q-tv-count" type="hidden" name="tvCount" value="1" />
         {/* Honeypot — display:none + gibberish name so browser autofill skips it. */}
         <div aria-hidden="true" style="display:none !important;">
           <label>Leave this field blank
@@ -112,7 +113,7 @@ const contactLd = {
               ))}
               <option value="unsure">Not sure — help me pick</option>
             </select>
-            <p class="qt-hint">Pre-selected from /pricing/ if you came from a package card.</p>
+            <p id="q-package-hint" class="qt-hint">Pre-selected from /pricing/ if you came from a package card.</p>
           </div>
 
           <div class="qt-field qt-field-pair">
@@ -125,6 +126,7 @@ const contactLd = {
                 min="30"
                 max="130"
                 step="1"
+                required
                 placeholder="e.g. 75"
                 autocomplete="off"
               />
@@ -160,6 +162,7 @@ const contactLd = {
             <div class="qt-checks">
               <label class="qt-check"><input type="checkbox" name="extras" value="cable-concealment" /> In-wall cable concealment</label>
               <label class="qt-check"><input type="checkbox" name="extras" value="soundbar" /> Soundbar mount</label>
+              <label class="qt-check"><input type="checkbox" name="extras" value="full-motion-bracket" /> Full-motion bracket upgrade</label>
               <label class="qt-check"><input type="checkbox" name="extras" value="above-fireplace" /> Above-fireplace lift</label>
               <label class="qt-check"><input type="checkbox" name="extras" value="power-relocation" /> New power point behind TV</label>
               <label class="qt-check"><input type="checkbox" name="extras" value="outdoor" /> Outdoor / alfresco install</label>
@@ -350,7 +353,7 @@ const contactLd = {
   </article>
 </BaseLayout>
 
-{/* ===== JS: preselect package, show filename, POST to n8n ===== */}
+{/* ===== JS: preselect package, show filename, POST to lead intake ===== */}
 <script is:inline define:vars={{ webhook: BUSINESS.webhooks.photoQuote }}>
   (function () {
     const form = document.getElementById("quote-form");
@@ -371,6 +374,21 @@ const contactLd = {
           }
         }
       }
+      const count = params.get("count");
+      if (count && /^(?:[1-9]|10)$/.test(count)) {
+        const countInput = document.getElementById("q-tv-count");
+        if (countInput) countInput.value = count;
+        const packageHint = document.getElementById("q-package-hint");
+        if (packageHint && Number(count) > 1) {
+          packageHint.textContent = `Pricing calculator selection: ${count} TVs. Add any differences between them in the notes below.`;
+        }
+      }
+      const allowedExtras = new Set(["cable-concealment", "soundbar", "full-motion-bracket"]);
+      params.getAll("extra").slice(0, 6).forEach((extra) => {
+        if (!allowedExtras.has(extra)) return;
+        const checkbox = form.querySelector(`input[name="extras"][value="${extra}"]`);
+        if (checkbox) checkbox.checked = true;
+      });
     } catch (err) {
       // non-fatal — form still works without preselection
       console.warn("Could not preselect package:", err);
@@ -392,25 +410,32 @@ const contactLd = {
       });
     }
 
-    // ---- Submit handler: POST JSON to /api/n8n/lead ----
-    // The Pages Function proxy adds server-side fields (real IP, country,
-    // UA, referer) and forwards to the n8n lead webhook. The n8n Code node
-    // branches on `source` to format the email subject + body.
-    //
-    // NOTE on photos: file uploads are NOT included in the JSON payload yet
-    // (n8n flow doesn't handle Gmail attachments — Phase 2). We DO capture
-    // filenames + sizes as metadata so Tom can ask the customer to reply
-    // with the photos when he reaches out.
+    // ---- Submit handler: POST multipart data to the canonical lead intake ----
+    // Photos are stored in private R2; lead details and delivery state are kept
+    // in Operations D1 and copied to the private Website Leads Sheet tab.
     const submitEl = document.getElementById("q-submit");
     const statusEl = document.getElementById("q-status");
+    let submissionId = "";
 
-    function getUtm() {
+    function getTracking() {
+      if (typeof window.brisbaneAttribution === "function") {
+        return window.brisbaneAttribution();
+      }
       const p = new URLSearchParams(location.search);
-      const out = {};
+      const out = { referrer: document.referrer || "", landing_page: location.pathname };
       ["utm_source","utm_medium","utm_campaign","utm_term","utm_content"].forEach((k) => {
         if (p.get(k)) out[k] = p.get(k);
       });
       return out;
+    }
+
+    function currentSubmissionId() {
+      if (!submissionId) {
+        submissionId = typeof window.brisbaneNewSubmissionId === "function"
+          ? window.brisbaneNewSubmissionId()
+          : "web-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 14);
+      }
+      return submissionId;
     }
 
     form.addEventListener("submit", async (ev) => {
@@ -436,58 +461,48 @@ const contactLd = {
       const pkgEl = document.querySelector(`#q-package option[value="${pkgId}"]`);
       const pkgLabel = pkgEl ? pkgEl.textContent.trim() : pkgId;
 
-      const payload = {
-        source: "quote-page",
-        page_url: location.href,
-        lead: {
-          name: (fd.get("name") || "").toString().trim(),
-          phone: (fd.get("phone") || "").toString().trim(),
-          email: (fd.get("email") || "").toString().trim(),
-          suburb: (fd.get("suburb") || "").toString().trim(),
-          postcode: (fd.get("postcode") || "").toString().trim(),
-        },
-        job: {
-          package: pkgId,
-          package_label: pkgLabel,
-          tv_size: (fd.get("tvSize") || "").toString().trim(),
-          tv_brand: (fd.get("tvBrand") || "").toString().trim(),
-          wall_type: (fd.get("wallType") || "").toString().trim(),
-          addons: fd.getAll("extras").map((v) => v.toString()),
-          preferred_date: (fd.get("preferredDay") || "").toString().trim(),
-          notes: (fd.get("notes") || "").toString().trim(),
-          photos_attached: photoFiles.map((f) => ({
-            name: f.name,
-            size_kb: Math.round(f.size / 1024),
-          })),
-        },
-        tracking: Object.assign(
-          { referrer: document.referrer || "" },
-          getUtm()
-        ),
-        // Honeypot — if a bot filled this, the Pages Function silently 200s
-        _bts_check: (fd.get("_bts_check") || "").toString(),
-      };
+      const tracking = getTracking();
+      const payload = new FormData();
+      const add = (key, value) => payload.append(key, String(value || "").trim());
+      add("submission_id", currentSubmissionId());
+      add("form_source", "quote-page");
+      add("page_url", location.origin + location.pathname);
+      add("name", fd.get("name"));
+      add("phone", fd.get("phone"));
+      add("email", fd.get("email"));
+      add("suburb", fd.get("suburb"));
+      add("postcode", fd.get("postcode"));
+      add("service", pkgLabel);
+      add("package", pkgId);
+      add("tv_count", fd.get("tvCount") || "1");
+      add("tv_size", fd.get("tvSize"));
+      add("tv_brand", fd.get("tvBrand"));
+      add("wall_type", fd.get("wallType"));
+      add("addons_json", JSON.stringify(fd.getAll("extras").map((v) => v.toString())));
+      add("preferred_date", fd.get("preferredDay"));
+      add("message", fd.get("notes"));
+      add("consent", fd.get("consent") === "yes" ? "yes" : "");
+      add("_bts_check", fd.get("_bts_check"));
+      ["referrer", "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content", "utm_id", "landing_page", "source_platform"].forEach((key) => {
+        if (tracking[key]) add(key, tracking[key]);
+      });
+      photoFiles.forEach((file) => payload.append("photo", file, file.name));
 
-      // Customer sees friendly text. Developer sees the full picture in
-      // the browser console (filter: [lead]) — payload, HTTP status,
-      // honeypot trips, and any upstream error code from the Pages Function.
+      // Customer sees friendly text while the console retains status only.
+      // Contact details and free-text answers are never logged in the browser.
       const FALLBACK_TEXT =
         "Hmm, that didn't send. Please call 0432 145 101 or email admin@brisbanetvs.com and we'll sort it manually.";
-
-      console.log("[lead] POST", webhook, payload);
 
       let res, bodyText, bodyJson;
       try {
         res = await fetch(webhook, {
           method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(payload),
+          body: payload,
         });
         bodyText = await res.text();
         try { bodyJson = JSON.parse(bodyText); } catch (_) { bodyJson = null; }
-        console.log("[lead] response", res.status, bodyJson || bodyText);
       } catch (err) {
-        console.error("[lead] network error", err);
+        console.error("[lead] network error");
         statusEl.textContent = FALLBACK_TEXT;
         statusEl.classList.add("qt-form-status-err");
         submitEl.disabled = false;
@@ -495,10 +510,9 @@ const contactLd = {
         return;
       }
 
-      // Honeypot trip → silent for the customer (we don't tell bots they were caught),
-      // but loud in the console so a developer testing knows why nothing happened.
+      // Honeypot trips stay deliberately generic for the customer and console.
       if (bodyJson && bodyJson.filtered === "honeypot") {
-        console.warn("[lead] honeypot tripped on field:", bodyJson.tripped, "— email NOT sent");
+        console.warn("[lead] submission filtered");
         statusEl.textContent = FALLBACK_TEXT;
         statusEl.classList.add("qt-form-status-err");
         submitEl.disabled = false;
@@ -508,7 +522,7 @@ const contactLd = {
 
       // Upstream/proxy error
       if (!res.ok) {
-        console.error("[lead] failed:", res.status, bodyJson || bodyText);
+        console.error("[lead] failed:", res.status);
         statusEl.textContent = FALLBACK_TEXT;
         statusEl.classList.add("qt-form-status-err");
         submitEl.disabled = false;
@@ -517,14 +531,14 @@ const contactLd = {
       }
 
       // Success
-      console.log("[lead] sent OK");
-      window.brisbaneTrack?.("generate_lead", { lead_source: "quote_page" });
-      const photoNote =
-        photoFiles.length > 0
-          ? " We'll reply asking for the photo" + (photoFiles.length > 1 ? "s" : "") + "."
-          : "";
+      const attribution = tracking;
+      window.brisbaneTrack?.("generate_lead", {
+        lead_source: "quote_page",
+        traffic_source: attribution.source_platform || "website",
+      });
+      submissionId = "";
       statusEl.textContent =
-        "Thanks — your quote request is in. We'll be in touch within the hour." + photoNote;
+        "Thanks — your quote request is in. We'll be in touch within the hour.";
       statusEl.classList.add("qt-form-status-ok");
       form.reset();
       if (fileName) fileName.textContent = "No file chosen";

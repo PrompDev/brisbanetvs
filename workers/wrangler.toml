@@ -4,6 +4,12 @@ compatibility_date = "2026-06-05"
 account_id = "8d813ed7931872a79e12d13a6669b601"
 route = "brisbanetvs.com/api/*"
 
+[vars]
+GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-3UnBWEg2cYkx-QjM29GNE7A48eMYQ5Dm9fOBnb2AxW1Wgesrt9fKs_YjEdVAMDC0YA/exec"
+
+[triggers]
+crons = ["*/5 * * * *"]
+
 [[r2_buckets]]
 binding = "LEAD_UPLOADS"
 bucket_name = "brisbanetvs-lead-uploads"
@@ -21,4 +27,5 @@ database_id = "56374f18-ad57-47e3-a536-800de56c665d"
 migrations_dir = "migrations"
 
 # Set with: npx wrangler secret put LEAD_SYNC_SECRET
+# Set with: npx wrangler secret put GOOGLE_APPS_SCRIPT_SECRET
 # This is intentionally a secret, never a [vars] value.

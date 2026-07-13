@@ -96,7 +96,7 @@ Not if we spec them right. We use stainless or galvanised rod on any wall within
 
 ## Want a quote on your wall?
 
-Send us a photo of the wall, the TV model, and a rough ceiling height — we'll come back with a firm price within one business day. [Book a free site check](tel:0432145101) or call us on [07 3186 8644](tel:+61731868644). We cover the inner north, the inner east, and the bayside five days a week, and a senior installer handles every brick job personally.
+Send us a photo of the wall, the TV model, and a rough ceiling height — we'll come back with a firm price within one business day. [Book a free site check](tel:0432145101) or call us on [0432 145 101](tel:0432145101). We cover the inner north, the inner east, and the bayside five days a week, and a senior installer handles every brick job personally.
 
 ---
 

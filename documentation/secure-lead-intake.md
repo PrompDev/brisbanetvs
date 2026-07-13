@@ -3,13 +3,23 @@
 The public form endpoints now write canonical lead records to the
 brisbanetvs-operations D1 database. This is the operational copy used by
 the staff portal. It does not send email, call n8n, or call Twenty CRM.
+Website leads are also queued for a private, server-to-server copy into the
+`Website Leads` tab of the existing Brisbane TVs lead spreadsheet.
 
-The D1 migration is at
-[workers/migrations/0001_operations_intake.sql](../workers/migrations/0001_operations_intake.sql).
-It creates:
+The D1 schema is split across two migrations:
+
+- [workers/migrations/0001_operations_intake.sql](../workers/migrations/0001_operations_intake.sql)
+  creates contacts, leads, uploads, intake events, sync requests and the
+  unused mailbox foundation;
+- [workers/migrations/0003_website_sheet_delivery.sql](../workers/migrations/0003_website_sheet_delivery.sql)
+  creates the retry-safe website-to-Sheet delivery ledger and index.
+
+Together they create:
 
 - contacts, leads, lead_uploads, and intake_events;
 - sync_requests for signed Apps Script batch replay protection;
+- lead_deliveries for retry-safe website-to-Sheet delivery state (migration
+  0003, not migration 0001);
 - mail_messages, mail_drafts, and mail_attachments as an empty mailbox
   foundation only.
 
@@ -20,11 +30,52 @@ postcode, platform, tv_size, and status. The unique pair is
 
 ## Public form endpoints
 
-- POST /api/website-lead accepts the existing multipart or URL-encoded
-  website forms and stores the lead plus any allowed image uploads.
-- POST /api/n8n/lead accepts the existing JSON quote and footer payloads.
+- POST /api/website-lead accepts the multipart photo-quote form (and legacy
+  URL-encoded submissions) and stores the lead plus any allowed image uploads.
+- POST /api/n8n/lead accepts the existing JSON footer and other compact forms.
   Its historical name remains for browser compatibility; it no longer
   forwards submissions to n8n.
+
+All public forms generate one stable `submission_id` per enquiry attempt.
+D1 uses that value as the website lead's external ID, so a browser retry cannot
+create a second lead. After D1 accepts the lead, the Worker queues a private
+copy for Google Apps Script. The form does not receive the Apps Script secret
+and does not post customer details directly to Google.
+
+## Website leads copied to Google Sheets
+
+Website lead delivery uses the existing private Apps Script receiver and a
+separate `Website Leads` tab. Keeping website rows out of the Meta `Leads` tab
+prevents the existing Sheet-to-D1 synchroniser from importing the same website
+lead back into Operations as a duplicate.
+
+- Sheet row ID: `website:<submission_id>`
+- Immediate delivery: Cloudflare `waitUntil()` after the D1 commit
+- Recovery: scheduled Worker retry every five minutes
+- Recovery cadence: eight fast attempts with bounded exponential backoff,
+  then a slow retry every six hours until delivery succeeds
+- Idempotency: Apps Script deduplicates the stable Sheet row ID
+- Reconciliation: each lead and initial delivery row commit together, and the
+  scheduler also repairs any website lead missing a delivery ledger row
+- Delivery visibility: aggregate delivered, pending, failed and missing-ledger
+  counts appear on `/operations/analytics/`
+
+The Worker requires:
+
+- `GOOGLE_APPS_SCRIPT_URL` as a non-secret Worker variable;
+- `GOOGLE_APPS_SCRIPT_SECRET` as an encrypted Worker secret matching the
+  receiver's existing `INGEST_SECRET` Script Property.
+
+No contact values are stored in the retry table. It contains only a lead
+reference, status, retry timestamps and a bounded error code.
+
+The Sheet keeps its compact existing schema. Calculator TV count, TV brand,
+selected add-ons and uploaded-photo count are appended to the `notes` cell;
+the package label remains in the service column.
+
+Production was checked before activation and had no pre-existing website
+leads, so no historical backfill is required. Do not bulk-copy old rows through
+the receiver without first suppressing its calendar-call automation.
 
 Image files are stored with an opaque R2 path:
 
@@ -80,7 +131,9 @@ const signature = bytes
   .join("");
 ~~~
 
-The JSON body is bounded to 100 leads and 512 KiB:
+The JSON body is bounded to 15 leads and 512 KiB. Fifteen keeps the signed
+Sheet-to-D1 sync below the Workers Free-plan D1 query ceiling because each
+canonical lead is written with three statements:
 
 ~~~json
 {
@@ -123,10 +176,11 @@ lead records. Reusing the ID with a different body returns 409.
    npx wrangler d1 migrations apply brisbanetvs-operations --remote --config workers/wrangler.toml
    ~~~
 
-2. Set the Worker secret interactively:
+2. Set both Worker secrets interactively:
 
    ~~~powershell
    npx wrangler secret put LEAD_SYNC_SECRET --config workers/wrangler.toml
+   npx wrangler secret put GOOGLE_APPS_SCRIPT_SECRET --config workers/wrangler.toml
    ~~~
 
 3. Deploy the Worker:
@@ -135,6 +189,11 @@ lead records. Reusing the ID with a different body returns 409.
    npx wrangler deploy --config workers/wrangler.toml
    ~~~
 
-4. Only then deploy the Apps Script update and send a small signed test
-   batch. Check the protected Operations page before retiring the Sheet as
-   the original source.
+4. Store `GOOGLE_APPS_SCRIPT_SECRET` in the Brisbane TVs Pages project as
+   well. The Pages preview fallback uses the same canonical intake path; the
+   production custom domain is still owned by the standalone Worker route.
+
+5. Deploy Pages, then run one labelled, retry-safe test. Confirm one D1 lead,
+   one `Website Leads` row and a delivered queue state before deleting the
+   synthetic record. Check the protected Operations page before considering
+   the integration complete.

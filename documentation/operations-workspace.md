@@ -20,6 +20,8 @@ in the pages where it is actually needed.
 
 - Public website and lead-sheet submissions are stored in the protected
   Operations D1 database.
+- Website submissions are copied server-side to the private spreadsheet's
+  separate `Website Leads` tab, with stable IDs and a five-minute retry queue.
 - Staff APIs sit behind Cloudflare Access and also verify the signed Access
   token before reading any customer data.
 - Lead-sheet sync is HMAC-signed, time-limited and replay-safe.
@@ -30,26 +32,18 @@ in the pages where it is actually needed.
 - Drafts are saved in D1 only. There is no send endpoint, email binding or
   automatic reply.
 
-## Google Analytics: one remaining setup step
+## Website analytics and lead signals
 
-GA4 tracking is already installed on the public site and waits for visitor
-consent. It records aggregate website use and a `generate_lead` event after a
-successful form submission; it does not send names, emails, phone numbers or
-form answers to Analytics.
+GA4 and Search Console reporting are connected. Public GA4 tracking waits for
+visitor consent and records aggregate use plus successful `generate_lead`
+events; names, emails, phone numbers and form answers are never sent to GA4.
 
-The protected Analytics page needs one private server credential before it can
-query GA4:
-
-1. Create a **JSON key** for the existing read-only GA4 service account.
-2. Store the downloaded JSON exactly once as the encrypted Cloudflare Pages
-   production secret named `GA4_SERVICE_ACCOUNT_JSON`.
-3. Open `/operations/analytics/` while signed in and confirm the aggregate
-   figures load.
-
-The service account already has GA4 Viewer-only access and the Google Analytics
-Data API is enabled. The JSON key must never be committed, pasted into the
-website, shared in chat, or placed in a browser. Creating it downloads a
-private key file, so it is deliberately left for an explicit owner approval.
+Facebook/Instagram campaign attribution is retained for the browser session,
+so a visitor can move from an ad landing page to `/quote/` without losing the
+source, campaign or first landing page attached to the saved lead. The protected
+Analytics page combines consent-aware traffic with aggregate actual-lead counts
+from D1, including source, privacy-filtered campaign labels, lead pages and
+website-to-Sheet delivery health.
 
 ## Team inbox: ready, but not switched over
 

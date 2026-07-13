@@ -6423,33 +6423,49 @@
     var status = document.getElementById('footerLeadStatus');
     var btn = form.querySelector('button[type="submit"]');
     var origBtnText = btn ? btn.textContent : '';
+    var submissionId = '';
 
-    function getUtm() {
+    function getTracking() {
+        if (typeof window.brisbaneAttribution === 'function') {
+            return window.brisbaneAttribution();
+        }
         var p = new URLSearchParams(location.search);
-        var out = {};
+        var out = { referrer: document.referrer || '', landing_page: location.pathname };
         ['utm_source','utm_medium','utm_campaign','utm_term','utm_content'].forEach(function (k) {
             if (p.get(k)) out[k] = p.get(k);
         });
         return out;
     }
 
+    function currentSubmissionId() {
+        if (!submissionId) {
+            submissionId = typeof window.brisbaneNewSubmissionId === 'function'
+                ? window.brisbaneNewSubmissionId()
+                : 'web-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 14);
+        }
+        return submissionId;
+    }
+
     form.addEventListener('submit', async function (ev) {
         ev.preventDefault();
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
         var email = (form.email.value || '').trim();
-        if (!email) return;
 
         if (status) { status.textContent = 'Sending…'; status.style.color = '#d8d8d8'; }
         if (btn) { btn.disabled = true; btn.textContent = '…'; }
 
         var payload = {
-            source: 'footer-subscribe',
-            page_url: location.href,
+            submission_id: currentSubmissionId(),
+            source: 'footer-quote',
+            page_url: location.origin + location.pathname,
             lead: { email: email },
-            tracking: Object.assign({ referrer: document.referrer || '' }, getUtm()),
+            tracking: getTracking(),
             _bts_check: form._bts_check ? form._bts_check.value : ''
         };
 
-        console.log('[lead] POST /api/n8n/lead', payload);
         var res, bodyText, bodyJson = null;
         try {
             res = await fetch('/api/n8n/lead', {
@@ -6459,27 +6475,30 @@
             });
             bodyText = await res.text();
             try { bodyJson = JSON.parse(bodyText); } catch (_) {}
-            console.log('[lead] response', res.status, bodyJson || bodyText);
         } catch (err) {
-            console.error('[lead] network error', err);
+            console.error('[lead] network error');
             if (btn) { btn.disabled = false; btn.textContent = origBtnText; }
             if (status) { status.textContent = "Couldn't send — please call 0432 145 101."; status.style.color = '#ff9b9b'; }
             return;
         }
         if (bodyJson && bodyJson.filtered === 'honeypot') {
-            console.warn('[lead] honeypot tripped:', bodyJson.tripped, '— email NOT sent');
+            console.warn('[lead] submission filtered');
             if (btn) { btn.disabled = false; btn.textContent = origBtnText; }
             if (status) { status.textContent = "Couldn't send — please call 0432 145 101."; status.style.color = '#ff9b9b'; }
             return;
         }
         if (!res.ok) {
-            console.error('[lead] failed:', res.status, bodyJson || bodyText);
+            console.error('[lead] failed:', res.status);
             if (btn) { btn.disabled = false; btn.textContent = origBtnText; }
             if (status) { status.textContent = "Couldn't send — please call 0432 145 101."; status.style.color = '#ff9b9b'; }
             return;
         }
-        console.log('[lead] sent OK');
-        window.brisbaneTrack?.('generate_lead', { lead_source: 'homepage_footer' });
+        var attribution = getTracking();
+        window.brisbaneTrack?.('generate_lead', {
+            lead_source: 'homepage_footer',
+            traffic_source: attribution.source_platform || 'website'
+        });
+        submissionId = '';
         form.style.display = 'none';
         if (status) { status.textContent = "Thanks — we'll be in touch within 2 hours."; status.style.color = '#9be39b'; }
     });

@@ -8,9 +8,15 @@ function asCount(value) {
 
 function platformLabel(value) {
   const text = String(value || "").toLowerCase();
-  if (text.includes("instagram")) return "Instagram";
-  if (text.includes("facebook") || text.includes("meta")) return "Facebook";
-  if (text.includes("website") || text.includes("web")) return "Website";
+  if (text === "ig" || text.includes("instagram")) return "Instagram";
+  if (text === "fb" || text.includes("facebook")) return "Facebook";
+  if (text.includes("meta")) return "Meta (unattributed)";
+  if (
+    text.includes("website")
+    || text.includes("web")
+    || text.includes("quote-page")
+    || text.includes("footer")
+  ) return "Website";
   return "Other";
 }
 
@@ -80,7 +86,7 @@ export async function onRequestGet({ request, env }) {
       byPlatform: aggregateBuckets(
         platformResult.results,
         platformLabel,
-        ["Facebook", "Instagram", "Website", "Other"],
+        ["Facebook", "Instagram", "Meta (unattributed)", "Website", "Other"],
       ),
       byTvSize: aggregateBuckets(
         sizeResult.results,
