@@ -1,5 +1,9 @@
-import { onRequestOptions, onRequestPost } from "../functions/api/website-lead.js";
-import { onRequestGet as onUploadGet } from "../functions/api/lead-upload.js";
+import {
+  onLeadSyncPost,
+  onN8nLeadPost,
+  onRequestOptions,
+  onRequestPost,
+} from "../functions/api/website-lead.js";
 
 function notFound() {
   return new Response("Not found", { status: 404 });
@@ -15,8 +19,14 @@ export default {
       return new Response("Method Not Allowed", { status: 405 });
     }
 
-    if (url.pathname === "/api/lead-upload") {
-      if (request.method === "GET") return onUploadGet({ request, env, ctx });
+    if (url.pathname === "/api/n8n/lead") {
+      if (request.method === "OPTIONS") return onRequestOptions({ request, env, ctx });
+      if (request.method === "POST") return onN8nLeadPost({ request, env, ctx });
+      return new Response("Method Not Allowed", { status: 405 });
+    }
+
+    if (url.pathname === "/api/lead-sync") {
+      if (request.method === "POST") return onLeadSyncPost({ request, env, ctx });
       return new Response("Method Not Allowed", { status: 405 });
     }
 

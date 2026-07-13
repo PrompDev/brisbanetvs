@@ -1,154 +1,100 @@
-import { createRemoteJWKSet, jwtVerify } from "jose";
+import { hasOperationsDatabase, json, requireOperationsAccess } from "./_lib/auth.js";
+import { brisbaneDay, brisbaneDayDaysAgo, leadRecency } from "./_lib/dates.js";
 
-const JSON_HEADERS = {
-  "cache-control": "private, no-store",
-  "content-type": "application/json; charset=utf-8",
-  "referrer-policy": "no-referrer",
-  "x-content-type-options": "nosniff",
-};
-
-const ACCESS_HEADER = "cf-access-jwt-assertion";
-const PLATFORM_LABELS = new Set(["Facebook", "Instagram", "Website", "Other"]);
-const TV_SIZE_LABELS = new Set(["Under 55\"", "55-64\"", "65-74\"", "75\"+", "Unknown"]);
-const RECENCY_LABELS = new Set(["today", "yesterday", "older", "none", "unknown"]);
-const HEALTH_LABELS = new Set(["healthy", "attention", "never", "unknown"]);
-
-function json(body, status = 200) {
-  return new Response(JSON.stringify(body), { status, headers: JSON_HEADERS });
+function asCount(value) {
+  const count = Number(value);
+  return Number.isSafeInteger(count) && count >= 0 ? count : 0;
 }
 
-function nonEmptyString(value) {
-  return typeof value === "string" && value.trim() ? value.trim() : null;
+function platformLabel(value) {
+  const text = String(value || "").toLowerCase();
+  if (text.includes("instagram")) return "Instagram";
+  if (text.includes("facebook") || text.includes("meta")) return "Facebook";
+  if (text.includes("website") || text.includes("web")) return "Website";
+  return "Other";
 }
 
-function configuredTeamDomain(value) {
-  const raw = nonEmptyString(value);
-  if (!raw) return null;
+function tvSizeLabel(value) {
+  const match = String(value || "").match(/\b(\d{2,3})\b/);
+  if (!match) return "Unknown";
+  const size = Number(match[1]);
+  if (size < 55) return 'Under 55"';
+  if (size < 65) return '55-64"';
+  if (size < 75) return '65-74"';
+  return '75"+';
+}
 
-  try {
-    const url = new URL(raw);
-    if (url.protocol !== "https:" || !url.hostname.endsWith(".cloudflareaccess.com")) {
-      return null;
-    }
-    return url.origin;
-  } catch {
-    return null;
+function aggregateBuckets(rows, labelFor, order) {
+  const counts = new Map(order.map((label) => [label, 0]));
+  for (const row of rows || []) {
+    const label = labelFor(row.value);
+    counts.set(label, (counts.get(label) || 0) + asCount(row.count));
   }
-}
-
-function configuredScriptUrl(value) {
-  const raw = nonEmptyString(value);
-  if (!raw) return null;
-
-  try {
-    const url = new URL(raw);
-    return url.protocol === "https:" ? url.toString() : null;
-  } catch {
-    return null;
-  }
-}
-
-function portalConfig(env) {
-  const teamDomain = configuredTeamDomain(env.PORTAL_ACCESS_TEAM_DOMAIN);
-  const audience = nonEmptyString(env.PORTAL_ACCESS_AUD);
-  const appScriptUrl = configuredScriptUrl(env.PORTAL_APPS_SCRIPT_URL);
-  const readSecret = nonEmptyString(env.PORTAL_READ_SECRET);
-
-  return teamDomain && audience && appScriptUrl && readSecret
-    ? { teamDomain, audience, appScriptUrl, readSecret }
-    : null;
-}
-
-async function hasValidAccessJwt(request, config) {
-  const token = request.headers.get(ACCESS_HEADER);
-  if (!token) return false;
-
-  try {
-    const jwks = createRemoteJWKSet(new URL("/cdn-cgi/access/certs", config.teamDomain));
-    await jwtVerify(token, jwks, {
-      audience: config.audience,
-      issuer: config.teamDomain,
-    });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function count(value) {
-  return Number.isInteger(value) && value >= 0 ? value : 0;
-}
-
-function buckets(value, allowedLabels, maximum) {
-  if (!Array.isArray(value)) return [];
-
-  return value.slice(0, maximum).flatMap((item) => {
-    if (!item || typeof item !== "object" || !allowedLabels.has(item.label)) return [];
-    return [{ label: item.label, count: count(item.count) }];
-  });
-}
-
-/**
- * Treat the Apps Script response as untrusted. This whitelist is a second
- * privacy boundary: contact details, raw form answers, IDs, timestamps and
- * arbitrary labels cannot reach the browser even if the sheet script changes.
- */
-function safeSummary(payload) {
-  if (!payload || typeof payload !== "object" || payload.ok !== true) return null;
-
-  return {
-    totalLeads: count(payload.totalLeads),
-    leadsToday: count(payload.leadsToday),
-    leadsLast7Days: count(payload.leadsLast7Days),
-    latestLeadRecency: RECENCY_LABELS.has(payload.latestLeadRecency)
-      ? payload.latestLeadRecency
-      : "unknown",
-    syncHealth: HEALTH_LABELS.has(payload.syncHealth) ? payload.syncHealth : "unknown",
-    lastRunRecency: RECENCY_LABELS.has(payload.lastRunRecency)
-      ? payload.lastRunRecency
-      : "unknown",
-    byPlatform: buckets(payload.byPlatform, PLATFORM_LABELS, 4),
-    byTvSize: buckets(payload.byTvSize, TV_SIZE_LABELS, 5),
-  };
+  return order
+    .map((label) => ({ label, count: counts.get(label) || 0 }))
+    .filter((item) => item.count > 0);
 }
 
 export async function onRequestGet({ request, env }) {
-  const config = portalConfig(env);
-  if (!config) {
-    console.error(JSON.stringify({ event: "operations_summary_not_configured" }));
-    return json({ ok: false, error: "portal_unavailable" }, 503);
+  const access = await requireOperationsAccess(request, env);
+  if (access.response) return access.response;
+  if (!hasOperationsDatabase(env)) {
+    console.error(JSON.stringify({ event: "operations_summary_database_not_configured" }));
+    return json({ ok: false, error: "lead_store_unavailable" }, 503);
   }
 
-  if (!(await hasValidAccessJwt(request, config))) {
-    return json({ ok: false, error: "access_denied" }, 403);
-  }
+  const now = new Date();
+  const today = brisbaneDay(now);
+  const weekStart = brisbaneDayDaysAgo(6, now);
 
   try {
-    const upstream = await fetch(config.appScriptUrl, {
-      method: "POST",
-      headers: { "content-type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ type: "portal_summary", secret: config.readSecret }),
-    });
+    const [totalRow, todayRow, weekRow, latestRow, platformResult, sizeResult] = await Promise.all([
+      env.OPERATIONS_DB.prepare("SELECT COUNT(*) AS count FROM leads").first(),
+      env.OPERATIONS_DB.prepare("SELECT COUNT(*) AS count FROM leads WHERE received_day = ?")
+        .bind(today)
+        .first(),
+      env.OPERATIONS_DB.prepare(
+        "SELECT COUNT(*) AS count FROM leads WHERE received_day >= ? AND received_day <= ?",
+      )
+        .bind(weekStart, today)
+        .first(),
+      env.OPERATIONS_DB.prepare(
+        "SELECT received_at FROM leads WHERE received_at IS NOT NULL ORDER BY received_at DESC, id DESC LIMIT 1",
+      ).first(),
+      env.OPERATIONS_DB.prepare(
+        "SELECT platform AS value, COUNT(*) AS count FROM leads GROUP BY platform LIMIT 20",
+      ).all(),
+      env.OPERATIONS_DB.prepare(
+        "SELECT tv_size AS value, COUNT(*) AS count FROM leads GROUP BY tv_size LIMIT 20",
+      ).all(),
+    ]);
 
-    if (!upstream.ok) {
-      console.error(JSON.stringify({
-        event: "operations_summary_upstream_failed",
-        upstreamStatus: upstream.status,
-      }));
-      return json({ ok: false, error: "summary_unavailable" }, 503);
-    }
-
-    // The connected Apps Script is purpose-built to return a tiny aggregate.
-    // We still narrow it with safeSummary() before returning anything.
-    const summary = safeSummary(await upstream.json());
-    if (!summary) {
-      console.error(JSON.stringify({ event: "operations_summary_invalid_payload" }));
-      return json({ ok: false, error: "summary_unavailable" }, 503);
-    }
+    const totalLeads = asCount(totalRow?.count);
+    const latestLeadRecency = latestRow?.received_at ? leadRecency(latestRow.received_at, now) : "none";
+    const summary = {
+      totalLeads,
+      leadsToday: asCount(todayRow?.count),
+      leadsLast7Days: asCount(weekRow?.count),
+      latestLeadRecency,
+      syncHealth: totalLeads === 0 ? "empty" : (latestLeadRecency === "older" ? "attention" : "ready"),
+      byPlatform: aggregateBuckets(
+        platformResult.results,
+        platformLabel,
+        ["Facebook", "Instagram", "Website", "Other"],
+      ),
+      byTvSize: aggregateBuckets(
+        sizeResult.results,
+        tvSizeLabel,
+        ['Under 55"', '55-64"', '65-74"', '75"+', "Unknown"],
+      ),
+    };
 
     return json({ ok: true, summary });
-  } catch {
-    console.error(JSON.stringify({ event: "operations_summary_request_failed" }));
-    return json({ ok: false, error: "summary_unavailable" }, 503);
+  } catch (error) {
+    console.error(JSON.stringify({
+      event: "operations_summary_query_failed",
+      message: error instanceof Error ? error.message.slice(0, 160) : "unknown",
+    }));
+    return json({ ok: false, error: "lead_store_unavailable" }, 503);
   }
 }

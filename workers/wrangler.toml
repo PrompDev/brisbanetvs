@@ -4,9 +4,15 @@ compatibility_date = "2026-06-05"
 account_id = "8d813ed7931872a79e12d13a6669b601"
 route = "brisbanetvs.com/api/*"
 
-[vars]
-TWENTY_API_URL = "https://api.twenty.com"
-
 [[r2_buckets]]
 binding = "LEAD_UPLOADS"
 bucket_name = "brisbanetvs-lead-uploads"
+
+[[d1_databases]]
+binding = "OPERATIONS_DB"
+database_name = "brisbanetvs-operations"
+database_id = "56374f18-ad57-47e3-a536-800de56c665d"
+migrations_dir = "migrations"
+
+# Set with: npx wrangler secret put LEAD_SYNC_SECRET
+# This is intentionally a secret, never a [vars] value.

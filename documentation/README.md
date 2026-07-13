@@ -19,6 +19,9 @@ you're not sure how a piece of the site works.
 6. [**Glossary**](./06-glossary.md) — one-sentence definitions of every
    piece of jargon you'll see.
 
+7. [**Secure lead intake**](./secure-lead-intake.md) - how website and
+   lead-sheet submissions reach the protected Operations register.
+
 ## If something breaks
 
 - Blog won't build → check `astro/README.md` → Troubleshooting.
