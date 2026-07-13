@@ -24,6 +24,10 @@ import MarketingLayout from "~/layouts/MarketingLayout.astro";
         </ul>
         <h2>Sharing</h2>
         <p>We do not sell customer information. We only share details where required to deliver the service, such as with a licensed electrician when electrical work is needed, or where legally required.</p>
+        <h2>Analytics and cookies</h2>
+        <p>With your permission, we use Google Analytics to understand general website use, such as which pages are helpful and whether quote requests are completed. We do not send names, email addresses, phone numbers, postcodes, lead details or other contact information to Google Analytics.</p>
+        <p>You can choose whether to allow analytics when you visit the site, and change that choice at any time.</p>
+        <button class="analytics-choice" type="button" data-analytics-preferences>Change analytics preference</button>
         <h2>Storage and security</h2>
         <p>Customer messages, booking notes and quote details are kept in business systems used by Brisbane TVs. We take reasonable steps to protect this information from misuse, loss and unauthorised access.</p>
         <h2>Access and correction</h2>
@@ -44,5 +48,7 @@ import MarketingLayout from "~/layouts/MarketingLayout.astro";
   .legal-card h2:first-child { margin-top: 0; }
   .legal-card p, .legal-card li { line-height: 1.72; color: #4b4740; }
   .legal-card ul { padding-left: 1.2rem; }
+  .analytics-choice { cursor: pointer; border: 1px solid #8b6f47; border-radius: 4px; padding: .65rem .85rem; background: #fff; color: #5c482e; font: inherit; font-weight: 700; }
+  .analytics-choice:hover, .analytics-choice:focus-visible { background: #f7f1e8; }
   .legal-contact { margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid #ece5d8; }
 </style>

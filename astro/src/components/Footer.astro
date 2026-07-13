@@ -152,6 +152,7 @@
                         return;
                       }
                       console.log('[lead] sent OK');
+                      window.brisbaneTrack?.('generate_lead', { lead_source: 'footer' });
                       form.style.display = 'none';
                       status.textContent = "Thanks — we'll be in touch within 2 hours.";
                       status.style.color = '#9be39b';

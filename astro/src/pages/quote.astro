@@ -518,6 +518,7 @@ const contactLd = {
 
       // Success
       console.log("[lead] sent OK");
+      window.brisbaneTrack?.("generate_lead", { lead_source: "quote_page" });
       const photoNote =
         photoFiles.length > 0
           ? " We'll reply asking for the photo" + (photoFiles.length > 1 ? "s" : "") + "."

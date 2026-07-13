@@ -3787,6 +3787,7 @@
             .tab-nav::-webkit-scrollbar { display: none; }
         }
     </style>
+    <script src="/scripts/brisbane-analytics.js" defer></script>
 </head>
 <body>
 
@@ -6478,6 +6479,7 @@
             return;
         }
         console.log('[lead] sent OK');
+        window.brisbaneTrack?.('generate_lead', { lead_source: 'homepage_footer' });
         form.style.display = 'none';
         if (status) { status.textContent = "Thanks — we'll be in touch within 2 hours."; status.style.color = '#9be39b'; }
     });
