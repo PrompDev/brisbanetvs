@@ -78,6 +78,8 @@ historically named `/api/n8n/lead`. Both store canonical website leads in D1;
 the photo-quote route also saves selected images privately in R2. Pages preview
 fallbacks import those same canonical handlers rather than forwarding to n8n,
 so preview and production no longer split lead behaviour.
-Website leads are then copied to the private spreadsheet's separate
-`Website Leads` tab by a retry-safe Worker queue. The Meta `Leads` tab remains
-the input to the existing Sheet-to-D1 sync, so the two directions cannot loop.
+Website leads are copied by a retry-safe Worker queue into the private
+spreadsheet's normal `Leads` tab. Each row uses the stable
+`website:<submission_id>` ID, enters the same `Calendar Calls` workflow as a
+Meta lead, and is explicitly skipped by the return Sheet-to-D1 sync because
+the canonical website record already exists in Operations.

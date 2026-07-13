@@ -4,7 +4,7 @@ The public form endpoints now write canonical lead records to the
 brisbanetvs-operations D1 database. This is the operational copy used by
 the staff portal. It does not send email, call n8n, or call Twenty CRM.
 Website leads are also queued for a private, server-to-server copy into the
-`Website Leads` tab of the existing Brisbane TVs lead spreadsheet.
+normal `Leads` tab of the existing Brisbane TVs lead spreadsheet.
 
 The D1 schema is split across two migrations:
 
@@ -44,10 +44,11 @@ and does not post customer details directly to Google.
 
 ## Website leads copied to Google Sheets
 
-Website lead delivery uses the existing private Apps Script receiver and a
-separate `Website Leads` tab. Keeping website rows out of the Meta `Leads` tab
-prevents the existing Sheet-to-D1 synchroniser from importing the same website
-lead back into Operations as a duplicate.
+Website lead delivery uses the existing private Apps Script receiver and the
+normal `Leads` tab. This gives staff one queue and sends every new website row
+through the existing `Calendar Calls` automation. The Sheet-to-D1 synchroniser
+skips IDs beginning `website:`, because those records already originated in
+Operations D1.
 
 - Sheet row ID: `website:<submission_id>`
 - Immediate delivery: Cloudflare `waitUntil()` after the D1 commit
@@ -69,9 +70,12 @@ The Worker requires:
 No contact values are stored in the retry table. It contains only a lead
 reference, status, retry timestamps and a bounded error code.
 
-The Sheet keeps its compact existing schema. Calculator TV count, TV brand,
-selected add-ons and uploaded-photo count are appended to the `notes` cell;
-the package label remains in the service column.
+The Sheet keeps the compact 18-field `Leads` input schema used by Meta. Website
+campaign, form, platform, mounting intent, TV-size band and contact fields are
+placed in the matching columns. Sizes below 40 inches use the truthful
+`under_40"` option. Rich quote details, including the selected package/service,
+notes and private photo references remain available in Operations D1 rather
+than widening the shared Sheet contract.
 
 Production was checked before activation and had no pre-existing website
 leads, so no historical backfill is required. Do not bulk-copy old rows through
@@ -194,6 +198,6 @@ lead records. Reusing the ID with a different body returns 409.
    production custom domain is still owned by the standalone Worker route.
 
 5. Deploy Pages, then run one labelled, retry-safe test. Confirm one D1 lead,
-   one `Website Leads` row and a delivered queue state before deleting the
-   synthetic record. Check the protected Operations page before considering
-   the integration complete.
+   one `Leads` row, one matching `Calendar Calls` row and a delivered queue
+   state before deleting the synthetic record and calendar event. Check the
+   protected Operations page before considering the integration complete.

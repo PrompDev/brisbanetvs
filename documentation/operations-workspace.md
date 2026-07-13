@@ -20,8 +20,10 @@ in the pages where it is actually needed.
 
 - Public website and lead-sheet submissions are stored in the protected
   Operations D1 database.
-- Website submissions are copied server-side to the private spreadsheet's
-  separate `Website Leads` tab, with stable IDs and a five-minute retry queue.
+- Website submissions are copied server-side into the private spreadsheet's
+  normal `Leads` tab, with stable IDs and a five-minute retry queue. They enter
+  the same calendar follow-up workflow as Facebook and Instagram leads, while
+  an origin guard prevents the Sheet sync from creating a second D1 record.
 - Staff APIs sit behind Cloudflare Access and also verify the signed Access
   token before reading any customer data.
 - Lead-sheet sync is HMAC-signed, time-limited and replay-safe.

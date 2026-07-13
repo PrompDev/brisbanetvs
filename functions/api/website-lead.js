@@ -7,35 +7,30 @@ const SYNC_TIMESTAMP_TOLERANCE_SECONDS = 5 * 60;
 const SYNC_REPLAY_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 const BRISBANE_TIME_ZONE = "Australia/Brisbane";
 const WEBSITE_SHEET_DESTINATION = "google_sheet";
-const WEBSITE_SHEET_NAME = "Website Leads";
+export const WEBSITE_SHEET_NAME = "Leads";
 const WEBSITE_SHEET_REQUEST_TIMEOUT_MS = 10_000;
 const WEBSITE_SHEET_MAX_RESPONSE_BYTES = 32 * 1024;
 const WEBSITE_SHEET_MAX_ATTEMPTS = 8;
 const WEBSITE_SHEET_BATCH_LIMIT = 5;
-const WEBSITE_SHEET_HEADERS = Object.freeze([
+export const WEBSITE_SHEET_HEADERS = Object.freeze([
   "id",
   "created_time",
-  "source",
-  "platform",
+  "ad_id",
+  "ad_name",
+  "adset_id",
+  "adset_name",
+  "campaign_id",
   "campaign_name",
-  "utm_source",
-  "utm_medium",
-  "utm_campaign",
-  "utm_term",
-  "utm_content",
-  "landing_page",
-  "page_url",
+  "form_id",
   "form_name",
+  "is_organic",
+  "platform",
   "want_to_get_your_tv_mounted",
   "what_size_is_your_tv",
-  "full_name",
   "email",
+  "full_name",
   "phone_number",
-  "suburb",
   "postcode",
-  "wall_type",
-  "preferred_date",
-  "notes",
 ]);
 
 const FIELD_LIMITS = Object.freeze({
@@ -883,6 +878,27 @@ function parsedObject(value) {
   }
 }
 
+function websiteSheetPlatform(value) {
+  const platform = String(value || "").trim().toLowerCase();
+  if (platform === "facebook") return "fb";
+  if (platform === "instagram") return "ig";
+  return platform.slice(0, FIELD_LIMITS.platform);
+}
+
+function websiteSheetTvSize(value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  if (["under_40\"", "40\"–55\"", "56\"–75\"", "over_75\""].includes(text)) return text;
+
+  const lower = text.toLowerCase();
+  const size = Number((text.match(/\d{2,3}/) || [])[0]);
+  if (!Number.isFinite(size)) return "";
+  if (lower.includes("over") || lower.includes("+") || size > 75) return "over_75\"";
+  if (size < 40) return "under_40\"";
+  if (size <= 55) return "40\"–55\"";
+  return "56\"–75\"";
+}
+
 function websiteSheetConfig(env) {
   const secret = typeof env.GOOGLE_APPS_SCRIPT_SECRET === "string"
     ? env.GOOGLE_APPS_SCRIPT_SECRET.trim()
@@ -906,49 +922,29 @@ function websiteSheetConfig(env) {
   return { url: url.toString(), secret };
 }
 
-function websiteSheetRow(lead) {
+export function websiteSheetRow(lead) {
   const tracking = parsedObject(lead.tracking_json);
   const details = parsedObject(lead.details_json);
   const value = (entry, maximum = 10_000) => String(entry == null ? "" : entry).slice(0, maximum);
-  const noteParts = [];
-  if (details.tv_count) {
-    const count = value(details.tv_count, 2);
-    noteParts.push(count + (count === "1" ? " TV" : " TVs"));
-  }
-  if (details.tv_brand) noteParts.push("TV brand: " + value(details.tv_brand, FIELD_LIMITS.name));
-  if (Array.isArray(details.addons) && details.addons.length) {
-    noteParts.push("Add-ons: " + details.addons.slice(0, 20).map((item) => value(item, 80)).join(", "));
-  }
-  if (details.photos_attached_count) {
-    noteParts.push("Photos uploaded: " + value(details.photos_attached_count, 2));
-  }
-  if (lead.message) noteParts.push(value(lead.message, FIELD_LIMITS.message));
-  const sheetNotes = noteParts.join(" · ").slice(0, FIELD_LIMITS.message);
-
   return [
     "website:" + value(lead.external_id, FIELD_LIMITS.externalId),
     value(lead.received_at, 64),
-    "website",
-    value(lead.platform, FIELD_LIMITS.platform),
-    value(lead.campaign, FIELD_LIMITS.campaign),
-    value(tracking.utm_source, FIELD_LIMITS.trackingValue),
-    value(tracking.utm_medium, FIELD_LIMITS.trackingValue),
-    value(tracking.utm_campaign, FIELD_LIMITS.trackingValue),
-    value(tracking.utm_term, FIELD_LIMITS.trackingValue),
-    value(tracking.utm_content, FIELD_LIMITS.trackingValue),
-    value(tracking.landing_page, FIELD_LIMITS.pageUrl),
-    value(lead.page_url, FIELD_LIMITS.pageUrl),
+    "",
+    "",
+    "",
+    "",
+    "",
+    value(lead.campaign || tracking.utm_campaign, FIELD_LIMITS.campaign),
+    "",
     value(details.form_source || details.intake, FIELD_LIMITS.platform),
-    value(lead.service, FIELD_LIMITS.service),
-    value(lead.tv_size, FIELD_LIMITS.tvSize),
-    value(lead.full_name, FIELD_LIMITS.name),
+    "",
+    websiteSheetPlatform(lead.platform),
+    "yes",
+    websiteSheetTvSize(lead.tv_size),
     value(lead.email, FIELD_LIMITS.email),
+    value(lead.full_name, FIELD_LIMITS.name),
     value(lead.phone, FIELD_LIMITS.phone),
-    value(lead.suburb, FIELD_LIMITS.suburb),
     value(lead.postcode, FIELD_LIMITS.postcode),
-    value(lead.wall_type, FIELD_LIMITS.wallType),
-    value(lead.preferred_date, FIELD_LIMITS.preferredDate),
-    sheetNotes,
   ];
 }
 

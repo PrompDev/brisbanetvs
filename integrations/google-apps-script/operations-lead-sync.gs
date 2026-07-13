@@ -171,6 +171,12 @@ function operationsLeadFromRow_(row, index) {
   const receivedAt = operationsIso_(operationsValue_(row, index, ['created_time', 'created_at']));
   if (!externalId || !receivedAt) return null;
 
+  // Website enquiries already originate in Operations D1. They are copied to
+  // the shared Leads sheet for the normal follow-up calendar workflow, but
+  // must not be sent back into D1 as a second google_lead_sheet record.
+  const rowSource = operationsText_(operationsValue_(row, index, ['source']), 64).toLowerCase();
+  if (rowSource === 'website' || /^website:/i.test(externalId)) return null;
+
   return {
     source: 'google_lead_sheet',
     external_id: externalId,

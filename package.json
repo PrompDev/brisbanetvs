@@ -4,7 +4,7 @@
   "description": "Professional TV wall mounting and Starlink installation service for North Brisbane.",
   "main": "generate-areas.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test"
   },
   "keywords": [],
   "author": "",
