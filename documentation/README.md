@@ -21,6 +21,9 @@ you're not sure how a piece of the site works.
 
 7. [**Secure lead intake**](./secure-lead-intake.md) - how website and
    lead-sheet submissions reach the protected Operations register.
+8. [**Operations workspace**](./operations-workspace.md) - what the staff
+   dashboard, lead register, inbox and analytics pages do, plus the small
+   remaining Google Analytics and mail decisions.
 
 ## If something breaks
 

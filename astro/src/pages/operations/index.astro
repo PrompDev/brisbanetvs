@@ -1,612 +1,219 @@
-<!doctype html>
-<html lang="en-AU">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex,nofollow" />
-    <title>Operations | Brisbane TVs</title>
-    <meta name="description" content="Protected Brisbane TVs customer and lead operations workspace." />
-  </head>
-  <body>
-    <main class="dashboard-shell">
-      <header class="dashboard-header">
-        <a class="brand" href="/" aria-label="Brisbane TVs home">BRISBANE <span>TVS</span></a>
-        <p><span class="secure-dot" aria-hidden="true"></span> Secure staff workspace</p>
-      </header>
+---
+import OperationsLayout from "../../components/operations/OperationsLayout.astro";
+---
 
-      <section class="intro" aria-labelledby="dashboard-title">
+<OperationsLayout
+  active="overview"
+  title="Operations overview"
+  description="Protected Brisbane TVs operations overview for staff."
+>
+  <section class="operations-page-header" aria-labelledby="operations-overview-title">
+    <div>
+      <p class="operations-eyebrow">Operations</p>
+      <h1 id="operations-overview-title" class="operations-title">Know what needs attention.</h1>
+      <p class="operations-copy">Use the workspace sections below for the customer register, team inbox and consent-aware website reporting. This page stays aggregate-only so the daily workflow is easy to scan.</p>
+    </div>
+    <p class="operations-status" data-summary-state role="status">Connecting to the protected lead register...</p>
+  </section>
+
+  <section class="operations-grid operations-metrics" aria-label="Lead summary">
+    <article class="operations-metric">
+      <p class="operations-metric-label">Total leads</p>
+      <strong class="operations-metric-value" data-summary-total>—</strong>
+      <span class="operations-metric-copy">Protected master register</span>
+    </article>
+    <article class="operations-metric">
+      <p class="operations-metric-label">Received today</p>
+      <strong class="operations-metric-value" data-summary-today>—</strong>
+      <span class="operations-metric-copy">Brisbane time</span>
+    </article>
+    <article class="operations-metric">
+      <p class="operations-metric-label">Last 7 days</p>
+      <strong class="operations-metric-value" data-summary-week>—</strong>
+      <span class="operations-metric-copy">New customer enquiries</span>
+    </article>
+    <article class="operations-metric is-dark">
+      <p class="operations-metric-label">Intake health</p>
+      <strong class="operations-metric-value" data-summary-health>Checking</strong>
+      <span class="operations-metric-copy" data-summary-recency>Checking latest intake</span>
+    </article>
+  </section>
+
+  <section class="operations-grid operations-action-grid" aria-label="Operations sections">
+    <article class="operations-panel operations-action-card is-leads">
+      <p class="operations-eyebrow">Lead register</p>
+      <h2 class="operations-section-title">Every customer contact in one place.</h2>
+      <p class="operations-panel-copy" data-lead-register-copy>Loading the protected register status...</p>
+      <a class="operations-link" href="/operations/leads/">Open master lead list</a>
+    </article>
+    <article class="operations-panel operations-action-card is-inbox">
+      <div class="operations-panel-heading">
         <div>
-          <p class="eyebrow">Operations</p>
-          <h1 id="dashboard-title">Leads, clearly organised.</h1>
-          <p class="intro-copy">Your staff-only register for customer enquiries, consented website activity and future team email. Customer details are shown only after the secure staff check.</p>
+          <p class="operations-eyebrow">Team inbox</p>
+          <h2 class="operations-section-title">Mail, without sending.</h2>
         </div>
-        <p class="summary-state" data-summary-state role="status">Connecting to the protected lead register...</p>
-      </section>
+        <span class="operations-pill is-muted" data-inbox-state>Checking</span>
+      </div>
+      <p class="operations-panel-copy" data-inbox-copy>Checking the team inbox connection...</p>
+      <a class="operations-link is-quiet" href="/operations/inbox/">Open inbox and drafts</a>
+    </article>
+    <article class="operations-panel operations-action-card is-analytics">
+      <div class="operations-panel-heading">
+        <div>
+          <p class="operations-eyebrow">Google Analytics</p>
+          <h2 class="operations-section-title">Website activity, separately.</h2>
+        </div>
+        <span class="operations-pill is-muted" data-analytics-state>Checking</span>
+      </div>
+      <p class="operations-panel-copy" data-analytics-copy>Checking consent-aware reporting access...</p>
+      <a class="operations-link is-quiet" href="/operations/analytics/">Open analytics</a>
+    </article>
+  </section>
 
-      <section class="metrics" aria-label="Lead summary">
-        <article class="metric-card">
-          <p>Total leads</p>
-          <strong data-summary-total>-</strong>
-          <span>Protected master register</span>
-        </article>
-        <article class="metric-card">
-          <p>Received today</p>
-          <strong data-summary-today>-</strong>
-          <span>Brisbane time</span>
-        </article>
-        <article class="metric-card">
-          <p>Last 7 days</p>
-          <strong data-summary-week>-</strong>
-          <span>New customer enquiries</span>
-        </article>
-        <article class="metric-card status-card">
-          <p>Intake health</p>
-          <strong data-summary-health>Checking</strong>
-          <span data-summary-recency>Checking latest intake</span>
-        </article>
-      </section>
+  <section class="operations-grid operations-breakdown-grid" aria-label="Lead mix">
+    <article class="operations-panel">
+      <p class="operations-eyebrow">Source mix</p>
+      <h2 class="operations-section-title">By platform</h2>
+      <ul class="operations-list" data-summary-platform aria-live="polite">
+        <li class="operations-list-loading">Loading lead sources...</li>
+      </ul>
+    </article>
+    <article class="operations-panel">
+      <p class="operations-eyebrow">Demand signal</p>
+      <h2 class="operations-section-title">TV size</h2>
+      <ul class="operations-list" data-summary-size aria-live="polite">
+        <li class="operations-list-loading">Loading TV preferences...</li>
+      </ul>
+    </article>
+  </section>
 
-      <section class="workspace-grid" aria-label="Operations workspace">
-        <article class="lead-register panel" aria-labelledby="leads-heading">
-          <div class="panel-heading lead-heading">
-            <div>
-              <p class="eyebrow">Master lead list</p>
-              <h2 id="leads-heading">Who contacted us</h2>
-              <p class="panel-copy" data-lead-count>Loading customer contacts...</p>
-            </div>
-            <button class="quiet-button" type="button" data-refresh-leads>Refresh</button>
-          </div>
+  <section class="operations-privacy-note">
+    <span aria-hidden="true">✓</span>
+    <p>This overview deliberately excludes customer names, phone numbers, emails and lead IDs. Open <a href="/operations/leads/">Leads</a> only when you need to work with the restricted customer register.</p>
+  </section>
 
-          <form class="lead-filters" data-lead-filters>
-            <label>
-              <span>Show</span>
-              <select name="range" data-lead-range>
-                <option value="today">Today</option>
-                <option value="7d">Last 7 days</option>
-                <option value="all">All records</option>
-              </select>
-            </label>
-            <label class="lead-search">
-              <span>Find a customer</span>
-              <input name="q" type="search" maxlength="80" autocomplete="off" placeholder="Name, email, phone or postcode" data-lead-search />
-            </label>
-            <button class="primary-button" type="submit">Search</button>
-          </form>
+  <script>
+    const numberFormat = new Intl.NumberFormat("en-AU");
+    const summaryState = document.querySelector("[data-summary-state]");
+    const total = document.querySelector("[data-summary-total]");
+    const today = document.querySelector("[data-summary-today]");
+    const week = document.querySelector("[data-summary-week]");
+    const health = document.querySelector("[data-summary-health]");
+    const recency = document.querySelector("[data-summary-recency]");
+    const platform = document.querySelector("[data-summary-platform]");
+    const size = document.querySelector("[data-summary-size]");
+    const leadRegisterCopy = document.querySelector("[data-lead-register-copy]");
+    const inboxState = document.querySelector("[data-inbox-state]");
+    const inboxCopy = document.querySelector("[data-inbox-copy]");
+    const analyticsState = document.querySelector("[data-analytics-state]");
+    const analyticsCopy = document.querySelector("[data-analytics-copy]");
 
-          <div class="table-wrap" tabindex="0">
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">Customer</th>
-                  <th scope="col">Contact</th>
-                  <th scope="col">Source</th>
-                  <th scope="col">TV</th>
-                  <th scope="col">Received</th>
-                  <th scope="col">Status</th>
-                </tr>
-              </thead>
-              <tbody data-leads-table>
-                <tr><td class="empty-cell" colspan="6">Loading protected customer records...</td></tr>
-              </tbody>
-            </table>
-          </div>
+    const recencyCopy = {
+      today: "Latest contact arrived today",
+      yesterday: "Latest contact arrived yesterday",
+      older: "Latest contact is older",
+      none: "No contacts yet",
+      unknown: "Latest intake time is unavailable",
+    };
+    const healthCopy = { ready: "Ready", attention: "Needs attention", empty: "No leads yet" };
 
-          <div class="table-footer">
-            <p data-lead-page>Loading...</p>
-            <div class="pager" aria-label="Lead list pages">
-              <button type="button" class="quiet-button" data-lead-previous disabled>Previous</button>
-              <button type="button" class="quiet-button" data-lead-next disabled>Next</button>
-            </div>
-          </div>
-        </article>
-
-        <aside class="side-stack" aria-label="Analytics and inbox">
-          <article class="panel analytics-card" aria-labelledby="analytics-heading">
-            <div class="panel-heading">
-              <div>
-                <p class="eyebrow">Google Analytics</p>
-                <h2 id="analytics-heading">Website activity</h2>
-              </div>
-              <span class="pill" data-analytics-state>Checking</span>
-            </div>
-            <div class="analytics-grid" data-analytics-metrics>
-              <div><span>Sessions today</span><strong>-</strong></div>
-              <div><span>Page views today</span><strong>-</strong></div>
-              <div><span>Lead events today</span><strong>-</strong></div>
-              <div><span>Sessions, 7 days</span><strong>-</strong></div>
-            </div>
-            <p class="panel-copy" data-analytics-copy>Connecting to consented GA4 reporting...</p>
-            <ul class="compact-list" data-analytics-sources aria-live="polite">
-              <li>Source data will appear here.</li>
-            </ul>
-          </article>
-
-          <article class="panel inbox-card" aria-labelledby="inbox-heading">
-            <div class="panel-heading">
-              <div>
-                <p class="eyebrow">Team inbox</p>
-                <h2 id="inbox-heading">team@brisbanetvs.com</h2>
-              </div>
-              <span class="pill muted" data-inbox-state>Staged</span>
-            </div>
-            <p class="panel-copy" data-inbox-copy>Checking inbox status...</p>
-            <ul class="compact-list" data-inbox-list aria-live="polite">
-              <li>No email messages loaded.</li>
-            </ul>
-            <form class="draft-form" data-draft-form>
-              <p class="draft-title">Prepare a customer email</p>
-              <label>
-                <span>To</span>
-                <input name="to" type="email" maxlength="320" autocomplete="email" placeholder="customer@example.com" required />
-              </label>
-              <label>
-                <span>Subject</span>
-                <input name="subject" type="text" maxlength="180" placeholder="Thanks for contacting Brisbane TVs" required />
-              </label>
-              <label>
-                <span>Message</span>
-                <textarea name="plainText" maxlength="10000" rows="5" placeholder="Write a reply, invoice note or future approved campaign draft..." required></textarea>
-              </label>
-              <div class="draft-actions">
-                <button class="quiet-button" type="submit">Save draft</button>
-                <span data-draft-status role="status"></span>
-              </div>
-            </form>
-            <p class="no-send-note"><strong>Sending is disabled.</strong> This workspace stores drafts for a future approval flow; it does not send automatic replies, invoices or promotions.</p>
-          </article>
-        </aside>
-      </section>
-
-      <section class="breakdown-grid" aria-label="Lead mix">
-        <article class="panel breakdown-card">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">Source mix</p>
-              <h2>By platform</h2>
-            </div>
-          </div>
-          <ul class="breakdown-list" data-summary-platform aria-live="polite">
-            <li class="loading">Loading lead sources...</li>
-          </ul>
-        </article>
-        <article class="panel breakdown-card">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">Demand signal</p>
-              <h2>TV size</h2>
-            </div>
-          </div>
-          <ul class="breakdown-list" data-summary-size aria-live="polite">
-            <li class="loading">Loading TV preferences...</li>
-          </ul>
-        </article>
-      </section>
-
-      <section class="privacy-note">
-        <span aria-hidden="true">&#10003;</span>
-        <p>Customer data is not cached in this browser. It remains in the restricted Operations store and is available only to approved staff through the secure access check.</p>
-      </section>
-    </main>
-
-    <script>
-      const numberFormat = new Intl.NumberFormat("en-AU");
-      const dateFormat = new Intl.DateTimeFormat("en-AU", {
-        timeZone: "Australia/Brisbane",
-        day: "numeric",
-        month: "short",
-        hour: "numeric",
-        minute: "2-digit",
+    async function requestJson(path) {
+      const response = await fetch(path, {
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: { accept: "application/json" },
       });
-      const summaryState = document.querySelector("[data-summary-state]");
-      const total = document.querySelector("[data-summary-total]");
-      const today = document.querySelector("[data-summary-today]");
-      const week = document.querySelector("[data-summary-week]");
-      const health = document.querySelector("[data-summary-health]");
-      const recency = document.querySelector("[data-summary-recency]");
-      const platform = document.querySelector("[data-summary-platform]");
-      const size = document.querySelector("[data-summary-size]");
-      const leadsTable = document.querySelector("[data-leads-table]");
-      const leadCount = document.querySelector("[data-lead-count]");
-      const leadPage = document.querySelector("[data-lead-page]");
-      const leadFilters = document.querySelector("[data-lead-filters]");
-      const leadRange = document.querySelector("[data-lead-range]");
-      const leadSearch = document.querySelector("[data-lead-search]");
-      const previousButton = document.querySelector("[data-lead-previous]");
-      const nextButton = document.querySelector("[data-lead-next]");
-      const refreshLeadsButton = document.querySelector("[data-refresh-leads]");
-      const analyticsState = document.querySelector("[data-analytics-state]");
-      const analyticsMetrics = document.querySelector("[data-analytics-metrics]");
-      const analyticsCopy = document.querySelector("[data-analytics-copy]");
-      const analyticsSources = document.querySelector("[data-analytics-sources]");
-      const inboxState = document.querySelector("[data-inbox-state]");
-      const inboxCopy = document.querySelector("[data-inbox-copy]");
-      const inboxList = document.querySelector("[data-inbox-list]");
-      const draftForm = document.querySelector("[data-draft-form]");
-      const draftStatus = document.querySelector("[data-draft-status]");
+      const payload = await response.json().catch(() => null);
+      return { response, payload };
+    }
 
-      const leadState = { offset: 0, limit: 50, total: 0 };
-      const recencyCopy = {
-        today: "Latest contact arrived today",
-        yesterday: "Latest contact arrived yesterday",
-        older: "Latest contact is older",
-        none: "No contacts yet",
-        unknown: "Latest intake time is unavailable",
-      };
-      const healthCopy = {
-        ready: "Ready",
-        attention: "Needs attention",
-        empty: "No leads yet",
-      };
-
-      function emptyRow(message) {
-        const row = document.createElement("tr");
-        const cell = document.createElement("td");
-        cell.className = "empty-cell";
-        cell.colSpan = 6;
-        cell.textContent = message;
-        row.append(cell);
-        return row;
+    function renderBuckets(target, items) {
+      target.replaceChildren();
+      if (!items?.length) {
+        const item = document.createElement("li");
+        item.className = "operations-list-loading";
+        item.textContent = "No lead data yet.";
+        target.append(item);
+        return;
       }
+      items.forEach((entry) => {
+        const row = document.createElement("li");
+        const label = document.createElement("span");
+        const value = document.createElement("strong");
+        label.textContent = entry.label;
+        value.textContent = numberFormat.format(entry.count);
+        row.append(label, value);
+        target.append(row);
+      });
+    }
 
-      function textCell(value, className) {
-        const cell = document.createElement("td");
-        if (className) cell.className = className;
-        cell.textContent = value || "-";
-        return cell;
-      }
-
-      function detailCell(primary, secondary) {
-        const cell = document.createElement("td");
-        const strong = document.createElement("strong");
-        strong.textContent = primary || "-";
-        cell.append(strong);
-        if (secondary) {
-          const detail = document.createElement("span");
-          detail.className = "table-detail";
-          detail.textContent = secondary;
-          cell.append(detail);
-        }
-        return cell;
-      }
-
-      function showBuckets(target, items) {
-        target.replaceChildren();
-        if (!items.length) {
-          const empty = document.createElement("li");
-          empty.className = "loading";
-          empty.textContent = "No lead data yet.";
-          target.append(empty);
+    async function loadSummary() {
+      try {
+        const { response, payload } = await requestJson("/operations/api/summary");
+        if (!response.ok || !payload?.ok || !payload.summary) {
+          summaryState.textContent = response.status === 403
+            ? "Your secure session has expired. Sign in again to view Operations."
+            : "The protected lead register is temporarily unavailable. Please refresh shortly.";
           return;
         }
-        items.forEach((item) => {
-          const row = document.createElement("li");
-          const label = document.createElement("span");
-          const value = document.createElement("strong");
-          label.textContent = item.label;
-          value.textContent = numberFormat.format(item.count);
-          row.append(label, value);
-          target.append(row);
-        });
-      }
 
-      async function requestJson(path, options = {}) {
-        const response = await fetch(path, {
-          cache: "no-store",
-          credentials: "same-origin",
-          ...options,
-          headers: { accept: "application/json", ...(options.headers || {}) },
-        });
-        const payload = await response.json().catch(() => null);
-        return { response, payload };
-      }
-
-      function renderSummary(summary) {
+        const summary = payload.summary;
         total.textContent = numberFormat.format(summary.totalLeads);
         today.textContent = numberFormat.format(summary.leadsToday);
         week.textContent = numberFormat.format(summary.leadsLast7Days);
         health.textContent = healthCopy[summary.syncHealth] || "Checking";
         recency.textContent = recencyCopy[summary.latestLeadRecency] || recencyCopy.unknown;
-        showBuckets(platform, summary.byPlatform || []);
-        showBuckets(size, summary.byTvSize || []);
+        leadRegisterCopy.textContent = summary.totalLeads
+          ? `${numberFormat.format(summary.totalLeads)} protected customer contact${summary.totalLeads === 1 ? "" : "s"} ready for staff follow-up.`
+          : "No customer contacts have been imported yet.";
+        renderBuckets(platform, summary.byPlatform);
+        renderBuckets(size, summary.byTvSize);
         summaryState.textContent = "The protected lead register is up to date.";
-        summaryState.classList.add("ready");
+        summaryState.classList.add("is-ready");
+      } catch {
+        summaryState.textContent = "The protected lead register is temporarily unavailable. Please refresh shortly.";
       }
+    }
 
-      async function loadSummary() {
-        try {
-          const { response, payload } = await requestJson("/operations/api/summary");
-          if (response.ok && payload?.ok && payload.summary) {
-            renderSummary(payload.summary);
-            return;
-          }
-          summaryState.textContent = response.status === 403
-            ? "Your secure session has expired. Sign in again to view Operations."
-            : "The protected lead register is not available yet. Please refresh shortly.";
-        } catch {
-          summaryState.textContent = "The protected lead register is temporarily unavailable. Please refresh shortly.";
-        }
+    async function loadInboxState() {
+      try {
+        const { response, payload } = await requestJson("/operations/api/inbox");
+        if (!response.ok || !payload?.ok) throw new Error("inbox unavailable");
+        const enabled = payload.inboundEnabled === true;
+        inboxState.textContent = enabled ? "Receiving" : "Staged";
+        inboxState.classList.toggle("is-muted", !enabled);
+        inboxCopy.textContent = enabled
+          ? "Incoming mail is stored in the protected team inbox. Outbound sending remains disabled."
+          : "Inbound delivery has not been moved here. The current business mail service remains unchanged.";
+      } catch {
+        inboxState.textContent = "Unavailable";
+        inboxCopy.textContent = "The team inbox status could not be checked.";
       }
+    }
 
-      function renderLeads(payload) {
-        leadState.total = payload.total || 0;
-        leadsTable.replaceChildren();
-        if (!payload.leads?.length) {
-          leadsTable.append(emptyRow(payload.query ? "No customers match that search." : "No customer contacts in this view yet."));
-        } else {
-          payload.leads.forEach((lead) => {
-            const row = document.createElement("tr");
-            row.append(
-              detailCell(lead.name, lead.postcode ? `Postcode ${lead.postcode}` : ""),
-              detailCell(lead.email, lead.phone),
-              textCell(lead.source),
-              textCell(lead.tvSize),
-              textCell(lead.receivedAt ? dateFormat.format(new Date(lead.receivedAt)) : "-"),
-              textCell(lead.status, "status-cell"),
-            );
-            leadsTable.append(row);
-          });
-        }
-
-        const shownStart = payload.total ? payload.offset + 1 : 0;
-        const shownEnd = Math.min(payload.offset + payload.limit, payload.total);
-        leadCount.textContent = payload.total
-          ? `${numberFormat.format(payload.total)} customer contact${payload.total === 1 ? "" : "s"} in this view`
-          : "No customer contacts in this view yet";
-        leadPage.textContent = payload.total
-          ? `Showing ${numberFormat.format(shownStart)}-${numberFormat.format(shownEnd)} of ${numberFormat.format(payload.total)}`
-          : "No records to show";
-        previousButton.disabled = payload.offset <= 0;
-        nextButton.disabled = payload.offset + payload.limit >= payload.total;
-      }
-
-      async function loadLeads(reset = false) {
-        if (reset) leadState.offset = 0;
-        leadsTable.replaceChildren(emptyRow("Loading protected customer records..."));
-        const params = new URLSearchParams({
-          range: leadRange.value,
-          limit: String(leadState.limit),
-          offset: String(leadState.offset),
-        });
-        const query = leadSearch.value.trim();
-        if (query) params.set("q", query);
-
-        try {
-          const { response, payload } = await requestJson(`/operations/api/leads?${params}`);
-          if (!response.ok || !payload?.ok) {
-            leadsTable.replaceChildren(emptyRow("Customer records are temporarily unavailable."));
-            leadCount.textContent = "Could not load the protected lead list";
-            return;
-          }
-          renderLeads(payload);
-        } catch {
-          leadsTable.replaceChildren(emptyRow("Customer records are temporarily unavailable."));
-          leadCount.textContent = "Could not load the protected lead list";
-        }
-      }
-
-      function metricElement(label, value) {
-        const metric = document.createElement("div");
-        const labelElement = document.createElement("span");
-        const valueElement = document.createElement("strong");
-        labelElement.textContent = label;
-        valueElement.textContent = numberFormat.format(Number(value) || 0);
-        metric.append(labelElement, valueElement);
-        return metric;
-      }
-
-      async function loadAnalytics() {
-        try {
-          const { response, payload } = await requestJson("/operations/api/analytics");
-          if (!response.ok || !payload?.ok || !payload.analytics) {
-            analyticsState.textContent = "Setup needed";
-            analyticsState.classList.add("muted");
-            analyticsCopy.textContent = payload?.error === "analytics_not_configured"
-              ? "GA4 collection is active. Secure reporting access is being connected before traffic figures are shown here."
-              : "Analytics reporting is temporarily unavailable.";
-            analyticsSources.replaceChildren();
-            const item = document.createElement("li");
-            item.textContent = "No traffic sources available yet.";
-            analyticsSources.append(item);
-            return;
-          }
-
-          const analytics = payload.analytics;
+    async function loadAnalyticsState() {
+      try {
+        const { response, payload } = await requestJson("/operations/api/analytics");
+        if (response.ok && payload?.ok && payload.analytics) {
+          const sessions = Number(payload.analytics.today?.sessions) || 0;
           analyticsState.textContent = "Live";
-          analyticsState.classList.remove("muted");
-          analyticsMetrics.replaceChildren(
-            metricElement("Sessions today", analytics.today?.sessions),
-            metricElement("Page views today", analytics.today?.pageViews),
-            metricElement("Lead events today", analytics.today?.generateLeads),
-            metricElement("Sessions, 7 days", analytics.last7Days?.sessions),
-          );
-          analyticsCopy.textContent = "Consent-aware Google Analytics reporting. Lead records above remain the operational source of truth.";
-          analyticsSources.replaceChildren();
-          const sources = analytics.topSources || [];
-          if (!sources.length) {
-            const item = document.createElement("li");
-            item.textContent = "No traffic sources recorded in this period.";
-            analyticsSources.append(item);
-          } else {
-            sources.forEach((source) => {
-              const item = document.createElement("li");
-              const label = document.createElement("span");
-              const value = document.createElement("strong");
-              label.textContent = source.label;
-              value.textContent = `${numberFormat.format(Number(source.sessions) || 0)} sessions`;
-              item.append(label, value);
-              analyticsSources.append(item);
-            });
-          }
-        } catch {
-          analyticsState.textContent = "Unavailable";
-          analyticsCopy.textContent = "Analytics reporting is temporarily unavailable.";
+          analyticsState.classList.remove("is-muted");
+          analyticsCopy.textContent = `${numberFormat.format(sessions)} session${sessions === 1 ? "" : "s"} recorded today. Open Analytics for the full protected report.`;
+          return;
         }
+        analyticsState.textContent = payload?.error === "analytics_not_configured" ? "Setup needed" : "Unavailable";
+        analyticsState.classList.add("is-muted");
+        analyticsCopy.textContent = payload?.error === "analytics_not_configured"
+          ? "GA4 collection is active; secure reporting access still needs its server-side credential."
+          : "Analytics reporting is temporarily unavailable.";
+      } catch {
+        analyticsState.textContent = "Unavailable";
+        analyticsCopy.textContent = "Analytics reporting is temporarily unavailable.";
       }
+    }
 
-      async function loadInbox() {
-        try {
-          const { response, payload } = await requestJson("/operations/api/inbox");
-          if (!response.ok || !payload?.ok) {
-            inboxState.textContent = "Unavailable";
-            inboxCopy.textContent = "The inbox status could not be checked.";
-            return;
-          }
-          inboxState.textContent = payload.inboundEnabled ? "Receiving" : "Staged";
-          inboxState.classList.toggle("muted", !payload.inboundEnabled);
-          inboxCopy.textContent = payload.inboundEnabled
-            ? "Inbound mail is being stored in the protected Operations inbox."
-            : "The current business mail service remains unchanged. Team inbox delivery will be enabled only after a reviewed mail migration.";
-          inboxList.replaceChildren();
-          if (!payload.messages?.length) {
-            const item = document.createElement("li");
-            item.textContent = payload.inboundEnabled ? "No messages received yet." : "No mail is being routed here yet.";
-            inboxList.append(item);
-          } else {
-            payload.messages.forEach((message) => {
-              const item = document.createElement("li");
-              const copy = document.createElement("span");
-              const timestamp = document.createElement("strong");
-              copy.textContent = message.subject || message.from || "New message";
-              timestamp.textContent = message.receivedAt ? dateFormat.format(new Date(message.receivedAt)) : "";
-              item.append(copy, timestamp);
-              inboxList.append(item);
-            });
-          }
-        } catch {
-          inboxState.textContent = "Unavailable";
-          inboxCopy.textContent = "The inbox status could not be checked.";
-        }
-      }
-
-      draftForm.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        draftStatus.textContent = "Saving...";
-        const formData = new FormData(draftForm);
-        const payload = Object.fromEntries(formData.entries());
-
-        try {
-          const { response, payload: result } = await requestJson("/operations/api/inbox/drafts", {
-            method: "POST",
-            headers: { "content-type": "application/json", accept: "application/json" },
-            body: JSON.stringify(payload),
-          });
-          if (!response.ok || !result?.ok) {
-            draftStatus.textContent = "Could not save draft.";
-            return;
-          }
-          draftForm.reset();
-          draftStatus.textContent = "Draft saved. Nothing was sent.";
-        } catch {
-          draftStatus.textContent = "Could not save draft.";
-        }
-      });
-
-      leadFilters.addEventListener("submit", (event) => {
-        event.preventDefault();
-        loadLeads(true);
-      });
-      leadRange.addEventListener("change", () => loadLeads(true));
-      previousButton.addEventListener("click", () => {
-        leadState.offset = Math.max(0, leadState.offset - leadState.limit);
-        loadLeads();
-      });
-      nextButton.addEventListener("click", () => {
-        leadState.offset += leadState.limit;
-        loadLeads();
-      });
-      refreshLeadsButton.addEventListener("click", () => {
-        Promise.all([loadSummary(), loadLeads(), loadAnalytics(), loadInbox()]);
-      });
-
-      loadSummary();
-      loadLeads();
-      loadAnalytics();
-      loadInbox();
-    </script>
-  </body>
-</html>
-
-<style>
-  :global(*) { box-sizing: border-box; }
-  :global(body) { margin: 0; min-width: 320px; background: #f5f3ee; color: #162330; font-family: Inter, ui-sans-serif, system-ui, sans-serif; }
-  :global(button), :global(input), :global(select) { font: inherit; }
-  .dashboard-shell { width: min(1240px, calc(100% - 2rem)); margin: 0 auto; padding: 1.4rem 0 4rem; }
-  .dashboard-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .95rem 0 3rem; }
-  .brand { color: #162330; font-size: 1.02rem; font-weight: 850; letter-spacing: .12em; text-decoration: none; }
-  .brand span { color: #a98245; }
-  .dashboard-header p { display: flex; align-items: center; gap: .55rem; margin: 0; color: #536270; font-size: .84rem; font-weight: 650; }
-  .secure-dot { width: .55rem; height: .55rem; border-radius: 50%; background: #29875d; box-shadow: 0 0 0 4px rgba(41, 135, 93, .12); }
-  .intro { display: flex; justify-content: space-between; align-items: end; gap: 2rem; margin-bottom: 2rem; }
-  .eyebrow { margin: 0 0 .5rem; color: #9c773f; font-size: .72rem; font-weight: 850; letter-spacing: .13em; text-transform: uppercase; }
-  h1, h2 { margin: 0; font-family: Georgia, "Times New Roman", serif; }
-  h1 { font-size: clamp(2.6rem, 6.1vw, 4.85rem); line-height: .94; letter-spacing: -.045em; }
-  h2 { font-size: 1.55rem; letter-spacing: -.02em; }
-  .intro-copy { max-width: 45rem; margin: 1rem 0 0; color: #586572; line-height: 1.65; }
-  .summary-state { max-width: 21rem; margin: 0; border: 1px solid #ddd9cf; border-radius: .6rem; padding: .8rem .9rem; color: #596674; background: #fffdf8; font-size: .86rem; line-height: 1.45; }
-  .summary-state.ready { color: #176444; border-color: #b7d8c7; background: #f0faf4; }
-  .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
-  .metric-card, .panel { border: 1px solid #dedbd4; border-radius: .9rem; background: #fffdf9; box-shadow: 0 14px 35px rgba(25, 33, 43, .045); }
-  .metric-card { min-height: 10.3rem; padding: 1.3rem; }
-  .metric-card p { margin: 0; color: #61707d; font-size: .88rem; font-weight: 680; }
-  .metric-card strong { display: block; margin: .75rem 0 .45rem; font-family: Georgia, "Times New Roman", serif; font-size: clamp(2rem, 4vw, 3rem); line-height: 1; }
-  .metric-card span { color: #79848d; font-size: .78rem; }
-  .status-card { background: #172e40; border-color: #172e40; color: #fff; }
-  .status-card p, .status-card span { color: #c5d0d7; }
-  .workspace-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(18rem, .85fr); gap: 1rem; margin-top: 1rem; align-items: start; }
-  .panel { padding: 1.45rem; }
-  .panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
-  .panel-copy { margin: .7rem 0 0; color: #697680; font-size: .88rem; line-height: 1.5; }
-  .quiet-button, .primary-button { border-radius: .55rem; min-height: 2.45rem; padding: .55rem .8rem; cursor: pointer; font-size: .84rem; font-weight: 750; }
-  .quiet-button { border: 1px solid #d9d6cf; color: #344352; background: #fffdf9; }
-  .quiet-button:hover:not(:disabled) { border-color: #82909a; background: #f4f2ed; }
-  .quiet-button:disabled { cursor: not-allowed; opacity: .48; }
-  .primary-button { border: 1px solid #172e40; color: #fff; background: #172e40; }
-  .primary-button:hover { background: #25445b; }
-  .lead-filters { display: grid; grid-template-columns: minmax(8rem, .46fr) minmax(12rem, 1fr) auto; gap: .75rem; margin: 1.4rem 0 1rem; }
-  .lead-filters label { display: grid; gap: .35rem; color: #60707d; font-size: .75rem; font-weight: 750; letter-spacing: .02em; }
-  .lead-filters input, .lead-filters select { min-width: 0; border: 1px solid #d9d6cf; border-radius: .55rem; padding: .63rem .68rem; color: #1e2f3e; background: #fff; font-size: .9rem; }
-  .lead-filters input:focus, .lead-filters select:focus, button:focus-visible { outline: 3px solid rgba(67, 112, 144, .28); outline-offset: 2px; }
-  .lead-filters .primary-button { align-self: end; }
-  .table-wrap { overflow-x: auto; border: 1px solid #e7e3dc; border-radius: .65rem; }
-  table { width: 100%; border-collapse: collapse; min-width: 720px; font-size: .84rem; }
-  th, td { border-bottom: 1px solid #ece8e1; padding: .82rem .78rem; text-align: left; vertical-align: top; }
-  th { color: #64727c; background: #f8f6f1; font-size: .7rem; letter-spacing: .07em; text-transform: uppercase; }
-  tbody tr:last-child td { border-bottom: 0; }
-  td { color: #475765; line-height: 1.4; }
-  td strong { display: block; color: #1b2c3a; font-weight: 760; }
-  .table-detail { display: block; margin-top: .15rem; color: #75818a; font-size: .76rem; }
-  .status-cell { text-transform: capitalize; color: #176444; font-weight: 730; }
-  .empty-cell { padding: 1.5rem; color: #77838d; text-align: center; }
-  .table-footer { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: .9rem; }
-  .table-footer p { margin: 0; color: #75818a; font-size: .8rem; }
-  .pager { display: flex; gap: .45rem; }
-  .side-stack { display: grid; gap: 1rem; }
-  .analytics-card { background: #eef4f2; border-color: #d7e4df; }
-  .inbox-card { background: #fbf8f1; }
-  .pill { display: inline-flex; align-items: center; min-height: 1.9rem; padding: .3rem .58rem; border-radius: 999px; color: #176444; background: #dceee5; font-size: .72rem; font-weight: 800; white-space: nowrap; }
-  .pill.muted { color: #5f6d77; background: #ece9e1; }
-  .analytics-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; margin-top: 1.2rem; }
-  .analytics-grid div { min-height: 5.7rem; border: 1px solid rgba(84, 123, 111, .18); border-radius: .65rem; padding: .75rem; background: rgba(255, 255, 255, .7); }
-  .analytics-grid span { display: block; color: #60726e; font-size: .72rem; line-height: 1.35; }
-  .analytics-grid strong { display: block; margin-top: .5rem; color: #18343a; font-family: Georgia, "Times New Roman", serif; font-size: 1.75rem; }
-  .compact-list, .breakdown-list { display: grid; gap: .65rem; margin: 1.2rem 0 0; padding: 0; list-style: none; }
-  .compact-list li, .breakdown-list li { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; border-top: 1px solid rgba(127, 137, 137, .18); padding-top: .65rem; color: #53636d; font-size: .84rem; line-height: 1.4; }
-  .compact-list li strong, .breakdown-list li strong { color: #1b2c3a; font-size: .78rem; text-align: right; }
-  .draft-form { display: grid; gap: .7rem; margin-top: 1.2rem; border-top: 1px solid rgba(127, 137, 137, .18); padding-top: 1rem; }
-  .draft-title { margin: 0; color: #5c4d36; font-size: .82rem; font-weight: 800; }
-  .draft-form label { display: grid; gap: .3rem; color: #60707d; font-size: .72rem; font-weight: 750; letter-spacing: .02em; }
-  .draft-form input, .draft-form textarea { width: 100%; min-width: 0; border: 1px solid #d9d6cf; border-radius: .55rem; padding: .6rem .65rem; color: #1e2f3e; background: #fff; font-size: .84rem; line-height: 1.45; }
-  .draft-form textarea { resize: vertical; }
-  .draft-form input:focus, .draft-form textarea:focus { outline: 3px solid rgba(67, 112, 144, .28); outline-offset: 2px; }
-  .draft-actions { display: flex; align-items: center; gap: .65rem; }
-  .draft-actions span { color: #63717b; font-size: .75rem; line-height: 1.35; }
-  .no-send-note { margin: 1.15rem 0 0; border-left: 3px solid #b38a4b; padding: .2rem 0 .2rem .7rem; color: #655944; font-size: .78rem; line-height: 1.5; }
-  .breakdown-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-top: 1rem; }
-  .loading { justify-content: flex-start !important; color: #7a858f !important; font-size: .9rem; }
-  .privacy-note { display: flex; align-items: flex-start; gap: .75rem; margin-top: 1rem; border-radius: .8rem; padding: 1rem 1.1rem; background: #e9eff0; color: #50616c; }
-  .privacy-note span { color: #277a59; font-size: 1.2rem; line-height: 1.2; }
-  .privacy-note p { margin: 0; font-size: .88rem; line-height: 1.55; }
-  @media (max-width: 980px) { .workspace-grid { grid-template-columns: 1fr; } .side-stack { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  @media (max-width: 800px) { .intro { align-items: flex-start; flex-direction: column; } .summary-state { max-width: none; } .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .lead-filters { grid-template-columns: 1fr 1fr; } .lead-search { grid-column: 1 / -1; } .lead-filters .primary-button { grid-column: 1 / -1; } }
-  @media (max-width: 620px) { .dashboard-shell { width: min(100% - 1.2rem, 1240px); } .dashboard-header { padding-bottom: 2.2rem; } .dashboard-header p { font-size: .74rem; } .metrics, .breakdown-grid, .side-stack { grid-template-columns: 1fr; } .metric-card { min-height: auto; } .panel { padding: 1.1rem; } .lead-filters { grid-template-columns: 1fr; } .lead-search, .lead-filters .primary-button { grid-column: auto; } .table-footer { align-items: flex-start; flex-direction: column; } }
-</style>
+    loadSummary();
+    loadInboxState();
+    loadAnalyticsState();
+  </script>
+</OperationsLayout>

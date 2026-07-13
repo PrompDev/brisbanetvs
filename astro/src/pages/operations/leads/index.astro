@@ -1,0 +1,220 @@
+---
+import OperationsLayout from "../../../components/operations/OperationsLayout.astro";
+---
+
+<OperationsLayout
+  active="leads"
+  title="Master lead list"
+  description="Protected Brisbane TVs customer lead register for staff."
+>
+  <section class="operations-page-header" aria-labelledby="lead-list-title">
+    <div>
+      <p class="operations-eyebrow">Lead register</p>
+      <h1 id="lead-list-title" class="operations-title">Customer contacts.</h1>
+      <p class="operations-copy">This is the master list for every imported customer enquiry. Search and follow up here; the overview remains aggregate-only.</p>
+    </div>
+    <p class="operations-status is-warning" role="status">Restricted customer information. This page is for approved staff only.</p>
+  </section>
+
+  <section class="operations-panel" aria-labelledby="lead-table-heading">
+    <div class="operations-toolbar">
+      <div>
+        <p class="operations-eyebrow">Master list</p>
+        <h2 id="lead-table-heading" class="operations-section-title">Who contacted Brisbane TVs</h2>
+        <p class="operations-panel-copy" data-lead-count>Loading protected customer contacts...</p>
+      </div>
+      <button class="operations-button" type="button" data-refresh-leads>Refresh</button>
+    </div>
+
+    <form class="operations-filters" data-lead-filters>
+      <label class="operations-field">
+        <span>Show</span>
+        <select class="operations-input" name="range" data-lead-range>
+          <option value="all" selected>All records</option>
+          <option value="today">Today</option>
+          <option value="7d">Last 7 days</option>
+        </select>
+      </label>
+      <label class="operations-field">
+        <span>Find a customer</span>
+        <input class="operations-input" name="q" type="search" maxlength="80" autocomplete="off" placeholder="Name, email, phone or postcode" data-lead-search />
+      </label>
+      <button class="operations-button operations-primary-button" type="submit">Search</button>
+    </form>
+
+    <div class="operations-table-wrap" tabindex="0">
+      <table class="operations-table">
+        <thead>
+          <tr>
+            <th scope="col">Customer</th>
+            <th scope="col">Contact</th>
+            <th scope="col">Source</th>
+            <th scope="col">TV</th>
+            <th scope="col">Received</th>
+            <th scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody data-leads-table>
+          <tr><td class="operations-empty-cell" colspan="6">Loading protected customer records...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="operations-table-footer">
+      <p data-lead-page>Loading...</p>
+      <div class="operations-pager" aria-label="Lead list pages">
+        <button type="button" class="operations-button" data-lead-previous disabled>Previous</button>
+        <button type="button" class="operations-button" data-lead-next disabled>Next</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="operations-privacy-note">
+    <span aria-hidden="true">✓</span>
+    <p>Customer data is requested only when this protected page loads and is not stored by the page for later browsing. Use the smallest date range and search needed for the follow-up work.</p>
+  </section>
+
+  <script>
+    const numberFormat = new Intl.NumberFormat("en-AU");
+    const dateFormat = new Intl.DateTimeFormat("en-AU", {
+      timeZone: "Australia/Brisbane",
+      day: "numeric",
+      month: "short",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+    const leadsTable = document.querySelector("[data-leads-table]");
+    const leadCount = document.querySelector("[data-lead-count]");
+    const leadPage = document.querySelector("[data-lead-page]");
+    const leadFilters = document.querySelector("[data-lead-filters]");
+    const leadRange = document.querySelector("[data-lead-range]");
+    const leadSearch = document.querySelector("[data-lead-search]");
+    const previousButton = document.querySelector("[data-lead-previous]");
+    const nextButton = document.querySelector("[data-lead-next]");
+    const refreshButton = document.querySelector("[data-refresh-leads]");
+    const leadState = { offset: 0, limit: 50, total: 0 };
+
+    function emptyRow(message) {
+      const row = document.createElement("tr");
+      const cell = document.createElement("td");
+      cell.className = "operations-empty-cell";
+      cell.colSpan = 6;
+      cell.textContent = message;
+      row.append(cell);
+      return row;
+    }
+
+    function textCell(value, className) {
+      const cell = document.createElement("td");
+      if (className) cell.className = className;
+      cell.textContent = value || "—";
+      return cell;
+    }
+
+    function detailCell(primary, secondary) {
+      const cell = document.createElement("td");
+      const strong = document.createElement("strong");
+      strong.textContent = primary || "—";
+      cell.append(strong);
+      if (secondary) {
+        const detail = document.createElement("span");
+        detail.className = "operations-table-detail";
+        detail.textContent = secondary;
+        cell.append(detail);
+      }
+      return cell;
+    }
+
+    async function requestJson(path) {
+      const response = await fetch(path, {
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: { accept: "application/json" },
+      });
+      const payload = await response.json().catch(() => null);
+      return { response, payload };
+    }
+
+    function renderLeads(payload) {
+      leadState.total = payload.total || 0;
+      leadsTable.replaceChildren();
+      if (!payload.leads?.length) {
+        leadsTable.append(emptyRow(payload.query ? "No customers match that search." : "No customer contacts in this view yet."));
+      } else {
+        payload.leads.forEach((lead) => {
+          const row = document.createElement("tr");
+          row.append(
+            detailCell(lead.name, lead.postcode ? `Postcode ${lead.postcode}` : ""),
+            detailCell(lead.email, lead.phone),
+            textCell(lead.source),
+            textCell(lead.tvSize),
+            textCell(lead.receivedAt ? dateFormat.format(new Date(lead.receivedAt)) : "—"),
+            textCell(lead.status, "operations-table-status"),
+          );
+          leadsTable.append(row);
+        });
+      }
+
+      const shownStart = payload.total ? payload.offset + 1 : 0;
+      const shownEnd = Math.min(payload.offset + payload.limit, payload.total);
+      leadCount.textContent = payload.total
+        ? `${numberFormat.format(payload.total)} customer contact${payload.total === 1 ? "" : "s"} in this view`
+        : "No customer contacts in this view yet";
+      leadPage.textContent = payload.total
+        ? `Showing ${numberFormat.format(shownStart)}–${numberFormat.format(shownEnd)} of ${numberFormat.format(payload.total)}`
+        : "No records to show";
+      previousButton.disabled = payload.offset <= 0;
+      nextButton.disabled = payload.offset + payload.limit >= payload.total;
+    }
+
+    async function loadLeads(reset = false) {
+      if (reset) leadState.offset = 0;
+      leadsTable.replaceChildren(emptyRow("Loading protected customer records..."));
+      const params = new URLSearchParams({
+        range: leadRange.value,
+        limit: String(leadState.limit),
+        offset: String(leadState.offset),
+      });
+      const query = leadSearch.value.trim();
+      if (query) params.set("q", query);
+
+      try {
+        const { response, payload } = await requestJson(`/operations/api/leads?${params}`);
+        if (!response.ok || !payload?.ok) {
+          leadsTable.replaceChildren(emptyRow(response.status === 403
+            ? "Your secure session has expired. Sign in again to view customer records."
+            : "Customer records are temporarily unavailable."));
+          leadCount.textContent = "Could not load the protected lead list";
+          leadPage.textContent = "No records to show";
+          previousButton.disabled = true;
+          nextButton.disabled = true;
+          return;
+        }
+        renderLeads(payload);
+      } catch {
+        leadsTable.replaceChildren(emptyRow("Customer records are temporarily unavailable."));
+        leadCount.textContent = "Could not load the protected lead list";
+        leadPage.textContent = "No records to show";
+        previousButton.disabled = true;
+        nextButton.disabled = true;
+      }
+    }
+
+    leadFilters.addEventListener("submit", (event) => {
+      event.preventDefault();
+      loadLeads(true);
+    });
+    leadRange.addEventListener("change", () => loadLeads(true));
+    previousButton.addEventListener("click", () => {
+      leadState.offset = Math.max(0, leadState.offset - leadState.limit);
+      loadLeads();
+    });
+    nextButton.addEventListener("click", () => {
+      leadState.offset += leadState.limit;
+      loadLeads();
+    });
+    refreshButton.addEventListener("click", () => loadLeads());
+
+    loadLeads();
+  </script>
+</OperationsLayout>

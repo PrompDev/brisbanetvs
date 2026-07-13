@@ -8,6 +8,12 @@ route = "brisbanetvs.com/api/*"
 binding = "LEAD_UPLOADS"
 bucket_name = "brisbanetvs-lead-uploads"
 
+# Raw inbound MIME is kept in a dedicated private bucket. The email handler
+# is inert until an owner explicitly enables Email Routing and creates a rule.
+[[r2_buckets]]
+binding = "INBOX_MAIL_RAW"
+bucket_name = "brisbanetvs-operations-mail"
+
 [[d1_databases]]
 binding = "OPERATIONS_DB"
 database_name = "brisbanetvs-operations"

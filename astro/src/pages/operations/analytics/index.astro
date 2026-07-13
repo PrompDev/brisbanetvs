@@ -1,0 +1,180 @@
+---
+import OperationsLayout from "../../../components/operations/OperationsLayout.astro";
+---
+
+<OperationsLayout
+  active="analytics"
+  title="Website analytics"
+  description="Protected consent-aware Google Analytics reporting for Brisbane TVs staff."
+>
+  <section class="operations-page-header" aria-labelledby="analytics-title">
+    <div>
+      <p class="operations-eyebrow">Google Analytics</p>
+      <h1 id="analytics-title" class="operations-title">Website activity.</h1>
+      <p class="operations-copy">A separate, aggregate-only view of consented GA4 activity. Lead records remain in the protected register, so customer identity is never mixed into these website figures.</p>
+    </div>
+    <p class="operations-status" data-analytics-status role="status">Connecting to secure GA4 reporting...</p>
+  </section>
+
+  <section class="operations-grid operations-breakdown-grid" aria-label="Website activity periods">
+    <article class="operations-panel">
+      <p class="operations-eyebrow">Today</p>
+      <h2 class="operations-section-title">Current activity</h2>
+      <div class="operations-grid operations-analytics-metrics" style="margin-top: 1.2rem;">
+        <div class="operations-metric"><p class="operations-metric-label">Sessions</p><strong class="operations-metric-value" data-today-sessions>—</strong><span class="operations-metric-copy">Consent-aware visits</span></div>
+        <div class="operations-metric"><p class="operations-metric-label">Active users</p><strong class="operations-metric-value" data-today-users>—</strong><span class="operations-metric-copy">GA4 aggregate</span></div>
+        <div class="operations-metric"><p class="operations-metric-label">Page views</p><strong class="operations-metric-value" data-today-views>—</strong><span class="operations-metric-copy">Viewed pages</span></div>
+        <div class="operations-metric"><p class="operations-metric-label">Lead events</p><strong class="operations-metric-value" data-today-leads>—</strong><span class="operations-metric-copy">Successful form events</span></div>
+      </div>
+    </article>
+
+    <article class="operations-panel">
+      <p class="operations-eyebrow">Last 7 days</p>
+      <h2 class="operations-section-title">Recent direction</h2>
+      <div class="operations-grid operations-analytics-metrics" style="margin-top: 1.2rem;">
+        <div class="operations-metric"><p class="operations-metric-label">Sessions</p><strong class="operations-metric-value" data-week-sessions>—</strong><span class="operations-metric-copy">Consent-aware visits</span></div>
+        <div class="operations-metric"><p class="operations-metric-label">Active users</p><strong class="operations-metric-value" data-week-users>—</strong><span class="operations-metric-copy">GA4 aggregate</span></div>
+        <div class="operations-metric"><p class="operations-metric-label">Page views</p><strong class="operations-metric-value" data-week-views>—</strong><span class="operations-metric-copy">Viewed pages</span></div>
+        <div class="operations-metric"><p class="operations-metric-label">Lead events</p><strong class="operations-metric-value" data-week-leads>—</strong><span class="operations-metric-copy">Successful form events</span></div>
+      </div>
+    </article>
+  </section>
+
+  <section class="operations-grid operations-breakdown-grid" aria-label="Analytics detail">
+    <article class="operations-panel">
+      <div class="operations-panel-heading">
+        <div>
+          <p class="operations-eyebrow">Acquisition</p>
+          <h2 class="operations-section-title">Top traffic sources</h2>
+        </div>
+        <span class="operations-pill is-muted" data-analytics-pill>Checking</span>
+      </div>
+      <p class="operations-panel-copy" data-analytics-copy>Only controlled GA4 channel groups are shown here.</p>
+      <ul class="operations-list" data-analytics-sources aria-live="polite">
+        <li class="operations-list-loading">Loading traffic sources...</li>
+      </ul>
+    </article>
+
+    <article class="operations-panel" data-analytics-setup>
+      <p class="operations-eyebrow">Reporting connection</p>
+      <h2 class="operations-section-title">What is needed</h2>
+      <p class="operations-panel-copy" data-analytics-setup-copy>Checking the server-side reporting connection...</p>
+      <ul class="operations-setup-list">
+        <li>GA4 tracking remains consent-aware on the public website.</li>
+        <li>A restricted service-account credential is kept only in Cloudflare’s encrypted environment settings.</li>
+        <li>The account has GA4 Viewer access only; this page requests fixed aggregate reports, not visitor-level data.</li>
+      </ul>
+    </article>
+  </section>
+
+  <section class="operations-privacy-note">
+    <span aria-hidden="true">✓</span>
+    <p>Analytics stays aggregate-only: no visitor emails, phone numbers, form answers, campaign text or user-supplied URLs are requested or displayed in this workspace.</p>
+  </section>
+
+  <script>
+    const numberFormat = new Intl.NumberFormat("en-AU");
+    const status = document.querySelector("[data-analytics-status]");
+    const pill = document.querySelector("[data-analytics-pill]");
+    const copy = document.querySelector("[data-analytics-copy]");
+    const setupCopy = document.querySelector("[data-analytics-setup-copy]");
+    const sourceList = document.querySelector("[data-analytics-sources]");
+    const values = {
+      todaySessions: document.querySelector("[data-today-sessions]"),
+      todayUsers: document.querySelector("[data-today-users]"),
+      todayViews: document.querySelector("[data-today-views]"),
+      todayLeads: document.querySelector("[data-today-leads]"),
+      weekSessions: document.querySelector("[data-week-sessions]"),
+      weekUsers: document.querySelector("[data-week-users]"),
+      weekViews: document.querySelector("[data-week-views]"),
+      weekLeads: document.querySelector("[data-week-leads]"),
+    };
+
+    async function requestJson(path) {
+      const response = await fetch(path, {
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: { accept: "application/json" },
+      });
+      const payload = await response.json().catch(() => null);
+      return { response, payload };
+    }
+
+    function renderSources(sources) {
+      sourceList.replaceChildren();
+      if (!sources?.length) {
+        const item = document.createElement("li");
+        item.className = "operations-list-loading";
+        item.textContent = "No traffic sources recorded in this period.";
+        sourceList.append(item);
+        return;
+      }
+
+      sources.forEach((source) => {
+        const item = document.createElement("li");
+        const label = document.createElement("span");
+        const value = document.createElement("strong");
+        label.textContent = source.label;
+        value.textContent = `${numberFormat.format(Number(source.sessions) || 0)} sessions`;
+        item.append(label, value);
+        sourceList.append(item);
+      });
+    }
+
+    function setValue(target, value) {
+      target.textContent = numberFormat.format(Number(value) || 0);
+    }
+
+    function renderAnalytics(analytics) {
+      setValue(values.todaySessions, analytics.today?.sessions);
+      setValue(values.todayUsers, analytics.today?.activeUsers);
+      setValue(values.todayViews, analytics.today?.pageViews);
+      setValue(values.todayLeads, analytics.today?.generateLeads);
+      setValue(values.weekSessions, analytics.last7Days?.sessions);
+      setValue(values.weekUsers, analytics.last7Days?.activeUsers);
+      setValue(values.weekViews, analytics.last7Days?.pageViews);
+      setValue(values.weekLeads, analytics.last7Days?.generateLeads);
+      renderSources(analytics.topSources);
+      status.textContent = "Secure GA4 reporting is live.";
+      status.classList.add("is-ready");
+      pill.textContent = "Live";
+      pill.classList.remove("is-muted");
+      copy.textContent = "Fixed aggregate GA4 reports, refreshed when this page opens.";
+      setupCopy.textContent = "Connected. The reporting credential stays server-side and is never exposed to this page.";
+    }
+
+    async function loadAnalytics() {
+      try {
+        const { response, payload } = await requestJson("/operations/api/analytics");
+        if (response.ok && payload?.ok && payload.analytics) {
+          renderAnalytics(payload.analytics);
+          return;
+        }
+
+        const needsSetup = payload?.error === "analytics_not_configured";
+        status.textContent = response.status === 403
+          ? "Your secure session has expired. Sign in again to view Analytics."
+          : needsSetup
+            ? "GA4 is collecting consented website activity; secure reporting access still needs its server-side credential."
+            : "Analytics reporting is temporarily unavailable. Please refresh shortly.";
+        status.classList.toggle("is-warning", needsSetup);
+        pill.textContent = needsSetup ? "Setup needed" : "Unavailable";
+        copy.textContent = needsSetup
+          ? "Tracking is separate from reporting. Once the restricted GA4 service credential is stored in Cloudflare, figures will populate here."
+          : "No traffic sources are available while reporting is unavailable.";
+        setupCopy.textContent = needsSetup
+          ? "One reporting credential remains to be stored securely in Cloudflare; it is not committed to the website or sent to staff browsers."
+          : "Check the restricted reporting connection and refresh this page.";
+        renderSources([]);
+      } catch {
+        status.textContent = "Analytics reporting is temporarily unavailable. Please refresh shortly.";
+        pill.textContent = "Unavailable";
+        copy.textContent = "No traffic sources are available while reporting is unavailable.";
+        setupCopy.textContent = "Check the restricted reporting connection and refresh this page.";
+        renderSources([]);
+      }
+    }
+
+    loadAnalytics();
+  </script>
+</OperationsLayout>

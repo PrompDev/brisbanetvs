@@ -4,6 +4,7 @@ import {
   onRequestOptions,
   onRequestPost,
 } from "../functions/api/website-lead.js";
+import { receiveInboundMail } from "./mail-ingest.js";
 
 function notFound() {
   return new Response("Not found", { status: 404 });
@@ -32,4 +33,5 @@ export default {
 
     return notFound();
   },
+  email: receiveInboundMail,
 };
