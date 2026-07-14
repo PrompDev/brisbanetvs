@@ -22,6 +22,7 @@ The current systems remain authoritative:
 | --- | --- |
 | Contacts, enquiries and website attribution | Operations D1 |
 | Facebook, Instagram and website lead follow-up | Existing private Google Sheet and Calendar Calls workflow |
+| Pixel call recording upload | Brisbane Calls Android app, private R2 storage and D1 call records |
 | Uploaded quote photos and stored inbound mail | Private R2 buckets, indexed by D1 |
 | Website reporting | Consent-aware GA4, Search Console and aggregate D1 lead counts |
 | Staff identity and portal access | Cloudflare Access |
@@ -62,10 +63,17 @@ in the pages where it is actually needed.
   exhausted, an error is shown instead of falling through to a static asset.
 - Drafts are saved in D1 only. There is no send endpoint, email binding or
   automatic reply.
+- Brisbane Calls pairs Tom's Pixel through a ten-minute one-use code. Google
+  Phone records the call, and the app uploads the shared audio to private R2
+  under the canonical lead ID.
 
 The safe port adds nine empty D1 tables and one Access-verified read API for
 the new workspace views. It does not change the existing connections or add a
 live telephony, SMS, payment, transcription, social-publishing or AI provider.
+
+The later Pixel recording integration adds hashed phone-device credentials,
+private audio storage and a call-recording index. See
+[Tom's Pixel call-recording app](mobile-call-recording.md).
 
 ## Remaining connectors and read-only modules
 
@@ -77,7 +85,7 @@ tested. A screen or database table does not make a connector live.
 | --- | --- | --- |
 | Lead pipeline | Reads the canonical D1 leads | Access-verified status updates with an audit event |
 | Calls and PBX | Empty D1 records and read view; no provider connected | Voice provider, signed callbacks, provider call IDs and phone-to-lead matching |
-| Call recordings and transcripts | Private-reference fields and read view; no transcription provider connected | Recording decision, retention rule, private storage and authenticated callbacks |
+| Pixel call recordings | Private R2 upload and Access-protected playback are connected; no transcription provider | Install and pair Tom's Pixel, add the app link to Calendar Calls, then run one announced test call |
 | Quotes, jobs, stock and finance | Empty D1 tables and read views | Access-verified write APIs, audit events and field-level validation |
 | SMS outbox | Empty approval-state table and read view; sending disabled | SMS transport, authenticated dispatch, staff approval, idempotency and delivery callbacks |
 | Stripe reconciliation | Not connected | Stripe account integration, signed raw-body webhook verification and invoice/payment mapping |

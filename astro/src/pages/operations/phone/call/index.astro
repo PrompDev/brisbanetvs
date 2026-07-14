@@ -1,0 +1,23 @@
+---
+import OperationsLayout from "../../../../components/operations/OperationsLayout.astro";
+---
+
+<OperationsLayout
+  title="Open call | Brisbane TVs Operations"
+  description="Open a calendar follow-up in the Brisbane TVs Calls Android app."
+  activeNav="workspace"
+>
+  <main class="call-fallback" aria-labelledby="call-title">
+    <p class="operations-eyebrow">Calendar call</p>
+    <h1 id="call-title">Open this link on Tom's Pixel.</h1>
+    <p>When Brisbane TVs Calls is installed and verified, the calendar link opens the matching lead in the app. If this page keeps appearing, install the current APK and enable <strong>Open supported links</strong> for the app.</p>
+    <a href="/operations/phone/pair/">Pair the installed app</a>
+  </main>
+
+  <style>
+    .call-fallback { max-width: 38rem; margin: 2rem auto; border: 1px solid #e0ddd6; border-radius: .9rem; padding: clamp(1.25rem, 4vw, 2rem); background: #fbfaf7; }
+    .call-fallback h1 { margin: .3rem 0 .7rem; color: #223744; font-family: Georgia, "Times New Roman", serif; font-size: clamp(2rem, 7vw, 3rem); }
+    .call-fallback p { color: #5f6f79; line-height: 1.6; }
+    .call-fallback a { color: #1f5a70; font-weight: 800; }
+  </style>
+</OperationsLayout>

@@ -67,6 +67,9 @@ function connectorStatuses(env, sheetDelivery) {
     && sheetDelivery?.status === "delivered"
     && nonEmpty(sheetDelivery?.delivered_at);
   const pbxStatus = pairStatus(env.PBX_PROVIDER, env.PBX_WEBHOOK_SECRET);
+  const pixelRecordingStatus = hasOperationsDatabase(env) && Boolean(env.CALL_RECORDINGS)
+    ? "configured"
+    : "not_connected";
   const smsStatus = pairStatus(env.ANDROID_SMS_GATEWAY_URL, env.ANDROID_SMS_GATEWAY_TOKEN, true);
   const transcriptionStatus = pairStatus(env.TRANSCRIPTION_PROVIDER, env.TRANSCRIPTION_API_KEY);
   const stripeStatus = pairStatus(env.STRIPE_SECRET_KEY, env.STRIPE_WEBHOOK_SECRET);
@@ -103,6 +106,15 @@ function connectorStatuses(env, sheetDelivery) {
         ? "Server settings are present. The signed call webhook still needs an end-to-end test."
         : "No voice provider is connected.",
       nextStep: "Choose the voice provider and whether Tom keeps, ports or diverts the current number.",
+    },
+    {
+      key: "pixel_recording",
+      label: "Pixel call recordings",
+      status: pixelRecordingStatus,
+      detail: pixelRecordingStatus === "configured"
+        ? "Private upload storage and the canonical call index are connected."
+        : "The private recording bucket or call index is unavailable.",
+      nextStep: "Install and pair Brisbane Calls, then upload one announced test recording.",
     },
     {
       key: "sms",
@@ -300,7 +312,9 @@ async function overviewData(db, limit) {
 async function callsData(db, limit, offset) {
   const [result, totalRow] = await Promise.all([
     db.prepare(
-      "SELECT c.id, c.direction, c.status, c.duration_seconds, c.started_at, l.full_name, l.phone "
+      "SELECT c.id, c.direction, c.status, c.duration_seconds, c.started_at, l.full_name, l.phone, "
+      + "(SELECT r.id FROM ops_call_recordings r WHERE r.call_id = c.id "
+      + "ORDER BY r.created_at DESC LIMIT 1) AS recording_id "
       + "FROM ops_calls c LEFT JOIN leads l ON l.id = c.lead_id "
       + "ORDER BY c.started_at DESC, c.id DESC LIMIT ? OFFSET ?",
     ).bind(limit, offset).all(),
@@ -317,6 +331,7 @@ async function callsData(db, limit, offset) {
       status: safeText(row.status, 32),
       durationSeconds: asCount(row.duration_seconds),
       startedAt: safeText(row.started_at, 64),
+      recordingId: safeText(row.recording_id, 160),
     })),
   };
 }

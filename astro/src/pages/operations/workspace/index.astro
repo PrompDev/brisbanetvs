@@ -80,6 +80,7 @@ const workspaceViews = [
           { label: "Status", keys: ["status"], status: true },
           { label: "Started", keys: ["startedAt", "started_at", "createdAt", "created_at"], date: true },
           { label: "Duration", keys: ["durationSeconds", "duration", "duration_seconds"], duration: true },
+          { label: "Audio", keys: ["recordingId", "recording_id"], recording: true },
         ],
       },
       quotes: {
@@ -471,6 +472,12 @@ const workspaceViews = [
             cell.textContent = displayDuration(value);
           } else if (column.date) {
             cell.textContent = displayDate(value);
+          } else if (column.recording && safeText(value)) {
+            const link = element("a", "workspace-recording-link", "Play recording");
+            link.href = `/operations/api/recordings/${encodeURIComponent(safeText(value))}`;
+            link.target = "_blank";
+            link.rel = "noopener";
+            cell.append(link);
           } else {
             cell.textContent = safeText(value, "—");
           }
@@ -721,6 +728,7 @@ const workspaceViews = [
     .workspace-table th { color: #697680; background: #f8f6f1; font-size: .67rem; letter-spacing: .06em; text-transform: uppercase; }
     .workspace-table tbody tr:last-child td { border-bottom: 0; }
     .workspace-table tbody tr:hover td { background: #fcfbf8; }
+    .workspace-recording-link { color: #1f5a70; font-weight: 800; text-underline-offset: .16em; }
     .workspace-pagination-note { margin: .7rem 0 0; color: #74818a; font-size: .72rem; }
     .workspace-connector-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
     .workspace-connector-card { display: flex; min-height: 10rem; flex-direction: column; border: 1px solid #e1ded7; border-radius: .72rem; padding: 1rem; background: #fbfaf7; }

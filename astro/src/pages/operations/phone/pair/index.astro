@@ -1,0 +1,61 @@
+---
+import OperationsLayout from "../../../../components/operations/OperationsLayout.astro";
+---
+
+<OperationsLayout
+  title="Pair Tom's phone | Brisbane TVs Operations"
+  description="Pair the Brisbane TVs Calls app with the protected Operations workspace."
+  activeNav="workspace"
+>
+  <main class="pair-card" aria-labelledby="pair-title">
+    <p class="operations-eyebrow">Phone setup</p>
+    <h1 id="pair-title">Pair Tom's phone.</h1>
+    <p>This creates a single-use code that expires in ten minutes. The installed app stores the resulting device key in Android's protected key store.</p>
+    <a class="pair-download" href="/operations/api/app/android">Download the signed Android app</a>
+    <p class="pair-install-note">On the Pixel, open the downloaded file and allow installation from Chrome when Android asks. Return here after Brisbane Calls is installed.</p>
+    <button type="button" data-pair-button>Pair this phone</button>
+    <p class="pair-status" data-pair-status role="status">Open this page from the Brisbane TVs Calls app on Tom's Pixel.</p>
+    <a class="pair-open" data-open-app hidden>Finish in Brisbane TVs Calls</a>
+  </main>
+
+  <script>
+    const button = document.querySelector("[data-pair-button]");
+    const status = document.querySelector("[data-pair-status]");
+    const openApp = document.querySelector("[data-open-app]");
+
+    button?.addEventListener("click", async () => {
+      button.disabled = true;
+      status.textContent = "Creating a secure pairing code...";
+      openApp.hidden = true;
+      try {
+        const response = await fetch("/operations/api/phone/pairings", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "accept": "application/json" },
+        });
+        const payload = await response.json();
+        if (!response.ok || payload?.ok !== true || typeof payload.code !== "string") {
+          throw new Error("pairing_failed");
+        }
+        openApp.href = `brisbanetvs://paired?code=${encodeURIComponent(payload.code)}`;
+        openApp.hidden = false;
+        status.textContent = "Code ready. Tap the button below to finish pairing.";
+      } catch {
+        status.textContent = "Pairing could not be started. Refresh this page and try again.";
+        button.disabled = false;
+      }
+    });
+  </script>
+
+  <style>
+    .pair-card { max-width: 38rem; margin: 2rem auto; border: 1px solid #e0ddd6; border-radius: .9rem; padding: clamp(1.25rem, 4vw, 2rem); background: #fbfaf7; box-shadow: 0 16px 45px rgba(32, 51, 63, .08); }
+    .pair-card h1 { margin: .3rem 0 .7rem; color: #223744; font-family: Georgia, "Times New Roman", serif; font-size: clamp(2rem, 7vw, 3rem); }
+    .pair-card p { color: #5f6f79; line-height: 1.6; }
+    .pair-card button, .pair-open, .pair-download { display: inline-flex; min-height: 3rem; align-items: center; justify-content: center; border: 0; border-radius: .65rem; padding: .7rem 1rem; color: #fff; background: #1f5a70; font: inherit; font-weight: 800; text-decoration: none; cursor: pointer; }
+    .pair-card button:disabled { cursor: wait; opacity: .65; }
+    .pair-download { margin-bottom: .3rem; background: #566c78; }
+    .pair-install-note { font-size: .85rem; }
+    .pair-status { min-height: 3rem; margin-top: 1rem; }
+    .pair-open { margin-top: .4rem; background: #b14d34; }
+  </style>
+</OperationsLayout>

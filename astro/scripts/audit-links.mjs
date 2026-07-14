@@ -3,8 +3,8 @@
  * every generated HTML file, and prints which ones point at a route that doesn't
  * exist as a physical file in dist/.
  *
- * Ignored: tel:, mailto:, #, http(s) externals, /api/n8n/* (those are n8n-cloud
- * webhooks resolved at runtime, not static pages).
+ * Ignored: tel:, mailto:, #, http(s) externals, /api/n8n/* webhooks, and
+ * /operations/api/* Pages Functions resolved at runtime.
  */
 
 import fs from "node:fs";
@@ -77,6 +77,8 @@ for (const file of htmlFiles) {
     if (!link.startsWith("/")) continue; // relative links — treat as external to this audit
     // Skip the n8n webhook namespace (resolved by n8n at runtime, not here).
     if (link.startsWith("/api/n8n/")) continue;
+    // Staff downloads and data endpoints are Pages Functions, not dist files.
+    if (link.startsWith("/operations/api/")) continue;
     stats.internal++;
     stats.checked++;
     if (!linkResolves(link, fileSet)) {

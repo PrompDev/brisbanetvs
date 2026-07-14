@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.brisbanetvs.calls",
+      "sha256_cert_fingerprints": [
+        "35:C9:12:95:77:FA:BA:3A:69:93:37:10:DD:AB:F2:A6:3B:E1:E5:79:DD:05:14:86:5B:BC:D4:33:75:FB:C4:1C"
+      ]
+    }
+  }
+]

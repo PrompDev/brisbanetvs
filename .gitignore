@@ -17,3 +17,11 @@ package-lock.json
 # Misc
 *.log
 !git.tools/CHANGELOG.log
+
+# Android local build and signing material
+android/**/.gradle/
+android/**/local.properties
+android/**/build/
+android/**/*.jks
+android/**/*.keystore
+android/**/releases/*.apk
