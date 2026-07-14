@@ -1,10 +1,12 @@
 ---
 title: "TV Removal and Re-Mount Brisbane: Move, Replace or Dispose"
 description: "Professional TV wall mounting services across Brisbane. Fixed-price packages from $275. Cable concealment, Starlink installation, soundbar mounting. 5-year warranty. Book online."
-heroImage: "https://cdn.brisbanetvs.com/install-chermside1200x1200.webp"
-heroAlt: "Installer safely removing a television from a Brisbane wall bracket"
+heroImage: "https://cdn.brisbanetvs.com/work/v1/tv-wall-bracket.jpg"
+heroAlt: "Close-up of an articulated TV wall bracket during an installation assessment"
+heroWidth: 1600
+heroHeight: 1200
 publishDate: 2026-06-29T09:00:00.000+10:00
-updatedDate: 2026-06-29T09:00:00.000+10:00
+updatedDate: 2026-07-14T09:00:00.000+10:00
 priceFrom: 129
 priceCurrency: "AUD"
 priceUnit: "per job"

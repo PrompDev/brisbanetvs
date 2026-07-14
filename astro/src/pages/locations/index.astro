@@ -1,6 +1,7 @@
 ---
 import MarketingLayout from "~/layouts/MarketingLayout.astro";
 import { getCollection } from "astro:content";
+import { getLocationImage } from "~/data/installationImages";
 
 /**
  * /locations/ — collection landing page for the suburb silo.
@@ -21,18 +22,24 @@ const locations = (
  */
 const GROUP_ORDER = [
   "Brisbane City",
-  "Inner North",
-  "Inner South",
-  "West",
-  "East / Bayside",
-  "North",
-  "South",
-  "Logan & Redlands",
-  "Other Brisbane",
+  "Inner Brisbane",
+  "Inner North Brisbane",
+  "North Brisbane",
+  "North-West Brisbane",
+  "Bayside North",
+  "Southside Brisbane",
+  "Eastern Brisbane & Bayside",
+  "Western Brisbane",
+  "Moreton Bay",
+  "Redlands",
+  "Logan",
+  "Ipswich",
+  "Gold Coast",
+  "Sunshine Coast",
 ];
 const grouped = new Map<string, typeof locations>();
 for (const loc of locations) {
-  const key = loc.data.region ?? "Other Brisbane";
+  const key = loc.data.region ?? "Other service areas";
   if (!grouped.has(key)) grouped.set(key, []);
   grouped.get(key)!.push(loc);
 }
@@ -62,29 +69,32 @@ const collectionLd = {
   "@type": "CollectionPage",
   "@id": pageUrl,
   url: pageUrl,
-  name: "Brisbane TV Installation — Suburb Directory",
+  name: "Brisbane TVs service-area directory",
   description:
-    "Every suburb we cover across Greater Brisbane. Same-week TV installs, flat-rate pricing, local installers.",
+    "Listed service areas across Greater Brisbane, Moreton Bay, Redlands, Logan and Ipswich, plus selected Gold Coast and Sunshine Coast suburbs.",
   hasPart: locations.map((l) => ({
     "@type": "Place",
     name: l.data.suburb,
     url: new URL(`/locations/${l.slug}/`, Astro.site).toString(),
+    image: getLocationImage(l.slug).url,
   })),
 };
 ---
 <MarketingLayout
-  title={`TV Mounting Brisbane Suburbs - ${locations.length} Areas Covered | Brisbane TVs`}
-  description={`From New Farm to Wynnum, Paddington to Chermside - ${locations.length} service areas listed. Find your area and book a flat-rate TV install with our local crew.`}
+  title={`TV Mounting Service Areas - ${locations.length} Locations | Brisbane TVs`}
+  description={`${locations.length} listed service areas across Greater Brisbane and surrounding South East Queensland, including selected Gold Coast and Sunshine Coast suburbs.`}
   canonical={pageUrl}
-  ogImage="https://cdn.brisbanetvs.com/install-kangaroopoint1200x1200.webp"
-  keywords="TV mounting near me Brisbane, TV installer Brisbane suburbs, TV mount Paddington, TV mount New Farm, TV mount Chermside, TV mount Wynnum, Brisbane TV install coverage"
+  ogImage="https://cdn.brisbanetvs.com/work/v1/installer-large-tv.jpg"
+  keywords="TV mounting near me Brisbane, TV installer Brisbane suburbs, TV mounting Gold Coast, TV mounting Sunshine Coast, Brisbane TV install service areas"
   jsonLd={[breadcrumbLd, collectionLd]}
   bodyClass="page-locations-index"
 >
   <section class="idx-banner">
     <img
       class="idx-banner-img"
-      src="https://cdn.brisbanetvs.com/install-kangaroopoint1200x1200.webp"
+      src="https://cdn.brisbanetvs.com/work/v1/installer-large-tv.jpg"
+      width="2880"
+      height="2160"
       alt=""
       aria-hidden="true"
     />
@@ -102,12 +112,12 @@ const collectionLd = {
           <span class="idx-crumbs-current">Locations</span>
         </nav>
         <header class="idx-hero-copy">
-          <p class="idx-eyebrow">Greater Brisbane · Suburb directory</p>
-          <h1>Locally based installers across every Brisbane suburb.</h1>
+          <p class="idx-eyebrow">Brisbane and listed SEQ service areas</p>
+          <h1>TV mounting across Brisbane and our listed service areas.</h1>
           <p class="idx-lede">
-            From New Farm queenslanders to Redland Bay acreage, we install TVs across
-            every postcode in Greater Brisbane. Pick your suburb for local housing stock
-            notes, travel times from the CBD, and same-week availability.
+            Browse Greater Brisbane, Moreton Bay, Redlands, Logan and Ipswich, plus the
+            Gold Coast and Sunshine Coast suburbs currently listed. Each page covers
+            local housing notes, nearby areas and booking details.
           </p>
           <div class="idx-stats">
             <div class="idx-stat">
@@ -120,7 +130,7 @@ const collectionLd = {
             </div>
             <div class="idx-stat">
               <span class="idx-stat-k">Response</span>
-              <span class="idx-stat-v">Same week</span>
+              <span class="idx-stat-v">At booking</span>
             </div>
             <div class="idx-stat">
               <span class="idx-stat-k">Call-out</span>
@@ -136,9 +146,13 @@ const collectionLd = {
       <div class="idx-split-img-wrap">
         <img
           class="idx-split-img"
-          src="https://cdn.brisbanetvs.com/westend-install1200x1200.webp"
-          alt="A Brisbane TVs installer fitting a TV in a West End lounge room with exposed-brick detail behind the screen"
+          src="https://cdn.brisbanetvs.com/work/v1/apartment-wall-mounted-tv.jpg"
+          width="1600"
+          height="1200"
+          alt="Wall-mounted TV above a timber media cabinet in an apartment"
           loading="eager"
+          decoding="async"
+          fetchpriority="high"
         />
       </div>
     </div>
@@ -168,9 +182,12 @@ const collectionLd = {
                       <div class="idx-card-img-wrap">
                         <img
                           class="idx-card-img"
-                          src={l.data.heroImage}
-                          alt={l.data.heroAlt}
+                          src={getLocationImage(l.slug).url}
+                          width={getLocationImage(l.slug).width}
+                          height={getLocationImage(l.slug).height}
+                          alt={getLocationImage(l.slug).alt}
                           loading="lazy"
+                          decoding="async"
                         />
                       </div>
                       <div class="idx-card-body">
@@ -225,12 +242,12 @@ const collectionLd = {
           <p class="idx-book-eyebrow">Brisbane TVs · Coverage</p>
           <h3 class="idx-book-title">Don't see your suburb?</h3>
           <p class="idx-book-desc">
-            We cover every postcode in Greater Brisbane, not just the ones listed here.
-            Tell us where you are and we'll quote same-day.
+            Every current service area is listed on this page. If you are nearby but
+            cannot find your suburb, call and Tom will confirm availability before you book.
           </p>
           <ul class="idx-book-list">
             <li><span class="idx-book-k">Suburbs</span><span>{locations.length} listed</span></li>
-            <li><span class="idx-book-k">Response</span><span>Same week</span></li>
+            <li><span class="idx-book-k">Availability</span><span>Confirmed at booking</span></li>
             <li><span class="idx-book-k">Call-out fee</span><span>$0</span></li>
           </ul>
           <a class="idx-book-btn" href="tel:0432145101">Check your suburb →</a>
@@ -241,8 +258,8 @@ const collectionLd = {
 
     <aside class="idx-foot-cta">
       <div>
-        <h2>Covering Greater Brisbane, from riverside to bayside.</h2>
-        <p>CBD, inner north and south, west, east/bayside, Logan, Redlands — if it's on the map, we install there.</p>
+        <h2>Greater Brisbane and selected South East Queensland service areas.</h2>
+        <p>See the listed suburbs for Moreton Bay, Redlands, Logan, Ipswich, Gold Coast and Sunshine Coast.</p>
       </div>
       <a class="idx-btn idx-btn-primary" href="tel:0432145101">Book an installer</a>
     </aside>

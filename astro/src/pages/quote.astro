@@ -21,6 +21,15 @@ import { BUSINESS, PACKAGES } from "~/data/business";
 
 const pageUrl = new URL("/quote/", Astro.site).toString();
 const businessUrl = new URL("/", Astro.site).toString();
+const serviceAreas = [
+  "Greater Brisbane",
+  "Moreton Bay",
+  "Redland City",
+  "Logan",
+  "Ipswich",
+  "Gold Coast",
+  "Sunshine Coast",
+].map((name) => ({ "@type": "AdministrativeArea", name }));
 
 const breadcrumbLd = {
   "@context": "https://schema.org",
@@ -40,7 +49,7 @@ const contactLd = {
   email: BUSINESS.email,
   url: businessUrl,
   priceRange: "$$",
-  areaServed: "Greater Brisbane",
+  areaServed: serviceAreas,
 };
 ---
 <BaseLayout
@@ -52,7 +61,7 @@ const contactLd = {
   <script type="application/ld+json" set:html={JSON.stringify(contactLd)} />
 
   <section class="qt-banner">
-    <img class="qt-banner-img" src="https://cdn.brisbanetvs.com/install-toowong1200x1200.webp" alt="" aria-hidden="true" />
+    <img class="qt-banner-img" src="https://cdn.brisbanetvs.com/work/v1/installer-large-tv.jpg" width="2880" height="2160" alt="" aria-hidden="true" decoding="async" />
     <div class="qt-banner-inner">
       <p class="qt-banner-title">Get a Quote</p>
     </div>
@@ -333,7 +342,7 @@ const contactLd = {
             <li><strong>4.9★</strong> across 2,000+ Google reviews</li>
             <li><strong>$20M</strong> public-liability insurance</li>
             <li><strong>12-month</strong> workmanship warranty on every install</li>
-            <li><strong>300+ suburbs</strong> covered across Greater Brisbane</li>
+            <li><strong>300+ listed areas</strong> across Brisbane, the Gold Coast and Sunshine Coast</li>
             <li><strong>Locally owned</strong> — not a national franchise</li>
           </ul>
         </div>

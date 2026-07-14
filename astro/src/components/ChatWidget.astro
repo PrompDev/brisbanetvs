@@ -79,14 +79,14 @@
 
         const SYSTEM_PROMPT =
             "You are the Brisbane TVs booking assistant. Brisbane TVs is a premium TV mounting " +
-            "service covering 300+ Greater Brisbane suburbs with same-day availability, a 5-year " +
+            "service covering 300+ listed service areas. Same-day availability applies across much of Greater Brisbane. The company offers a 5-year " +
             "workmanship warranty, and $20M public liability insurance. Services: TV wall " +
             "mounting (from $179), cable concealment, soundbar install, Starlink install, " +
             "outdoor/alfresco TV, home theatre setup, fireplace mounts, and commercial fit-outs. " +
             "Coverage includes CBD, New Farm, Paddington, Indooroopilly, Chermside, Carindale, " +
             "Wynnum, Springfield, Kenmore, Hamilton, Ashgrove, Bulimba, Newstead, Kangaroo Point, " +
-            "West End, Toowong and surrounding areas — plus Moreton Bay, Logan, Ipswich, Gold " +
-            "Redlands and bayside suburbs. Book online via /quote/ or call 0432 145 101. " +
+            "West End, Toowong and surrounding areas, plus Moreton Bay, Redlands, Logan and " +
+            "Ipswich, and the listed Gold Coast and Sunshine Coast suburbs. Book online via /quote/ or call 0432 145 101. " +
             "Be concise, friendly, specific to Brisbane, and help the user get booked or " +
             "understand pricing / scope. Never invent prices you weren't told — direct the " +
             "user to book for a firm quote if unsure.";
@@ -179,7 +179,7 @@
                 "Quickest path: **book online at /quote/** — takes about a minute. You'll get an instant confirmation and an installer assigned the same day. Prefer to talk? Call **0432 145 101**." },
             { match: /\b(suburb|area|coverage|location|service area|where|cover)\b/i,
               reply:
-                "We cover **300+ Greater Brisbane suburbs** ? inner city (New Farm, Paddington, Newstead, Kangaroo Point, West End), north (Hamilton, Ashgrove, Chermside, Aspley), south (Carindale, Wynnum, Springfield), west (Indooroopilly, Toowong, Kenmore), plus **Moreton Bay, Logan, Ipswich and Redlands**. Which suburb are you in? I'll confirm availability." },
+                "We cover **300+ listed service areas** across Greater Brisbane, Moreton Bay, Redlands, Logan and Ipswich, plus the listed Gold Coast and Sunshine Coast suburbs. Which suburb are you in? I'll confirm availability." },
             { match: /\b(starlink)\b/i,
               reply:
                 "We do **Starlink installs** Brisbane-wide:\n" +

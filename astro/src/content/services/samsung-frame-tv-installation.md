@@ -1,10 +1,12 @@
 ---
 title: "Samsung Frame TV Installation Brisbane: Flush Wall Mounting"
 description: "Samsung Frame TV installation in Brisbane with flush wall mounting, One Connect planning, cable concealment options and clean art-style setup."
-heroImage: "https://cdn.brisbanetvs.com/install-chermside1200x1200.webp"
-heroAlt: "Samsung Frame TV installed flush on a Brisbane living room wall"
+heroImage: "https://cdn.brisbanetvs.com/work/v1/frame-tv-lounge.jpg"
+heroAlt: "Samsung Frame TV displaying artwork in a modern living room"
+heroWidth: 1420
+heroHeight: 1894
 publishDate: 2026-06-29T09:00:00.000+10:00
-updatedDate: 2026-06-29T09:00:00.000+10:00
+updatedDate: 2026-07-14T09:00:00.000+10:00
 priceFrom: 249
 priceCurrency: "AUD"
 priceUnit: "per job"

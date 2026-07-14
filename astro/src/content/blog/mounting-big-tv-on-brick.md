@@ -1,10 +1,10 @@
 ---
 title: "Mounting a Big TV on Brick: What Brisbane Installers Do That DIYers Don't"
 description: "Brisbane's solid-brick walls crack mortar when you pick the wrong anchor. Here are the three steps our installers follow on every 75-inch brick job — and where we walk away."
-heroImage: "https://cdn.brisbanetvs.com/Brick%20Wall%20Mount1200x1200.webp"
-heroAlt: "A 75-inch TV mounted flush on a whitewashed brick feature wall in a Brisbane lounge, no visible cables"
+heroImage: "https://cdn.brisbanetvs.com/work/v1/installer-large-tv.jpg"
+heroAlt: "Installer standing beside a very large wall-mounted Samsung television after setup"
 publishDate: 2026-04-19T09:00:00.000+10:00
-updatedDate: 2026-04-19T09:00:00.000+10:00
+updatedDate: 2026-07-14T09:00:00.000+10:00
 author: "Brisbane TVs Team"
 style: "custom"
 suburb: ""
@@ -30,7 +30,7 @@ There are three failure modes we see on DIY brick jobs, and they all come from t
 
 None of these show up on day one. They all appear six to twelve months in, which is why you rarely see them in DIY YouTube videos — by the time the wall fails, the creator has moved on to their next "one weekend project".
 
-![Hammer drill cutting cleanly into a mortar joint with a fresh masonry bit](/media/mounting-big-tv-on-brick-inline-1.webp)
+![Close-up of an articulated TV wall bracket during an installation assessment](https://cdn.brisbanetvs.com/work/v1/tv-wall-bracket.jpg)
 
 ## The right anchor for Brisbane brick
 
@@ -58,7 +58,7 @@ There are three honest options on a brick wall.
 
 We walk every brick customer through all three before we quote. Pretending there's a magic "cable runs invisibly inside the wall" option on a solid-brick install is the single fastest way to go over budget.
 
-![Slim white conduit painted to match the wall, almost invisible behind the TV unit](/media/mounting-big-tv-on-brick-inline-2.webp)
+![Wall-mounted TV and soundbar in a furnished living room](https://cdn.brisbanetvs.com/work/v1/living-room-tv-soundbar.webp)
 
 ## What we charge, and what we won't do
 
@@ -75,7 +75,7 @@ We won't mount onto unreinforced single-skin veneer unless we've positively loca
 
 We also won't bury a power lead inside a chased channel unless a licensed electrician is on site — that's a legal requirement in Queensland, not a Brisbane TVs policy. If you need power relocated, we bring a sparky or we reschedule the day.
 
-![Finished brick-wall TV install viewed wide from across a Brisbane living room](/media/mounting-big-tv-on-brick-inline-3.jpg)
+![Wall-mounted TV above a tiled fireplace](https://cdn.brisbanetvs.com/work/v1/tv-above-fireplace.jpg)
 
 ## Brick-wall FAQ
 

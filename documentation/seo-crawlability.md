@@ -26,11 +26,41 @@ content across competing URLs and split canonical and backlink signals.
 
 - 382 Astro routes build successfully.
 - The XML sitemap contains 365 canonical public URLs.
+- The sitemap also contains 361 image entries using Google's image sitemap
+  extension. Location pages and verified-photo service pages advertise their
+  rendered hero.
 - Every sitemap URL has a physical HTML file, one title, one description, one
   H1, one matching self-canonical and substantial text before JavaScript runs.
 - The built site has no broken static internal links.
 - Live Googlebot, smartphone Googlebot and browser requests receive the same
   primary content.
+
+## Image crawlability and provenance
+
+Googlebot receives ordinary server-rendered `<img>` elements. The image CDN
+also returns the files to `Googlebot-Image`, so JavaScript is not required for
+image discovery.
+
+Ten natural job photos are published under versioned `work/v1/` CDN keys. The
+homepage, service pages, articles and location templates use literal alt text,
+intrinsic dimensions and those stable URLs. The homepage gallery links to real
+location pages but does not claim that a generic workmanship photo was taken in
+the linked suburb.
+
+`astro/src/data/installationImages.ts` is the canonical generic location-photo
+pool. A location may use its frontmatter photo only after `photoLocation` has
+been verified. Until then, the layout chooses a real generic job photo and does
+not add suburb provenance.
+
+Do not publish the existing Starlink image set as completed work. The source
+files contain Google Generative AI / SynthID provenance. No authentic
+Starlink-specific job photo has been verified yet. The Starlink service and
+product pages are deliberately excluded from the image sitemap until their
+images can be matched to genuine, relevant work.
+
+The former 6.5 MB homepage hero PNG was replaced with the 206 KB real installer
+photo. Keep the versioned CDN URL and its intrinsic dimensions to protect LCP
+and layout stability.
 
 ## Location-page quality plan
 
@@ -45,10 +75,11 @@ local photo and an anonymised job example with the actual TV size, wall type,
 bracket or cable solution, and only confirmed price, warranty and job-count
 claims.
 
-Before narrowing the sitemap, confirm the genuine service footprint. Sixteen
-current pages target the Gold Coast or Sunshine Coast while the site-wide
-business data lists Greater Brisbane, Moreton Bay, Logan and Ipswich. Do not
-remove or retain those pages based on guesswork.
+Tom's footprint was confirmed to include the 9 listed Gold Coast suburbs and 7
+listed Sunshine Coast suburbs. Site-wide copy and structured data now describe
+Greater Brisbane, Moreton Bay, Redlands, Logan and Ipswich, plus the listed
+Gold Coast and Sunshine Coast suburbs. Availability outside Brisbane is
+confirmed at booking.
 
 ## Business identity
 

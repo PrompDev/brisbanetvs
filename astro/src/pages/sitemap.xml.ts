@@ -16,6 +16,7 @@
  */
 import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
+import { INSTALLATION_IMAGES, getLocationImage } from "~/data/installationImages";
 
 const SITE = "https://brisbanetvs.com";
 
@@ -45,6 +46,11 @@ function xml(s: string): string {
 interface Url {
   loc: string;
   lastmod?: string;
+  images?: string[];
+}
+
+function absoluteImageUrl(value: string): string {
+  return new URL(value, SITE).toString();
 }
 
 export const GET: APIRoute = async () => {
@@ -52,7 +58,11 @@ export const GET: APIRoute = async () => {
 
   // ---- Static top-level pages ----
   urls.push(
-    { loc: "/",         lastmod: SHARED_PUBLIC_LASTMOD },
+    {
+      loc: "/",
+      lastmod: SHARED_PUBLIC_LASTMOD,
+      images: INSTALLATION_IMAGES.map((image) => image.url),
+    },
     { loc: "/pricing/", lastmod: SHARED_PUBLIC_LASTMOD },
     { loc: "/quote/",   lastmod: SHARED_PUBLIC_LASTMOD },
     { loc: "/privacy/", lastmod: SHARED_PUBLIC_LASTMOD },
@@ -81,18 +91,27 @@ export const GET: APIRoute = async () => {
     urls.push({
       loc: `/blog/${p.slug}/`,
       lastmod: lastmod(p.data.updatedDate ?? p.data.publishDate, SHARED_PUBLIC_LASTMOD),
+      images: [absoluteImageUrl(p.data.heroImage)],
     });
   }
   for (const s of services) {
     urls.push({
       loc: `/services/${s.slug}/`,
       lastmod: lastmod(s.data.updatedDate ?? s.data.publishDate, SHARED_PUBLIC_LASTMOD),
+      images: s.slug === "starlink-installation"
+        ? undefined
+        : [absoluteImageUrl(s.data.heroImage)],
     });
   }
   for (const l of locations) {
     urls.push({
       loc: `/locations/${l.slug}/`,
       lastmod: lastmod(l.data.updatedDate ?? l.data.publishDate, SHARED_PUBLIC_LASTMOD),
+      images: [
+        l.data.photoLocation
+          ? absoluteImageUrl(l.data.heroImage)
+          : getLocationImage(l.slug).url,
+      ],
     });
   }
   for (const p of products) {
@@ -105,16 +124,24 @@ export const GET: APIRoute = async () => {
     urls.push({
       loc: `/mounts/${m.slug}/`,
       lastmod: lastmod(m.data.updatedDate ?? m.data.publishDate, SHARED_PUBLIC_LASTMOD),
+      images: [absoluteImageUrl(m.data.heroImage)],
     });
   }
 
   const body =
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
-    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n` +
     urls
       .map((u) => {
         const parts = [`  <url>`, `    <loc>${xml(SITE + u.loc)}</loc>`];
         if (u.lastmod) parts.push(`    <lastmod>${u.lastmod}</lastmod>`);
+        for (const image of u.images ?? []) {
+          parts.push(
+            `    <image:image>`,
+            `      <image:loc>${xml(image)}</image:loc>`,
+            `    </image:image>`,
+          );
+        }
         parts.push(`  </url>`);
         return parts.join("\n");
       })

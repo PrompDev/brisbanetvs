@@ -61,7 +61,7 @@ const collectionLd = {
   title="TV Installation Services Brisbane — Wall Mounting, Cable Concealment, Soundbar & Starlink | Brisbane TVs"
   description="Every TV install service we offer across Brisbane: wall mounting from $179, in-wall cable concealment, soundbar pairing, Starlink, outdoor, fireplace, commercial fit-out. Flat-rate, insured, same-day."
   canonical={pageUrl}
-  ogImage="https://cdn.brisbanetvs.com/install-newstead1200x1200.webp"
+  ogImage="https://cdn.brisbanetvs.com/work/v1/installer-large-tv.jpg"
   keywords="TV installation Brisbane, TV wall mounting Brisbane services, cable concealment Brisbane, soundbar installation, Starlink installer Brisbane, outdoor TV mount"
   jsonLd={[breadcrumbLd, collectionLd]}
   bodyClass="page-services-index"
@@ -69,9 +69,12 @@ const collectionLd = {
   <section class="idx-banner">
     <img
       class="idx-banner-img"
-      src="https://cdn.brisbanetvs.com/install-newstead1200x1200.webp"
+      src="https://cdn.brisbanetvs.com/work/v1/installer-large-tv.jpg"
+      width="2880"
+      height="2160"
       alt=""
       aria-hidden="true"
+      decoding="async"
     />
     <div class="idx-banner-inner">
       <p class="idx-banner-title">Services</p>
@@ -150,12 +153,15 @@ const collectionLd = {
               <li class="idx-card">
                 <a class="idx-card-link" href={`/services/${s.slug}/`}>
                   <div class="idx-card-img-wrap">
-                    <img
-                      class="idx-card-img"
-                      src={s.data.heroImage}
-                      alt={s.data.heroAlt}
-                      loading="lazy"
-                    />
+                      <img
+                        class="idx-card-img"
+                        src={s.data.heroImage}
+                        width={s.data.heroWidth ?? 1200}
+                        height={s.data.heroHeight ?? 1200}
+                        alt={s.data.heroAlt}
+                        loading="lazy"
+                        decoding="async"
+                      />
                   </div>
                   <div class="idx-card-body">
                     <p class="idx-card-eyebrow">

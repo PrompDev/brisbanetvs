@@ -1,10 +1,12 @@
 ---
 title: "TV Wall Mounting in Brisbane: Flat-Rate, Fully Insured, Same-Week"
 description: "Brisbane's most-booked TV wall-mount service. Plasterboard, brick, fibro, rendered — we price flat, bring our own anchors, and conceal cables in-wall."
-heroImage: "https://cdn.brisbanetvs.com/install-chermside1200x1200.webp"
-heroAlt: "A Brisbane TVs installer cleanly wall-mounting a 75-inch OLED in a Paddington queenslander living room"
+heroImage: "https://cdn.brisbanetvs.com/work/v1/installer-large-tv.jpg"
+heroAlt: "TV installer standing beside a large wall-mounted Samsung television"
+heroWidth: 2880
+heroHeight: 2160
 publishDate: 2026-04-19T09:00:00.000+10:00
-updatedDate: 2026-04-19T09:00:00.000+10:00
+updatedDate: 2026-07-14T09:00:00.000+10:00
 priceFrom: 189
 priceTo: 449
 priceCurrency: "AUD"

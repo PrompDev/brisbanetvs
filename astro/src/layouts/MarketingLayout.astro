@@ -26,7 +26,7 @@
  *     title="TV Mounting Paddington — Same-Day Wall Installs"
  *     description="Local Paddington TV mount specialists. 2000+ 5-star reviews."
  *     canonical="https://brisbanetvs.com/locations/paddington/"
- *     ogImage="https://cdn.brisbanetvs.com/install-paddington.webp">
+ *     ogImage="https://cdn.brisbanetvs.com/work/v1/installer-large-tv.jpg">
  *     <slot>...page content...</slot>
  *   </MarketingLayout>
  */
@@ -59,7 +59,7 @@ const {
   title,
   description,
   canonical,
-  ogImage = "https://cdn.brisbanetvs.com/install-newstead1200x1200.webp",
+  ogImage = "https://cdn.brisbanetvs.com/work/v1/installer-large-tv.jpg",
   jsonLd,
   noindex = false,
   keywords,
@@ -68,6 +68,15 @@ const {
 
 const SITE = "https://brisbanetvs.com";
 const pageUrl = canonical ?? new URL(Astro.url.pathname, SITE).toString();
+const serviceAreas = [
+  "Greater Brisbane",
+  "Moreton Bay",
+  "Redland City",
+  "Logan",
+  "Ipswich",
+  "Gold Coast",
+  "Sunshine Coast",
+].map((name) => ({ "@type": "AdministrativeArea", name }));
 
 // Always emit a LocalBusiness schema so every page gives Google the core
 // entity info. Extra per-page JSON-LD is appended afterwards.
@@ -88,7 +97,7 @@ const localBusiness = {
     "addressCountry": "AU",
   },
   "geo": { "@type": "GeoCoordinates", "latitude": -27.4698, "longitude": 153.0251 },
-  "areaServed": "Greater Brisbane, Moreton Bay, Logan, Ipswich",
+  "areaServed": serviceAreas,
   "openingHoursSpecification": [{
     "@type": "OpeningHoursSpecification",
     "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],

@@ -1,10 +1,10 @@
 ---
 title: "How to Hide TV Cables Inside the Wall: A Brisbane Homeowner's Guide"
 description: "A clean install hides every cable. Here's exactly how Brisbane TVs runs HDMI, power, and data behind plasterboard — without risking your warranty or tripping your smoke alarm."
-heroImage: "https://cdn.brisbanetvs.com/Cable%20Concealment1200x1200.webp"
-heroAlt: "Brisbane cable-concealment install — HDMI and power routed cleanly behind plasterboard beneath a wall-mounted TV"
+heroImage: "https://cdn.brisbanetvs.com/work/v1/apartment-wall-mounted-tv.jpg"
+heroAlt: "Wall-mounted TV above a media console with no loose cables visible"
 publishDate: 2026-02-14
-updatedDate: 2026-04-10
+updatedDate: 2026-07-14
 author: "Brisbane TVs Team"
 style: "custom"
 service: "Cable Concealment"
@@ -24,7 +24,7 @@ There are two approved ways to conceal cables behind the wall, and one illegal s
 
 We never run standard IEC power leads through a wall cavity. That is not legal in Queensland, and most TV manufacturer warranties explicitly exclude damage caused by non-compliant power runs. If an installer offers to "just stuff the power cable up the wall" — find a different installer.
 
-![Cable brush plates at TV height and console height — the clean way to pass HDMI through a wall](https://cdn.brisbanetvs.com/install-kangaroopoint800x800.webp)
+![Wall-mounted TV on a clean white wall in a bright living room](https://cdn.brisbanetvs.com/work/v1/clean-wall-mounted-tv.jpg)
 
 ## What you need before we arrive
 

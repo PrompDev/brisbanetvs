@@ -53,6 +53,8 @@ const services = defineCollection({
       description: z.string().min(40).max(200),
       heroImage: z.string(),
       heroAlt: z.string().min(8),
+      heroWidth: z.number().int().positive().optional(),
+      heroHeight: z.number().int().positive().optional(),
       publishDate: z.coerce.date(),
       updatedDate: z.coerce.date().optional(),
       // Pricing (drives the Offer in schema.org/Service)
@@ -89,6 +91,11 @@ const locations = defineCollection({
       description: z.string().min(40).max(200),
       heroImage: z.string(),
       heroAlt: z.string().min(8),
+      // Set only when the business has verified where the pictured job occurred.
+      // Layouts use this to avoid inventing suburb provenance for shared images.
+      photoLocation: z.string().optional(),
+      heroWidth: z.number().int().positive().optional(),
+      heroHeight: z.number().int().positive().optional(),
       publishDate: z.coerce.date(),
       updatedDate: z.coerce.date().optional(),
       suburb: z.string(),

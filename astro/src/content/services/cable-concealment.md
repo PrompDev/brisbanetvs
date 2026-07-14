@@ -1,10 +1,12 @@
 ---
 title: "TV Cable Concealment Brisbane: In-Wall and Conduit Cable Hiding"
 description: "Hide TV cables in Brisbane with in-wall cable concealment, conduit, cabinet cable tidy and safe setup advice for wall mounted TVs."
-heroImage: "https://cdn.brisbanetvs.com/install-chermside1200x1200.webp"
-heroAlt: "Clean cable concealment behind a wall mounted TV in Brisbane"
+heroImage: "https://cdn.brisbanetvs.com/work/v1/apartment-wall-mounted-tv.jpg"
+heroAlt: "Wall-mounted TV above a media console with no loose cables visible"
+heroWidth: 1600
+heroHeight: 1200
 publishDate: 2026-06-29T09:00:00.000+10:00
-updatedDate: 2026-06-29T09:00:00.000+10:00
+updatedDate: 2026-07-14T09:00:00.000+10:00
 priceFrom: 99
 priceCurrency: "AUD"
 priceUnit: "per job"

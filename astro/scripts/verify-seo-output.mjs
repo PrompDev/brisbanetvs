@@ -101,12 +101,40 @@ if (!fs.existsSync(robotsPath)) {
 
 const sitemapPath = path.join(DIST, "sitemap.xml");
 let sitemapUrls = [];
+let sitemapImageUrls = [];
+let sitemapUrlBlocks = [];
 if (!fs.existsSync(sitemapPath)) {
   fail("sitemap.xml is missing from the production output");
 } else {
   const sitemap = fs.readFileSync(sitemapPath, "utf8");
+  if (!/xmlns:image=["']http:\/\/www\.google\.com\/schemas\/sitemap-image\/1\.1["']/.test(sitemap)) {
+    fail("sitemap.xml is missing the Google image sitemap namespace");
+  }
   sitemapUrls = [...sitemap.matchAll(/<loc>([\s\S]*?)<\/loc>/gi)].map((match) => decodeXml(match[1].trim()));
+  sitemapImageUrls = [...sitemap.matchAll(/<image:loc>([\s\S]*?)<\/image:loc>/gi)].map((match) => decodeXml(match[1].trim()));
+  sitemapUrlBlocks = [...sitemap.matchAll(/<url>([\s\S]*?)<\/url>/gi)].map((match) => match[1]);
   if (sitemapUrls.length === 0) fail("sitemap.xml contains no URLs");
+  if (sitemapImageUrls.length === 0) fail("sitemap.xml contains no image URLs");
+}
+
+for (const imageUrl of sitemapImageUrls) {
+  try {
+    const parsed = new URL(imageUrl);
+    if (parsed.protocol !== "https:") fail(`sitemap image URL is not HTTPS: ${imageUrl}`);
+  } catch {
+    fail(`invalid sitemap image URL: ${imageUrl}`);
+  }
+}
+
+for (const block of sitemapUrlBlocks) {
+  const pageUrl = decodeXml(block.match(/<loc>([\s\S]*?)<\/loc>/i)?.[1]?.trim() ?? "");
+  const pathname = pageUrl ? new URL(pageUrl).pathname : "";
+  const requiresImage =
+    /^\/locations\/[^/]+\/$/.test(pathname) ||
+    (/^\/services\/[^/]+\/$/.test(pathname) && pathname !== "/services/starlink-installation/");
+  if (requiresImage && !/<image:image>/.test(block)) {
+    fail(`${pathname} is missing its image sitemap entry`);
+  }
 }
 
 const sitemapSet = new Set(sitemapUrls);
@@ -173,4 +201,4 @@ if (errors.length > 0) {
   process.exit(1);
 }
 
-console.log(`\nSEO output verified: ${sitemapUrls.length} canonical URLs have complete static HTML.`);
+console.log(`\nSEO output verified: ${sitemapUrls.length} canonical URLs and ${sitemapImageUrls.length} image entries.`);

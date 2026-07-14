@@ -1,10 +1,12 @@
 ---
 title: "Starlink Installation Brisbane: Roof Mount, Cable Route and Setup"
 description: "Professional Starlink installation in Brisbane. Roof mounting, line-of-sight check, tidy cable routing and router setup. Fully insured technicians. Get a fixed-price quote."
-heroImage: "https://cdn.brisbanetvs.com/install-chermside1200x1200.webp"
-heroAlt: "Starlink dish installed on a Brisbane roof with clean cable routing"
+heroImage: "https://cdn.brisbanetvs.com/work/v1/technician-tv-setup.jpg"
+heroAlt: "Technician checking equipment beside a large wall-mounted television"
+heroWidth: 1600
+heroHeight: 1200
 publishDate: 2026-06-29T09:00:00.000+10:00
-updatedDate: 2026-06-29T09:00:00.000+10:00
+updatedDate: 2026-07-14T09:00:00.000+10:00
 priceFrom: 399
 priceCurrency: "AUD"
 priceUnit: "per job"

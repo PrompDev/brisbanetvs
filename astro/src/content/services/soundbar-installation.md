@@ -1,10 +1,12 @@
 ---
 title: "Soundbar Mounting Brisbane: Clean TV Audio Installation"
 description: "Soundbar mounting in Brisbane for Sonos, Samsung, Bose, Sony and LG setups with wall mounting, TV bracket attachment, cable tidy and audio testing."
-heroImage: "https://cdn.brisbanetvs.com/install-chermside1200x1200.webp"
-heroAlt: "Soundbar mounted neatly under a wall mounted television in Brisbane"
+heroImage: "https://cdn.brisbanetvs.com/work/v1/tv-soundbar.jpg"
+heroAlt: "Wall-mounted TV with a soundbar installed below"
+heroWidth: 1600
+heroHeight: 1200
 publishDate: 2026-06-29T09:00:00.000+10:00
-updatedDate: 2026-06-29T09:00:00.000+10:00
+updatedDate: 2026-07-14T09:00:00.000+10:00
 priceFrom: 129
 priceCurrency: "AUD"
 priceUnit: "per job"

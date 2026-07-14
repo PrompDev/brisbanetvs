@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "~/layouts/BaseLayout.astro";
 import { getCollection } from "astro:content";
+import { getLocationImage } from "~/data/installationImages";
 
 /**
  * Only link to nearby suburbs and services that actually exist as collection
@@ -31,11 +32,15 @@ const __existingServices = new Set(
 interface FaqItem { q: string; a: string; }
 
 interface Props {
+  slug: string;
   frontmatter: {
     title: string;
     description: string;
     heroImage: string;
     heroAlt: string;
+    photoLocation?: string;
+    heroWidth?: number;
+    heroHeight?: number;
     publishDate: Date;
     updatedDate?: Date;
     suburb: string;
@@ -53,10 +58,18 @@ interface Props {
   };
 }
 
-const { frontmatter } = Astro.props;
+const { frontmatter, slug } = Astro.props;
 const pageUrl = new URL(Astro.url.pathname, Astro.site).toString();
 const businessUrl = new URL("/", Astro.site).toString();
 const businessName = "Brisbane TVs";
+const hero = frontmatter.photoLocation
+  ? {
+      url: frontmatter.heroImage,
+      alt: frontmatter.heroAlt,
+      width: frontmatter.heroWidth ?? 1200,
+      height: frontmatter.heroHeight ?? 1200,
+    }
+  : getLocationImage(slug);
 
 // Filter related lists to only include entries that have real pages built.
 const filteredNearbySuburbs = frontmatter.nearbySuburbs.filter((s) => __existingLocations.has(s));
@@ -87,7 +100,7 @@ const locationServiceLd: Record<string, any> = {
   name: `TV mounting in ${frontmatter.suburb}`,
   description: frontmatter.description,
   url: pageUrl,
-  image: new URL(frontmatter.heroImage, Astro.site).toString(),
+  image: new URL(hero.url, Astro.site).toString(),
   provider: {
     "@type": "LocalBusiness",
     "@id": `${businessUrl}#business`,
@@ -139,7 +152,7 @@ const faqLd =
 <BaseLayout
   title={frontmatter.title}
   description={frontmatter.description}
-  image={frontmatter.heroImage}
+  image={hero.url}
   canonical={pageUrl}
 >
   <script type="application/ld+json" set:html={JSON.stringify(locationServiceLd)} />
@@ -150,7 +163,16 @@ const faqLd =
       Breaks out of the article's container using the 100vw margin trick
       so it always spans the true viewport width regardless of parent. */}
   <section class="loc-banner">
-    <img class="loc-banner-img" src={frontmatter.heroImage} alt="" aria-hidden="true" />
+    <img
+      class="loc-banner-img"
+      src={hero.url}
+      sizes="100vw"
+      width={hero.width}
+      height={hero.height}
+      alt=""
+      aria-hidden="true"
+      decoding="async"
+    />
     <div class="loc-banner-inner">
       <p class="loc-banner-title">{frontmatter.suburb}</p>
     </div>
@@ -215,7 +237,20 @@ const faqLd =
           Net effect: picture ends exactly at the bottom of the left
           column — never extends past "Services we cover". */}
       <div class="loc-split-img-wrap">
-        <img class="loc-split-img" src={frontmatter.heroImage} alt={frontmatter.heroAlt} loading="eager" />
+        <img
+          class="loc-split-img"
+          src={hero.url}
+          sizes="(max-width: 900px) 100vw, 45vw"
+          width={hero.width}
+          height={hero.height}
+          alt={hero.alt}
+          loading="eager"
+          decoding="async"
+          fetchpriority="high"
+        />
+        {frontmatter.photoLocation && (
+          <p class="loc-photo-location">Brisbane TVs installation · {frontmatter.photoLocation}</p>
+        )}
       </div>
     </div>
 
@@ -357,6 +392,7 @@ const faqLd =
      so it can't push the row taller than the left column. */
   .loc-split-img-wrap { position: relative; width: 100%; height: 100%; min-height: 0; border-radius: 10px; overflow: hidden; background: #eef0f3; }
   .loc-split-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .loc-photo-location { position: absolute; right: 14px; bottom: 12px; z-index: 1; margin: 0; padding: 7px 10px; border-radius: 999px; background: rgba(13,18,22,.82); color: #fff; font: 600 .72rem/1.2 Inter, sans-serif; }
   @media (max-width: 760px) {
     .loc-split { grid-template-columns: 1fr; }
     .loc-split-img-wrap { position: relative; height: auto; aspect-ratio: 4/3; }

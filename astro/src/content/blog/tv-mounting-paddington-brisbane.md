@@ -1,10 +1,10 @@
 ---
 title: "TV Mounting in Paddington: A Field Guide to Heritage Queenslanders"
 description: "Paddington's classic Queenslanders bring their own challenges — timber studs, lath-and-plaster walls, and narrow hallways. Here's exactly what we look for, what it costs, and what usually goes wrong."
-heroImage: "https://cdn.brisbanetvs.com/install-paddington.webp"
-heroAlt: "TV mounted above a fireplace in a Paddington Queenslander, with restored VJ panelling visible"
+heroImage: "https://cdn.brisbanetvs.com/work/v1/tv-above-fireplace.jpg"
+heroAlt: "Wall-mounted TV above a tiled fireplace"
 publishDate: 2026-03-02
-updatedDate: 2026-04-02
+updatedDate: 2026-07-14
 author: "Mia Lawson"
 style: "custom"
 suburb: "Paddington"
@@ -36,7 +36,7 @@ Old fireplaces. Usually double-brick with a plaster skim. Needs masonry anchors 
 
 Becoming more common as Paddington homes get exterior cladding upgrades. These walls are great to mount into — the stud spacing is modern, the fixings are standard — but you need to know which layer is structural.
 
-![A Paddington Queenslander wall opened up for a cable-chase — laths visible under the skim coat](https://cdn.brisbanetvs.com/install-kangaroopoint800x800.webp)
+![A finished wall-mounted TV above a timber media cabinet](https://cdn.brisbanetvs.com/work/v1/apartment-wall-mounted-tv.jpg)
 
 ## What a typical Paddington booking looks like
 

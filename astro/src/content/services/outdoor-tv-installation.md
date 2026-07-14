@@ -1,10 +1,12 @@
 ---
 title: "Outdoor TV Installation Brisbane: Patio and Alfresco Mounting"
 description: "Outdoor TV installation in Brisbane for patios, decks, pools and alfresco areas. Weather-rated brackets, corrosion-resistant hardware, glare and cable planning. From $399."
-heroImage: "https://cdn.brisbanetvs.com/install-chermside1200x1200.webp"
-heroAlt: "Outdoor TV mounted in a covered Brisbane patio area"
+heroImage: "https://cdn.brisbanetvs.com/work/v1/outdoor-tv.jpg"
+heroAlt: "Outdoor television mounted under a covered patio"
+heroWidth: 526
+heroHeight: 701
 publishDate: 2026-06-29T09:00:00.000+10:00
-updatedDate: 2026-06-29T09:00:00.000+10:00
+updatedDate: 2026-07-14T09:00:00.000+10:00
 priceFrom: 249
 priceCurrency: "AUD"
 priceUnit: "per job"

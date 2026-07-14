@@ -41,6 +41,8 @@ interface Props {
     description: string;
     heroImage: string;
     heroAlt: string;
+    heroWidth?: number;
+    heroHeight?: number;
     publishDate: Date;
     updatedDate?: Date;
     priceFrom: number;
@@ -63,6 +65,15 @@ const { frontmatter, slug } = Astro.props;
 const pageUrl = new URL(Astro.url.pathname, Astro.site).toString();
 const businessName = "Brisbane TVs";
 const businessUrl = new URL("/", Astro.site).toString();
+const serviceFootprint = [
+  "Greater Brisbane",
+  "Moreton Bay",
+  "Redland City",
+  "Logan",
+  "Ipswich",
+  "Gold Coast",
+  "Sunshine Coast",
+].map((name) => ({ "@type": "AdministrativeArea", name }));
 
 // Filter related cross-links to only include entries that have real pages.
 const filteredRelatedServices = frontmatter.relatedServices.filter((s) => __existingServices.has(s));
@@ -104,12 +115,9 @@ const serviceLd: Record<string, any> = {
     "@type": "LocalBusiness",
     name: businessName,
     url: businessUrl,
-    areaServed: "Brisbane, Queensland, Australia",
+    areaServed: serviceFootprint,
   },
-  areaServed: frontmatter.serviceArea.map((s) => ({
-    "@type": "Place",
-    name: s,
-  })),
+  areaServed: serviceFootprint,
   offers: {
     "@type": "Offer",
     price: frontmatter.priceFrom,
@@ -173,7 +181,15 @@ const faqLd =
       Breaks out of the article's container via the 100vw margin trick so
       it always spans the true viewport width regardless of parent. */}
   <section class="svc-banner">
-    <img class="svc-banner-img" src={frontmatter.heroImage} alt="" aria-hidden="true" />
+    <img
+      class="svc-banner-img"
+      src={frontmatter.heroImage}
+      width={frontmatter.heroWidth ?? 1200}
+      height={frontmatter.heroHeight ?? 1200}
+      alt=""
+      aria-hidden="true"
+      decoding="async"
+    />
     <div class="svc-banner-inner">
       <p class="svc-banner-title">{shortLabel}</p>
     </div>
@@ -226,7 +242,16 @@ const faqLd =
       {/* Wrapper owns the grid cell so the image (absolutely-positioned
           inside it) can't push the row taller than the left column. */}
       <div class="svc-split-img-wrap">
-        <img class="svc-split-img" src={frontmatter.heroImage} alt={frontmatter.heroAlt} loading="eager" />
+        <img
+          class="svc-split-img"
+          src={frontmatter.heroImage}
+          width={frontmatter.heroWidth ?? 1200}
+          height={frontmatter.heroHeight ?? 1200}
+          alt={frontmatter.heroAlt}
+          loading="eager"
+          decoding="async"
+          fetchpriority="high"
+        />
       </div>
     </div>
 
@@ -239,7 +264,7 @@ const faqLd =
       <div class="svc-article-main">
         {frontmatter.serviceArea.length > 0 && (
           <section class="svc-area" aria-labelledby="svc-area-h">
-            <h2 id="svc-area-h">Where we deliver this service</h2>
+            <h2 id="svc-area-h">Popular service areas</h2>
             <p class="u-muted">Covered suburbs across Brisbane:</p>
             <ul class="svc-area-list">
               {frontmatter.serviceArea.map((s) => (
@@ -311,7 +336,7 @@ const faqLd =
           <ul class="svc-book-list">
             <li><span class="svc-book-k">From</span><span>${frontmatter.priceFrom}</span></li>
             <li><span class="svc-book-k">Duration</span><span>{frontmatter.duration ?? "—"}</span></li>
-            <li><span class="svc-book-k">Coverage</span><span>{frontmatter.serviceArea.length > 0 ? `${frontmatter.serviceArea.length}+ suburbs` : "Brisbane-wide"}</span></li>
+            <li><span class="svc-book-k">Coverage</span><span>{frontmatter.serviceArea.length > 0 ? `${frontmatter.serviceArea.length} popular areas` : "See locations"}</span></li>
           </ul>
           <a class="svc-book-btn" href="tel:0432145101">Book this service →</a>
           <a class="svc-book-link" href="tel:0432145101">or call 0432 145 101</a>

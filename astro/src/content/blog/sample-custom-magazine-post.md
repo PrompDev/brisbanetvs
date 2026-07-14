@@ -1,10 +1,10 @@
 ---
 title: "Inside a 98-Inch Samsung Install in New Farm"
 description: "A behind-the-scenes look at how we stud-anchored a 65kg, 98-inch Samsung QLED over a floating media console in a New Farm penthouse — without a single visible cable."
-heroImage: "https://cdn.brisbanetvs.com/install-bulimba1200x1200.webp"
-heroAlt: "98-inch Samsung QLED wall mounted over a floating media console in a Brisbane penthouse, no visible cables"
+heroImage: "https://cdn.brisbanetvs.com/work/v1/living-room-tv-soundbar.webp"
+heroAlt: "Wall-mounted TV and soundbar in a furnished living room"
 publishDate: 2026-04-18
-updatedDate: 2026-04-18
+updatedDate: 2026-07-14
 author: "Tom Reilly"
 style: "custom"
 suburb: "New Farm"
@@ -22,7 +22,7 @@ A 98-inch panel exerts serious leverage. The brackets we use for installs like t
 
 In this apartment, the stud spacing was 600 mm and the console was already installed. The centre of the console sat 40 mm left of the nearest stud pair — which meant we either off-centred the TV, or we shifted the console. The client chose to shift the console 40 mm. Worth the extra hour.
 
-![Laser-levelling the stud line before the bracket goes up — New Farm, April 2026](https://cdn.brisbanetvs.com/install-newstead800x800.webp)
+![TV technician checking a large wall-mounted television](https://cdn.brisbanetvs.com/work/v1/technician-tv-setup.jpg)
 
 ## The cable run
 

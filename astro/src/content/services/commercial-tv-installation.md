@@ -1,10 +1,12 @@
 ---
 title: "Commercial TV Installation Brisbane: Offices, Gyms, Clinics and Venues"
 description: "Commercial TV installation in Brisbane for offices, gyms, cafes, restaurants, clinics and venues. Multi-screen installs, digital signage, after-hours work and tax invoices."
-heroImage: "https://cdn.brisbanetvs.com/install-chermside1200x1200.webp"
-heroAlt: "Commercial display mounted in a Brisbane business fit-out"
+heroImage: "https://cdn.brisbanetvs.com/work/v1/technician-tv-setup.jpg"
+heroAlt: "Technician setting up a large wall-mounted television during installation"
+heroWidth: 1600
+heroHeight: 1200
 publishDate: 2026-06-29T09:00:00.000+10:00
-updatedDate: 2026-06-29T09:00:00.000+10:00
+updatedDate: 2026-07-14T09:00:00.000+10:00
 priceFrom: 349
 priceCurrency: "AUD"
 priceUnit: "per job"
