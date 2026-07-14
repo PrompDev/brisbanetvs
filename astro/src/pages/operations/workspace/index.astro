@@ -1,0 +1,762 @@
+---
+import OperationsLayout from "../../../components/operations/OperationsLayout.astro";
+
+const workspaceViews = [
+  { key: "overview", label: "Overview" },
+  { key: "calls", label: "Calls" },
+  { key: "quotes", label: "Quotes" },
+  { key: "jobs", label: "Jobs" },
+  { key: "stock", label: "Stock" },
+  { key: "finance", label: "Finance" },
+  { key: "social", label: "Social" },
+  { key: "phone", label: "Phone" },
+];
+---
+
+<OperationsLayout
+  active="workspace"
+  title="Operations workspace"
+  description="Read-only Brisbane TVs work views for approved staff."
+>
+  <div class="workspace-root">
+    <section class="operations-page-header" aria-labelledby="workspace-title">
+      <div>
+        <p class="operations-eyebrow">Workspace</p>
+        <h1 id="workspace-title" class="operations-title">Current work.</h1>
+        <p class="operations-copy">Open one view at a time. The workspace reads Operations data and cannot place calls, send messages, take payments or change records.</p>
+      </div>
+      <p class="operations-status" data-workspace-status role="status">Waiting for workspace data...</p>
+    </section>
+
+    <nav class="workspace-view-bar" aria-label="Workspace views">
+      {workspaceViews.map((view, index) => (
+        <button
+          class:list={["workspace-view-button", { "is-active": index === 0 }]}
+          type="button"
+          data-workspace-view={view.key}
+          aria-pressed={index === 0 ? "true" : "false"}
+          aria-controls="workspace-content"
+        >
+          {view.label}
+        </button>
+      ))}
+    </nav>
+
+    <section class="workspace-surface" aria-label="Workspace data" data-workspace-shell aria-busy="true">
+      <div id="workspace-content" data-workspace-content aria-live="polite">
+        <div class="workspace-loading">
+          <span class="workspace-loading-dot" aria-hidden="true"></span>
+          <p>Loading overview...</p>
+        </div>
+      </div>
+    </section>
+
+    <aside class="workspace-source-note" aria-label="Canonical Operations pages">
+      <p>Customer records remain in <a href="/operations/leads/">Leads</a>. Mail stays in <a href="/operations/inbox/">Inbox</a>, and website reporting stays in <a href="/operations/analytics/">Analytics</a>.</p>
+    </aside>
+  </div>
+
+  <script>
+    const allowedViews = new Set(["overview", "calls", "quotes", "jobs", "stock", "finance", "social", "phone"]);
+    const viewLabels = {
+      overview: "Overview",
+      calls: "Calls",
+      quotes: "Quotes",
+      jobs: "Jobs",
+      stock: "Stock",
+      finance: "Finance",
+      social: "Social",
+      phone: "Phone",
+    };
+    const tableViews = {
+      calls: {
+        title: "Call records",
+        description: "Recent call activity returned by Operations.",
+        collection: "calls",
+        columns: [
+          { label: "Lead", keys: ["leadName", "lead_name", "customer", "name", "lead"] },
+          { label: "Phone", keys: ["phone", "phoneNumber", "phone_number"] },
+          { label: "Direction", keys: ["direction"] },
+          { label: "Status", keys: ["status"], status: true },
+          { label: "Started", keys: ["startedAt", "started_at", "createdAt", "created_at"], date: true },
+          { label: "Duration", keys: ["durationSeconds", "duration", "duration_seconds"], duration: true },
+        ],
+      },
+      quotes: {
+        title: "Quotes",
+        description: "Quote records returned by Operations.",
+        collection: "quotes",
+        columns: [
+          { label: "Quote", keys: ["number", "quoteNumber", "quote_number", "reference", "id"] },
+          { label: "Customer", keys: ["customer", "customerName", "customer_name", "name"] },
+          { label: "Service", keys: ["service", "serviceName", "service_name"] },
+          { label: "Amount", keys: ["totalCents", "amount", "total", "value"], currencyCents: true },
+          { label: "Status", keys: ["status"], status: true },
+          { label: "Updated", keys: ["updatedAt", "updated_at", "createdAt", "created_at"], date: true },
+        ],
+      },
+      jobs: {
+        title: "Jobs",
+        description: "Scheduled and active work returned by Operations.",
+        collection: "jobs",
+        columns: [
+          { label: "Job", keys: ["jobNumber", "job_number", "reference", "id"] },
+          { label: "Customer", keys: ["customer", "customerName", "customer_name", "name"] },
+          { label: "Service", keys: ["service", "serviceName", "service_name"] },
+          { label: "Scheduled", keys: ["scheduledAt", "scheduled_at", "scheduled", "date"], date: true },
+          { label: "Status", keys: ["status"], status: true },
+        ],
+      },
+      stock: {
+        title: "Stock",
+        description: "Current stock records returned by Operations.",
+        collection: "supplies",
+        paginationKey: "suppliesPagination",
+        columns: [
+          { label: "Item", keys: ["item", "itemName", "item_name", "name", "sku"] },
+          { label: "Available", keys: ["available", "onHand", "on_hand", "quantity"] },
+          { label: "Reorder at", keys: ["reorderLevel", "required", "needed", "reorderAt", "reorder_at"] },
+          { label: "Supplier", keys: ["supplier"] },
+          { label: "Updated", keys: ["updatedAt", "updated_at"], date: true },
+        ],
+      },
+      finance: {
+        title: "Invoices",
+        description: "Invoice records returned by Operations.",
+        collection: "invoices",
+        columns: [
+          { label: "Invoice", keys: ["number", "reference", "id"] },
+          { label: "Customer", keys: ["customer", "name"] },
+          { label: "Total", keys: ["totalCents", "amount", "total"], currencyCents: true },
+          { label: "Due", keys: ["dueAt", "due_at"], date: true },
+          { label: "Status", keys: ["status"], status: true },
+        ],
+      },
+      social: {
+        title: "Social posts",
+        description: "Draft and scheduled posts returned by Operations.",
+        collection: "posts",
+        columns: [
+          { label: "Post", keys: ["title", "name", "id"] },
+          { label: "Campaign", keys: ["campaign", "campaignName", "campaign_name"] },
+          { label: "Scheduled", keys: ["scheduledAt", "scheduled_at"], date: true },
+          { label: "Status", keys: ["status"], status: true },
+        ],
+      },
+    };
+
+    const numberFormat = new Intl.NumberFormat("en-AU");
+    const currencyFormat = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" });
+    const dateFormat = new Intl.DateTimeFormat("en-AU", {
+      dateStyle: "medium",
+      timeStyle: "short",
+      timeZone: "Australia/Brisbane",
+    });
+    const statusElement = document.querySelector("[data-workspace-status]");
+    const workspaceShell = document.querySelector("[data-workspace-shell]");
+    const contentElement = document.querySelector("[data-workspace-content]");
+    const viewButtons = Array.from(document.querySelectorAll("[data-workspace-view]"));
+    let activeView = "overview";
+    let activeRequest = null;
+    let requestNumber = 0;
+
+    function isRecord(value) {
+      return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+    }
+
+    function safeText(value, fallback = "") {
+      if (typeof value !== "string" && typeof value !== "number" && typeof value !== "boolean") return fallback;
+      const text = String(value).replace(/\u0000/g, "").trim();
+      return text ? text.slice(0, 500) : fallback;
+    }
+
+    function element(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== undefined) node.textContent = safeText(text);
+      return node;
+    }
+
+    function firstValue(record, keys) {
+      if (!isRecord(record)) return "";
+      for (const key of keys) {
+        if (!Object.prototype.hasOwnProperty.call(record, key)) continue;
+        const value = record[key];
+        if (value !== null && value !== undefined && value !== "") return value;
+      }
+      return "";
+    }
+
+    function humanLabel(value) {
+      const text = safeText(value).replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ").trim();
+      return text ? text.charAt(0).toUpperCase() + text.slice(1) : "Metric";
+    }
+
+    function displayNumber(value) {
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? numberFormat.format(numeric) : safeText(value, "0");
+    }
+
+    function displayCurrency(value) {
+      if (typeof value === "number" && Number.isFinite(value)) return currencyFormat.format(value);
+      const text = safeText(value);
+      if (!text) return "—";
+      const numeric = Number(text);
+      return Number.isFinite(numeric) ? currencyFormat.format(numeric) : text;
+    }
+
+    function displayCurrencyCents(value) {
+      if (value === "" || value === null || value === undefined) return "—";
+      const numeric = Number(value);
+      return Number.isFinite(numeric) ? currencyFormat.format(numeric / 100) : "—";
+    }
+
+    function displayDuration(value) {
+      const seconds = Math.max(0, Number(value) || 0);
+      if (!seconds) return "0 sec";
+      const minutes = Math.floor(seconds / 60);
+      const remainder = Math.floor(seconds % 60);
+      return minutes ? `${minutes} min ${remainder} sec` : `${remainder} sec`;
+    }
+
+    function displayDate(value) {
+      const text = safeText(value);
+      if (!text) return "—";
+      const date = new Date(text);
+      return Number.isNaN(date.getTime()) ? text : dateFormat.format(date);
+    }
+
+    function normaliseStatus(value) {
+      return safeText(value, "unknown").toLowerCase().replace(/[^a-z0-9]+/g, "_").slice(0, 40);
+    }
+
+    function statusLabel(value) {
+      const status = normaliseStatus(value);
+      const labels = {
+        ready: "Ready",
+        available: "Available",
+        connected: "Connected",
+        active: "Active",
+        complete: "Complete",
+        completed: "Completed",
+        sent: "Sent",
+        paid: "Paid",
+        new: "New",
+        open: "Open",
+        pending: "Pending",
+        due: "Due",
+        scheduled: "Scheduled",
+        draft: "Draft",
+        low: "Low",
+        failed: "Failed",
+        error: "Error",
+        unavailable: "Unavailable",
+        not_configured: "Not configured",
+        setup_required: "Setup required",
+        disconnected: "Disconnected",
+        disabled: "Disabled",
+        staged: "Staged",
+        configured: "Configured",
+        not_connected: "Not connected",
+        unknown: "Status unavailable",
+      };
+      return labels[status] || humanLabel(status);
+    }
+
+    function statusTone(value) {
+      const status = normaliseStatus(value);
+      if (["ready", "connected", "active", "available", "complete", "completed", "sent", "paid"].includes(status)) return "is-ready";
+      if (["failed", "error", "unavailable", "disconnected", "disabled"].includes(status)) return "is-error";
+      if (["pending", "due", "low", "configured", "setup_required", "not_configured", "not_connected", "staged"].includes(status)) return "is-warning";
+      return "is-muted";
+    }
+
+    function statusPill(value) {
+      const pill = element("span", `workspace-status-pill ${statusTone(value)}`, statusLabel(value));
+      return pill;
+    }
+
+    function emptyState() {
+      const empty = element("div", "workspace-empty");
+      empty.append(
+        element("span", "workspace-empty-mark", "0"),
+        element("p", "", "No live records yet."),
+      );
+      return empty;
+    }
+
+    function loadingState(view) {
+      const loading = element("div", "workspace-loading");
+      const dot = element("span", "workspace-loading-dot");
+      dot.setAttribute("aria-hidden", "true");
+      loading.append(dot, element("p", "", `Loading ${viewLabels[view].toLowerCase()}...`));
+      return loading;
+    }
+
+    function errorState(message) {
+      const panel = element("div", "workspace-error");
+      panel.append(
+        element("strong", "", "Workspace data is unavailable"),
+        element("p", "", message),
+        element("p", "workspace-error-help", "Leads, Inbox and Analytics remain available from the main Operations navigation."),
+      );
+      return panel;
+    }
+
+    function metricEntries(value) {
+      if (Array.isArray(value)) {
+        return value.filter(isRecord).slice(0, 8).map((entry) => ({
+          label: safeText(firstValue(entry, ["label", "name", "title"]), "Metric"),
+          value: firstValue(entry, ["value", "count", "amount", "total"]),
+          detail: safeText(firstValue(entry, ["detail", "description", "period"])),
+          status: safeText(firstValue(entry, ["status"])),
+        }));
+      }
+      if (!isRecord(value)) return [];
+      return Object.entries(value).slice(0, 8).flatMap(([key, entry]) => {
+        if (entry === null || entry === undefined || typeof entry === "object") return [];
+        return [{ label: humanLabel(key), value: entry, detail: "", status: "" }];
+      });
+    }
+
+    function renderMetrics(metrics, parent) {
+      const entries = metricEntries(metrics);
+      if (!entries.length) return false;
+      const grid = element("section", "workspace-metrics");
+      grid.setAttribute("aria-label", "Workspace metrics");
+      entries.forEach((entry) => {
+        const card = element("article", "workspace-metric-card");
+        const header = element("div", "workspace-metric-heading");
+        header.append(element("p", "workspace-metric-label", entry.label));
+        if (entry.status) header.append(statusPill(entry.status));
+        const value = element("strong", "workspace-metric-value", displayNumber(entry.value));
+        card.append(header, value);
+        if (entry.detail) card.append(element("p", "workspace-metric-detail", entry.detail));
+        grid.append(card);
+      });
+      parent.append(grid);
+      return true;
+    }
+
+    function modulePanel(title, description) {
+      const panel = element("section", "workspace-module");
+      const heading = element("div", "workspace-module-heading");
+      const copy = element("div", "");
+      const titleElement = element("h2", "workspace-module-title", title);
+      titleElement.id = `workspace-view-title-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+      copy.append(titleElement);
+      if (description) copy.append(element("p", "workspace-module-copy", description));
+      heading.append(copy);
+      panel.append(heading);
+      return panel;
+    }
+
+    function collectionFrom(data, key) {
+      const candidates = [data[key], data.records, data.items];
+      for (const candidate of candidates) {
+        if (Array.isArray(candidate)) return candidate.filter(isRecord).slice(0, 100);
+      }
+      return [];
+    }
+
+    function renderOverview(data) {
+      const fragment = document.createDocumentFragment();
+      const leads = isRecord(data.leads) ? data.leads : {};
+      const operations = isRecord(data.operations) ? data.operations : {};
+      const calls = isRecord(operations.calls) ? operations.calls : {};
+      const quotes = isRecord(operations.quotes) ? operations.quotes : {};
+      const jobs = isRecord(operations.jobs) ? operations.jobs : {};
+      const metrics = [
+        { label: "Leads today", value: leads.today ?? 0 },
+        { label: "Leads, 7 days", value: leads.last7Days ?? 0 },
+        { label: "Open leads", value: leads.open ?? 0 },
+        { label: "Missed calls", value: calls.missed ?? 0 },
+        { label: "Quotes to review", value: quotes.needsReview ?? 0 },
+        { label: "Active jobs", value: jobs.active ?? 0 },
+      ];
+      const hasMetrics = renderMetrics(metrics, fragment);
+      if (!hasMetrics) {
+        const metricPanel = modulePanel("Summary", "Current totals returned by Operations.");
+        metricPanel.append(emptyState());
+        fragment.append(metricPanel);
+      }
+
+      const moduleGrid = element("div", "workspace-overview-grid");
+      const pipelinePanel = modulePanel("Pipeline", "Current work by stage.");
+      const pipelineSource = leads.pipeline;
+      const pipeline = Array.isArray(pipelineSource)
+        ? pipelineSource.filter(isRecord).slice(0, 12)
+        : isRecord(pipelineSource)
+          ? Object.entries(pipelineSource).map(([label, count]) => ({ label, count })).slice(0, 12)
+          : [];
+      if (!pipeline.length) {
+        pipelinePanel.append(emptyState());
+      } else {
+        const list = element("ol", "workspace-pipeline");
+        const maximum = Math.max(1, ...pipeline.map((entry) => Math.max(0, Number(firstValue(entry, ["count", "value", "total"])) || 0)));
+        pipeline.forEach((entry) => {
+          const count = Math.max(0, Number(firstValue(entry, ["count", "value", "total"])) || 0);
+          const item = element("li", "workspace-pipeline-item");
+          const top = element("div", "workspace-pipeline-row");
+          top.append(
+            element("span", "", safeText(firstValue(entry, ["label", "stage", "name", "status"]), "Stage")),
+            element("strong", "", numberFormat.format(count)),
+          );
+          const track = element("div", "workspace-pipeline-track");
+          const bar = element("span", "workspace-pipeline-bar");
+          bar.style.width = `${Math.max(4, Math.min(100, (count / maximum) * 100))}%`;
+          track.append(bar);
+          item.append(top, track);
+          list.append(item);
+        });
+        pipelinePanel.append(list);
+      }
+
+      const followupPanel = modulePanel("Follow-ups", "Items due for staff review.");
+      const followups = Array.isArray(leads.recentFollowups)
+        ? leads.recentFollowups.filter(isRecord).slice(0, 100)
+        : [];
+      if (!followups.length) {
+        followupPanel.append(emptyState());
+      } else {
+        const list = element("ul", "workspace-followups");
+        followups.forEach((followup) => {
+          const item = element("li", "workspace-followup");
+          const main = element("div", "workspace-followup-main");
+          main.append(
+            element("strong", "", safeText(firstValue(followup, ["title", "customer", "leadName", "lead_name", "name"]), "Follow-up")),
+            element("span", "", safeText(firstValue(followup, ["nextAction", "next_action", "reason", "service", "detail", "type"]), "Review required")),
+          );
+          const meta = element("div", "workspace-followup-meta");
+          const due = firstValue(followup, ["nextActionAt", "next_action_at", "dueAt", "due_at", "due", "scheduledAt", "scheduled_at"]);
+          if (due) meta.append(element("time", "", displayDate(due)));
+          meta.append(statusPill(firstValue(followup, ["status"]) || "pending"));
+          item.append(main, meta);
+          list.append(item);
+        });
+        followupPanel.append(list);
+      }
+      moduleGrid.append(pipelinePanel, followupPanel);
+      fragment.append(moduleGrid);
+      contentElement.replaceChildren(fragment);
+    }
+
+    function tableFor(rows, columns, label) {
+      const wrap = element("div", "workspace-table-wrap");
+      wrap.tabIndex = 0;
+      wrap.setAttribute("role", "region");
+      wrap.setAttribute("aria-label", label);
+      const table = element("table", "workspace-table");
+      const head = document.createElement("thead");
+      const headRow = document.createElement("tr");
+      columns.forEach((column) => {
+        const heading = element("th", "", column.label);
+        heading.setAttribute("scope", "col");
+        headRow.append(heading);
+      });
+      head.append(headRow);
+      const body = document.createElement("tbody");
+      rows.forEach((record) => {
+        const row = document.createElement("tr");
+        columns.forEach((column) => {
+          const cell = document.createElement("td");
+          const value = firstValue(record, column.keys);
+          if (column.status) {
+            cell.append(statusPill(value));
+          } else if (column.currencyCents) {
+            cell.textContent = displayCurrencyCents(value);
+          } else if (column.currency) {
+            cell.textContent = displayCurrency(value);
+          } else if (column.duration) {
+            cell.textContent = displayDuration(value);
+          } else if (column.date) {
+            cell.textContent = displayDate(value);
+          } else {
+            cell.textContent = safeText(value, "—");
+          }
+          row.append(cell);
+        });
+        body.append(row);
+      });
+      table.append(head, body);
+      wrap.append(table);
+      return wrap;
+    }
+
+    function tablePanel(config, data) {
+      const panel = modulePanel(config.title, config.description);
+      const rows = collectionFrom(data, config.collection);
+      panel.append(rows.length ? tableFor(rows, config.columns, config.title) : emptyState());
+      const paginationValue = config.paginationKey ? data[config.paginationKey] : data.pagination;
+      if (rows.length && isRecord(paginationValue)) {
+        const total = Math.max(0, Number(paginationValue.total) || 0);
+        const offset = Math.max(0, Number(paginationValue.offset) || 0);
+        if (total > rows.length + offset) {
+          panel.append(element(
+            "p",
+            "workspace-pagination-note",
+            `Showing ${numberFormat.format(offset + 1)}–${numberFormat.format(offset + rows.length)} of ${numberFormat.format(total)} records.`,
+          ));
+        }
+      }
+      return panel;
+    }
+
+    function renderTableView(view, data) {
+      const config = tableViews[view];
+      const fragment = document.createDocumentFragment();
+      if (view === "finance" && isRecord(data.summary)) {
+        renderMetrics([
+          { label: "Invoiced", value: displayCurrencyCents(data.summary.invoicedCents) },
+          { label: "Collected", value: displayCurrencyCents(data.summary.collectedCents) },
+          { label: "Outstanding", value: displayCurrencyCents(data.summary.outstandingCents) },
+        ], fragment);
+      }
+      fragment.append(tablePanel(config, data));
+      if (view === "stock") {
+        fragment.append(tablePanel({
+          title: "Supplier catalogue",
+          description: "Approved supplier products available for future quote workflows.",
+          collection: "products",
+          paginationKey: "productPagination",
+          columns: [
+            { label: "Product", keys: ["name", "sku", "id"] },
+            { label: "Supplier", keys: ["supplier"] },
+            { label: "Type", keys: ["bracketType"] },
+            { label: "Min size", keys: ["minSize"] },
+            { label: "Max size", keys: ["maxSize"] },
+            { label: "Price", keys: ["priceCents"], currencyCents: true },
+            { label: "Availability", keys: ["availability"], status: true },
+          ],
+        }, data));
+      }
+      contentElement.replaceChildren(fragment);
+    }
+
+    function connectorStatus(value) {
+      const status = normaliseStatus(value);
+      return ["ready", "connected", "active"].includes(status) ? status : status || "unknown";
+    }
+
+    function renderPhone(data) {
+      const fragment = document.createDocumentFragment();
+      const panel = modulePanel("Phone connections", "Server-reported connection state. This view cannot place calls or send messages.");
+      const connectors = collectionFrom(data, "connectors");
+      if (!connectors.length) {
+        panel.append(emptyState());
+        fragment.append(panel);
+        contentElement.replaceChildren(fragment);
+        return;
+      }
+
+      const grid = element("div", "workspace-connector-grid");
+      connectors.forEach((connector) => {
+        const card = element("article", "workspace-connector-card");
+        const heading = element("div", "workspace-connector-heading");
+        heading.append(
+          element("h3", "", safeText(firstValue(connector, ["name", "label", "provider", "connector"]), "Phone connector")),
+          statusPill(connectorStatus(firstValue(connector, ["status", "state"]))),
+        );
+        card.append(heading);
+        const number = safeText(firstValue(connector, ["number", "phoneNumber", "phone_number", "callerId", "caller_id"]));
+        if (number) card.append(element("p", "workspace-connector-number", number));
+        const detail = safeText(firstValue(connector, ["detail", "description", "message"]));
+        if (detail) card.append(element("p", "workspace-connector-copy", detail));
+        const nextStep = safeText(firstValue(connector, ["nextStep", "next_step", "actionRequired", "action_required"]));
+        if (nextStep) {
+          const next = element("div", "workspace-next-step");
+          next.append(element("span", "", "Next step"), element("p", "", nextStep));
+          card.append(next);
+        }
+        grid.append(card);
+      });
+      panel.append(grid);
+      fragment.append(panel);
+      fragment.append(tablePanel({
+        title: "SMS outbox",
+        description: "Saved message records. Sending is disabled until a gateway and approval flow are connected.",
+        collection: "messages",
+        columns: [
+          { label: "Customer", keys: ["customer", "name"] },
+          { label: "Phone", keys: ["phone"] },
+          { label: "Message", keys: ["message"] },
+          { label: "Status", keys: ["status"], status: true },
+          { label: "Created", keys: ["createdAt"], date: true },
+        ],
+      }, data));
+      contentElement.replaceChildren(fragment);
+    }
+
+    function renderView(view, data) {
+      if (view === "overview") renderOverview(data);
+      else if (view === "phone") renderPhone(data);
+      else renderTableView(view, data);
+    }
+
+    function updateButtons(view) {
+      viewButtons.forEach((button) => {
+        const selected = button.dataset.workspaceView === view;
+        button.classList.toggle("is-active", selected);
+        button.setAttribute("aria-pressed", selected ? "true" : "false");
+      });
+    }
+
+    function updateLocation(view, replace = false) {
+      const url = new URL(window.location.href);
+      if (view === "overview") url.searchParams.delete("view");
+      else url.searchParams.set("view", view);
+      if (replace) window.history.replaceState({ workspaceView: view }, "", url);
+      else window.history.pushState({ workspaceView: view }, "", url);
+    }
+
+    async function loadView(view) {
+      activeRequest?.abort();
+      activeRequest = new AbortController();
+      const currentRequest = ++requestNumber;
+      workspaceShell.setAttribute("aria-busy", "true");
+      statusElement.classList.remove("is-ready", "is-warning");
+      statusElement.textContent = `Loading ${viewLabels[view].toLowerCase()}...`;
+      contentElement.replaceChildren(loadingState(view));
+
+      try {
+        const response = await fetch(`/operations/api/workspace?view=${encodeURIComponent(view)}`, {
+          cache: "no-store",
+          credentials: "same-origin",
+          headers: { accept: "application/json" },
+          signal: activeRequest.signal,
+        });
+        const payload = await response.json().catch(() => null);
+        if (currentRequest !== requestNumber) return;
+        if (!response.ok || !payload?.ok || payload.view !== view || !isRecord(payload.data)) {
+          const message = response.status === 403
+            ? "Your secure session has expired. Sign in again to open the workspace."
+            : "The selected view could not be loaded. Try again shortly.";
+          contentElement.replaceChildren(errorState(message));
+          statusElement.textContent = response.status === 403 ? "Secure session expired." : "Workspace data is unavailable.";
+          statusElement.classList.add("is-warning");
+          return;
+        }
+
+        renderView(view, payload.data);
+        statusElement.textContent = `${viewLabels[view]} data loaded.`;
+        statusElement.classList.add("is-ready");
+      } catch (error) {
+        if (error?.name === "AbortError" || currentRequest !== requestNumber) return;
+        contentElement.replaceChildren(errorState("The selected view could not be loaded. Try again shortly."));
+        statusElement.textContent = "Workspace data is unavailable.";
+        statusElement.classList.add("is-warning");
+      } finally {
+        if (currentRequest === requestNumber) workspaceShell.setAttribute("aria-busy", "false");
+      }
+    }
+
+    function selectView(view, historyMode = "push") {
+      if (!allowedViews.has(view)) view = "overview";
+      activeView = view;
+      updateButtons(view);
+      if (historyMode !== "none") updateLocation(view, historyMode === "replace");
+      loadView(view);
+    }
+
+    viewButtons.forEach((button) => {
+      button.addEventListener("click", () => selectView(button.dataset.workspaceView || "overview"));
+    });
+    window.addEventListener("popstate", () => {
+      const requested = new URL(window.location.href).searchParams.get("view") || "overview";
+      selectView(requested, "none");
+    });
+
+    const initialView = new URL(window.location.href).searchParams.get("view") || "overview";
+    selectView(initialView, "replace");
+  </script>
+
+  <style is:global>
+    .workspace-root { min-width: 0; }
+    .workspace-view-bar { display: flex; overflow-x: auto; gap: .4rem; margin: 0 0 1rem; border: 1px solid #dedbd4; border-radius: .85rem; padding: .45rem; background: #fffdf9; box-shadow: 0 10px 28px rgba(25, 33, 43, .035); scrollbar-width: thin; }
+    .workspace-view-button { flex: 0 0 auto; min-height: 2.55rem; border: 0; border-radius: .55rem; padding: .58rem .9rem; color: #60707b; background: transparent; cursor: pointer; font-size: .83rem; font-weight: 780; }
+    .workspace-view-button:hover { color: #172736; background: #f1eee7; }
+    .workspace-view-button.is-active { color: #fff; background: #172e40; box-shadow: 0 5px 14px rgba(23, 46, 64, .16); }
+    .workspace-view-button:focus-visible { outline: 3px solid rgba(67, 112, 144, .32); outline-offset: 2px; }
+    .workspace-surface { min-height: 31rem; border: 1px solid #dedbd4; border-radius: 1rem; padding: clamp(1rem, 2.5vw, 1.55rem); background: #faf9f5; box-shadow: 0 14px 35px rgba(25, 33, 43, .04); }
+    .workspace-surface[aria-busy="true"] { cursor: progress; }
+    .workspace-loading { display: flex; min-height: 25rem; align-items: center; justify-content: center; gap: .7rem; color: #697780; }
+    .workspace-loading p { margin: 0; font-size: .88rem; }
+    .workspace-loading-dot { width: .62rem; height: .62rem; border-radius: 999px; background: #a98245; box-shadow: 0 0 0 0 rgba(169, 130, 69, .3); animation: workspace-pulse 1.2s ease-out infinite; }
+    @keyframes workspace-pulse { 70% { box-shadow: 0 0 0 8px rgba(169, 130, 69, 0); } 100% { box-shadow: 0 0 0 0 rgba(169, 130, 69, 0); } }
+    .workspace-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; margin-bottom: .9rem; }
+    .workspace-metric-card { min-width: 0; border: 1px solid #dedbd4; border-radius: .8rem; padding: 1rem; background: #fff; }
+    .workspace-metric-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: .55rem; }
+    .workspace-metric-label { margin: 0; color: #687681; font-size: .74rem; font-weight: 760; }
+    .workspace-metric-value { display: block; margin-top: .65rem; overflow-wrap: anywhere; color: #172736; font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.75rem, 3vw, 2.4rem); font-weight: 700; line-height: 1; }
+    .workspace-metric-detail { margin: .55rem 0 0; color: #78848c; font-size: .72rem; line-height: 1.4; }
+    .workspace-overview-grid { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: .9rem; }
+    .workspace-module { min-width: 0; border: 1px solid #dedbd4; border-radius: .85rem; padding: 1.15rem; background: #fff; }
+    #workspace-content > .workspace-module + .workspace-module { margin-top: .9rem; }
+    .workspace-module-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+    .workspace-module-title { margin: 0; color: #172736; font-family: Georgia, "Times New Roman", serif; font-size: 1.42rem; letter-spacing: -.03em; line-height: 1.08; }
+    .workspace-module-copy { margin: .35rem 0 0; color: #74818a; font-size: .78rem; line-height: 1.45; }
+    .workspace-empty { display: grid; min-height: 9.5rem; place-items: center; align-content: center; gap: .55rem; border: 1px dashed #d6d3cc; border-radius: .65rem; color: #78848c; background: #fbfaf7; text-align: center; }
+    .workspace-empty-mark { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 999px; color: #7b6d5a; background: #eee9df; font-size: .76rem; font-weight: 850; }
+    .workspace-empty p { margin: 0; font-size: .82rem; }
+    .workspace-pipeline { display: grid; gap: .9rem; margin: 0; padding: 0; list-style: none; }
+    .workspace-pipeline-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .38rem; color: #596873; font-size: .8rem; }
+    .workspace-pipeline-row strong { color: #253846; font-size: .78rem; }
+    .workspace-pipeline-track { height: .38rem; overflow: hidden; border-radius: 999px; background: #ebe8e1; }
+    .workspace-pipeline-bar { display: block; height: 100%; border-radius: inherit; background: #3d7189; }
+    .workspace-followups { display: grid; gap: .55rem; margin: 0; padding: 0; list-style: none; }
+    .workspace-followup { display: flex; align-items: center; justify-content: space-between; gap: .85rem; border-top: 1px solid #ece8e1; padding-top: .7rem; }
+    .workspace-followup:first-child { border-top: 0; padding-top: 0; }
+    .workspace-followup-main { display: grid; min-width: 0; gap: .18rem; }
+    .workspace-followup-main strong { overflow-wrap: anywhere; color: #253846; font-size: .84rem; }
+    .workspace-followup-main span { overflow-wrap: anywhere; color: #74818a; font-size: .75rem; }
+    .workspace-followup-meta { display: grid; flex: 0 0 auto; justify-items: end; gap: .3rem; }
+    .workspace-followup-meta time { color: #6b7881; font-size: .7rem; }
+    .workspace-status-pill { display: inline-flex; align-items: center; min-height: 1.65rem; border-radius: 999px; padding: .25rem .48rem; color: #596873; background: #ece9e1; font-size: .66rem; font-weight: 820; white-space: nowrap; }
+    .workspace-status-pill.is-ready { color: #176444; background: #dceee5; }
+    .workspace-status-pill.is-warning { color: #765924; background: #f6ebd2; }
+    .workspace-status-pill.is-error { color: #8b3f42; background: #f7e2e2; }
+    .workspace-table-wrap { overflow-x: auto; border: 1px solid #e3e0d9; border-radius: .65rem; }
+    .workspace-table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: .8rem; }
+    .workspace-table th, .workspace-table td { border-bottom: 1px solid #ece8e1; padding: .78rem .72rem; color: #4c5d68; text-align: left; vertical-align: middle; }
+    .workspace-table th { color: #697680; background: #f8f6f1; font-size: .67rem; letter-spacing: .06em; text-transform: uppercase; }
+    .workspace-table tbody tr:last-child td { border-bottom: 0; }
+    .workspace-table tbody tr:hover td { background: #fcfbf8; }
+    .workspace-pagination-note { margin: .7rem 0 0; color: #74818a; font-size: .72rem; }
+    .workspace-connector-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+    .workspace-connector-card { display: flex; min-height: 10rem; flex-direction: column; border: 1px solid #e1ded7; border-radius: .72rem; padding: 1rem; background: #fbfaf7; }
+    .workspace-connector-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: .8rem; }
+    .workspace-connector-heading h3 { margin: 0; color: #243744; font-size: .9rem; }
+    .workspace-connector-number { margin: .7rem 0 0; color: #2d4657; font-size: .86rem; font-weight: 750; }
+    .workspace-connector-copy { margin: .55rem 0 0; color: #687680; font-size: .77rem; line-height: 1.48; }
+    .workspace-next-step { margin-top: auto; border-top: 1px solid #e3dfd6; padding-top: .7rem; }
+    .workspace-next-step span { color: #8a6d40; font-size: .66rem; font-weight: 820; letter-spacing: .06em; text-transform: uppercase; }
+    .workspace-next-step p { margin: .25rem 0 0; color: #596873; font-size: .75rem; line-height: 1.45; }
+    .workspace-error { display: grid; min-height: 24rem; place-items: center; align-content: center; gap: .45rem; padding: 2rem; color: #5f6d77; text-align: center; }
+    .workspace-error strong { color: #7c3438; font-family: Georgia, "Times New Roman", serif; font-size: 1.45rem; }
+    .workspace-error p { max-width: 33rem; margin: 0; font-size: .84rem; line-height: 1.5; }
+    .workspace-error .workspace-error-help { margin-top: .3rem; color: #7b858c; font-size: .74rem; }
+    .workspace-source-note { margin-top: 1rem; border-radius: .75rem; padding: .9rem 1rem; color: #596a75; background: #e9eff0; }
+    .workspace-source-note p { margin: 0; font-size: .8rem; line-height: 1.5; }
+    .workspace-source-note a { color: inherit; font-weight: 800; }
+
+    @media (max-width: 900px) {
+      .workspace-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .workspace-overview-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 600px) {
+      .workspace-view-bar { margin-right: -.2rem; margin-left: -.2rem; border-radius: .7rem; }
+      .workspace-surface { min-height: 26rem; padding: .7rem; }
+      .workspace-metrics { gap: .55rem; }
+      .workspace-metric-card, .workspace-module { padding: .85rem; }
+      .workspace-metric-value { font-size: 1.75rem; }
+      .workspace-connector-grid { grid-template-columns: 1fr; }
+      .workspace-followup { align-items: flex-start; flex-direction: column; }
+      .workspace-followup-meta { width: 100%; grid-auto-flow: column; align-items: center; justify-content: space-between; justify-items: start; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .workspace-loading-dot { animation: none; }
+    }
+  </style>
+</OperationsLayout>

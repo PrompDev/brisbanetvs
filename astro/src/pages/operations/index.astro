@@ -11,7 +11,7 @@ import OperationsLayout from "../../components/operations/OperationsLayout.astro
     <div>
       <p class="operations-eyebrow">Operations</p>
       <h1 id="operations-overview-title" class="operations-title">Know what needs attention.</h1>
-      <p class="operations-copy">Use the workspace sections below for the customer register, team inbox and consent-aware website reporting. This page stays aggregate-only so the daily workflow is easy to scan.</p>
+      <p class="operations-copy">Start with the Workspace for current work. Leads, Inbox and Analytics remain the source pages for customer records, mail and website reporting.</p>
     </div>
     <p class="operations-status" data-summary-state role="status">Connecting to the protected lead register...</p>
   </section>
@@ -40,6 +40,12 @@ import OperationsLayout from "../../components/operations/OperationsLayout.astro
   </section>
 
   <section class="operations-grid operations-action-grid" aria-label="Operations sections">
+    <article class="operations-panel operations-action-card is-workspace">
+      <p class="operations-eyebrow">Workspace</p>
+      <h2 class="operations-section-title">Daily work board.</h2>
+      <p class="operations-panel-copy">Review live calls, quotes, jobs, stock, finance, social activity and phone connection status. This screen is read-only.</p>
+      <a class="operations-link" href="/operations/workspace/">Open workspace</a>
+    </article>
     <article class="operations-panel operations-action-card is-leads">
       <p class="operations-eyebrow">Lead register</p>
       <h2 class="operations-section-title">Every customer contact in one place.</h2>

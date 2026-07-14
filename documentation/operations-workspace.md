@@ -3,11 +3,38 @@
 `/operations/` is the private staff workspace for Brisbane TVs. It is not a
 customer-facing website or a replacement for the public quote form.
 
+## Safe port from `brisbanetvs-ops`
+
+The operations design was reviewed from
+`bigdonnnybra/brisbanetvs-ops` commit `831207d`. The safe port reuses its screen
+structure and workflow concepts for calls, quotes, jobs, stock, finance and an
+approval-gated SMS outbox. It does not import the demo pricing data.
+
+The port does not import the repository's Node HTTP server, local SQLite
+database, runtime-created schema, demo customer records or seeded integration
+statuses. It also does not copy its root `/api/*` routes, unsigned PBX and
+Stripe webhooks, or direct Android gateway send handler. Those parts do not
+fit the existing Cloudflare architecture or its customer-data controls.
+
+The current systems remain authoritative:
+
+| Data or function | Authoritative system |
+| --- | --- |
+| Contacts, enquiries and website attribution | Operations D1 |
+| Facebook, Instagram and website lead follow-up | Existing private Google Sheet and Calendar Calls workflow |
+| Uploaded quote photos and stored inbound mail | Private R2 buckets, indexed by D1 |
+| Website reporting | Consent-aware GA4, Search Console and aggregate D1 lead counts |
+| Staff identity and portal access | Cloudflare Access |
+
+The new operations tables reference the existing D1 lead IDs. They do not
+create another lead register or another Sheet-to-Calendar path.
+
 ## Where to work
 
 | Page | Purpose | Customer information shown? |
 | --- | --- | --- |
 | `/operations/` | Fast daily overview: intake health and aggregate lead counts. | No |
+| `/operations/workspace/` | Read-only calls, quotes, jobs, stock, finance, social and connector views. | Yes, after staff access check |
 | `/operations/leads/` | Master list of customer contacts and enquiries. | Yes, after staff access check |
 | `/operations/inbox/` | Incoming team mail, saved reply drafts and invoice notes. | Yes, after staff access check |
 | `/operations/analytics/` | Aggregate, consent-aware website activity from GA4. | No visitor or lead identity |
@@ -16,7 +43,7 @@ The public website, private portal, lead register, inbox and analytics are
 separate on purpose. The overview is quick to scan, while customer data stays
 in the pages where it is actually needed.
 
-## What is connected now
+## Already connected
 
 - Public website and lead-sheet submissions are stored in the protected
   Operations D1 database. The lead register exposes the stable external lead
@@ -35,6 +62,144 @@ in the pages where it is actually needed.
   exhausted, an error is shown instead of falling through to a static asset.
 - Drafts are saved in D1 only. There is no send endpoint, email binding or
   automatic reply.
+
+The safe port adds nine empty D1 tables and one Access-verified read API for
+the new workspace views. It does not change the existing connections or add a
+live telephony, SMS, payment, transcription, social-publishing or AI provider.
+
+## Remaining connectors and read-only modules
+
+Provider-backed modules must remain read-only or show `Not connected` until
+their authenticated backend and provider callbacks have been configured and
+tested. A screen or database table does not make a connector live.
+
+| Module | Current state | Required before write or send actions are enabled |
+| --- | --- | --- |
+| Lead pipeline | Reads the canonical D1 leads | Access-verified status updates with an audit event |
+| Calls and PBX | Empty D1 records and read view; no provider connected | Voice provider, signed callbacks, provider call IDs and phone-to-lead matching |
+| Call recordings and transcripts | Private-reference fields and read view; no transcription provider connected | Recording decision, retention rule, private storage and authenticated callbacks |
+| Quotes, jobs, stock and finance | Empty D1 tables and read views | Access-verified write APIs, audit events and field-level validation |
+| SMS outbox | Empty approval-state table and read view; sending disabled | SMS transport, authenticated dispatch, staff approval, idempotency and delivery callbacks |
+| Stripe reconciliation | Not connected | Stripe account integration, signed raw-body webhook verification and invoice/payment mapping |
+| Inbox | Storage and draft interface are ready; live routing is off | Approved Email Routing migration; outbound delivery remains a separate change |
+| Social publishing | Not connected | Provider accounts, scoped credentials and an explicit approval/send workflow |
+| Dave automation | No AI or calling provider connected | Defined actions, service credentials, audit logging and enforced approval gates |
+
+## Access and webhook boundary
+
+Cloudflare Access protects `/operations/*`. Every staff API that reads customer
+data or changes operational state must also verify the signed Access assertion.
+The verified staff identity supplies fields such as `approved_by`; the browser
+must not choose or assert that identity.
+
+Phone, Stripe and other provider callbacks cannot depend on an interactive
+Access session. Put them on dedicated webhook routes and validate the
+provider's signature before parsing or storing an event. Each route also needs
+a bounded body, replay protection, a unique provider event ID and rate
+limiting. Webhook retries must return the previously recorded result without
+creating another call, payment activity or SMS.
+
+Customer-data responses use private, no-store headers. Portal pages should
+request only the current view and use pagination instead of loading every
+lead, transcript, invoice and message into the browser at startup. Gateway and
+provider credentials stay in server-side encrypted secrets and never appear
+in browser code, D1 status rows or logs.
+
+## Phone setup decisions
+
+Tom must make these decisions before phone actions can be enabled:
+
+1. **SMS sender:** use the Pixel's existing SIM and number through an Android
+   gateway, or use a cloud SMS provider and provider number.
+2. **Voice number:** keep the current business number with call diversion,
+   port it to the chosen voice provider, or use a new provider number.
+3. **Recording and transcription:** store call metadata only, or record and
+   transcribe calls. If recording is enabled, set a retention period and a
+   deletion process for recordings and transcripts.
+
+## Phone setup checklist
+
+### Common setup
+
+- [ ] Record the three decisions above in the project notes.
+- [ ] Choose one voice provider and one SMS transport. They may be the same
+  provider, but they do not have to be.
+- [ ] Add provider credentials through the Cloudflare secret store. Do not put
+  them in source, Wrangler variables, D1 or the browser.
+- [ ] Add D1 records for calls and messages that reference the existing text
+  lead ID. Store a unique provider call, event or message ID on every record.
+- [ ] Normalise Australian phone numbers to E.164 before matching or sending.
+- [ ] Place staff read, draft and approval endpoints under
+  `/operations/api/*` and apply the existing Access verifier.
+- [ ] Place provider callbacks on dedicated signed webhook routes. Validate
+  the exact raw request required by the selected provider.
+- [ ] Make message approval an atomic `draft` to `queued` change. Dispatch in
+  a background queue with a stable idempotency key; a repeated click must not
+  send a second SMS.
+- [ ] Store delivery, failure and reply callbacks against the provider message
+  ID. Do not mark an SMS delivered after the initial send request alone.
+- [ ] Keep phone numbers, message bodies, transcripts and recording addresses
+  out of analytics events and routine logs.
+
+### Pixel SIM SMS option
+
+- [ ] Install an Android SMS gateway that supports an authenticated HTTPS send
+  API and returns a stable message ID.
+- [ ] Select the correct SIM, grant SMS permission and confirm the phone can
+  send a normal test message.
+- [ ] Exempt the gateway from Android battery optimisation and allow required
+  background activity.
+- [ ] Provide an always-on HTTPS relay or tunnel. A Cloudflare Worker cannot
+  call a phone-only Tailscale address directly.
+- [ ] Protect the relay with service-to-service authentication and a separate
+  mandatory gateway credential. Reject plain HTTP and requests without both
+  checks.
+- [ ] Add a gateway health check that reports only availability and last
+  successful contact. It must not return its credential or recent messages.
+
+### Cloud SMS provider option
+
+- [ ] Complete the provider's business verification and number setup.
+- [ ] Configure the approved sender or provider number and confirm Australian
+  messaging support for the intended message type.
+- [ ] Configure signed delivery and inbound-message callbacks.
+- [ ] Restrict the provider credential to the required messaging operations
+  where the provider supports scoped credentials.
+
+### Voice and PBX
+
+- [ ] Complete the keep, port, divert or replace decision for the current
+  business number before changing live call routing.
+- [ ] Configure the Pixel as the provider's mobile endpoint or softphone if
+  calls should ring there.
+- [ ] Add signed call-status callbacks and a unique provider call ID. A replay
+  of a completed-call callback must update the same call record.
+- [ ] Match caller and recipient numbers to canonical contacts after E.164
+  normalisation. A provider callback cannot be expected to know an internal
+  D1 lead ID.
+- [ ] If recording is approved, keep recordings private, store only protected
+  object references and apply the selected deletion schedule.
+- [ ] If transcription is approved, send recordings only to the selected
+  provider and store transcripts behind the Operations Access boundary.
+
+### Acceptance checks
+
+- [ ] An unauthenticated request cannot read a lead, approve a message or
+  change an operational record.
+- [ ] A callback with a missing or invalid provider signature is rejected and
+  does not alter D1.
+- [ ] One labelled test call creates one call record and links to the expected
+  lead by phone number. Replaying its callback creates no duplicate.
+- [ ] One labelled SMS to Tom's own number creates one queued item, one provider
+  message ID and one final delivery state. Repeating the approval request sends
+  nothing else.
+- [ ] If replies are enabled, a reply attaches to the correct conversation and
+  does not create a new lead.
+- [ ] If recordings are enabled, the test recording and transcript follow the
+  selected access and deletion rules.
+
+Do not change live call diversion, port a number or expose the Pixel gateway
+until the labelled tests pass and Tom approves the cutover.
 
 ## Website analytics and lead signals
 

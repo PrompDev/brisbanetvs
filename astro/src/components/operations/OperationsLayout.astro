@@ -1,5 +1,5 @@
 ---
-export type OperationsSection = "overview" | "leads" | "inbox" | "analytics";
+export type OperationsSection = "overview" | "workspace" | "leads" | "inbox" | "analytics";
 
 interface Props {
   active: OperationsSection;
@@ -11,6 +11,7 @@ const { active, title, description } = Astro.props;
 
 const navigation: Array<{ key: OperationsSection; href: string; label: string; description: string }> = [
   { key: "overview", href: "/operations/", label: "Overview", description: "Intake and workflow health" },
+  { key: "workspace", href: "/operations/workspace/", label: "Workspace", description: "Calls, quotes and job status" },
   { key: "leads", href: "/operations/leads/", label: "Leads", description: "Protected customer register" },
   { key: "inbox", href: "/operations/inbox/", label: "Inbox", description: "Team mail and saved drafts" },
   { key: "analytics", href: "/operations/analytics/", label: "Analytics", description: "Consent-aware website activity" },
@@ -142,10 +143,11 @@ const navigation: Array<{ key: OperationsSection; href: string; label: string; d
   .operations-primary-button:hover:not(:disabled) { background: #25445b; }
   .operations-button:focus-visible, .operations-link:focus-visible, .operations-nav-link:focus-visible, .operations-mobile-nav-link:focus-visible, .operations-input:focus-visible { outline: 3px solid rgba(67, 112, 144, .32); outline-offset: 2px; }
 
-  .operations-action-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 1rem; }
+  .operations-action-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 1rem; }
   .operations-action-card { display: flex; min-height: 15rem; flex-direction: column; }
   .operations-action-card .operations-link { align-self: flex-start; margin-top: auto; }
   .operations-action-card.is-leads { background: #fffdf9; }
+  .operations-action-card.is-workspace { border-color: #ccd9df; background: #f1f6f8; }
   .operations-action-card.is-inbox { border-color: #eadfc9; background: #fbf8f1; }
   .operations-action-card.is-analytics { border-color: #d7e4df; background: #eef4f2; }
   .operations-pill { display: inline-flex; align-items: center; min-height: 1.9rem; border-radius: 999px; padding: .3rem .58rem; color: #176444; background: #dceee5; font-size: .72rem; font-weight: 800; white-space: nowrap; }
