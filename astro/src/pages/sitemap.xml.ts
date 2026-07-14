@@ -8,7 +8,7 @@
  *
  *   1. WHICH pages ship (admin UI excluded, drafts filtered out)
  *   2. `lastmod` tags pulled from frontmatter (updatedDate ?? publishDate)
- *   3. `priority` and `changefreq` tuned per section (home > hubs > entries)
+ *   3. only canonical, indexable URLs (no admin or protected staff routes)
  *
  * Runs at build time because this is a static Astro site — the exported
  * GET handler is invoked once during `astro build` and the result is
@@ -19,10 +19,17 @@ import { getCollection } from "astro:content";
 
 const SITE = "https://brisbanetvs.com";
 
+// A shared layout and structured-data correction materially changed every
+// public page on this date. Keep this floor honest: only advance it when a
+// future shared change alters visible content, structured data, or links.
+const SHARED_PUBLIC_LASTMOD = "2026-07-14";
+
 /** Format a Date for sitemap <lastmod> (W3C datetime — yyyy-mm-dd). */
-function lastmod(d?: Date): string {
-  if (!(d instanceof Date) || isNaN(d.valueOf())) return "";
-  return d.toISOString().slice(0, 10);
+function lastmod(d?: Date, floor = ""): string {
+  const value = d instanceof Date && !isNaN(d.valueOf())
+    ? d.toISOString().slice(0, 10)
+    : "";
+  return value > floor ? value : floor;
 }
 
 /** XML-escape a URL/string. Sitemaps are strict about ampersands. */
@@ -38,8 +45,6 @@ function xml(s: string): string {
 interface Url {
   loc: string;
   lastmod?: string;
-  changefreq?: "daily" | "weekly" | "monthly" | "yearly";
-  priority?: number;
 }
 
 export const GET: APIRoute = async () => {
@@ -47,18 +52,20 @@ export const GET: APIRoute = async () => {
 
   // ---- Static top-level pages ----
   urls.push(
-    { loc: "/",         changefreq: "weekly",  priority: 1.0 },
-    { loc: "/pricing/", changefreq: "monthly", priority: 0.9 },
-    { loc: "/quote/",   changefreq: "monthly", priority: 0.9 },
+    { loc: "/",         lastmod: SHARED_PUBLIC_LASTMOD },
+    { loc: "/pricing/", lastmod: SHARED_PUBLIC_LASTMOD },
+    { loc: "/quote/",   lastmod: SHARED_PUBLIC_LASTMOD },
+    { loc: "/privacy/", lastmod: SHARED_PUBLIC_LASTMOD },
+    { loc: "/terms/",   lastmod: SHARED_PUBLIC_LASTMOD },
   );
 
   // ---- Collection hubs ----
   urls.push(
-    { loc: "/blog/",      changefreq: "weekly",  priority: 0.9 },
-    { loc: "/services/",  changefreq: "monthly", priority: 0.9 },
-    { loc: "/locations/", changefreq: "monthly", priority: 0.9 },
-    { loc: "/products/",  changefreq: "weekly",  priority: 0.8 },
-    { loc: "/mounts/",    changefreq: "weekly",  priority: 0.8 },
+    { loc: "/blog/",      lastmod: SHARED_PUBLIC_LASTMOD },
+    { loc: "/services/",  lastmod: SHARED_PUBLIC_LASTMOD },
+    { loc: "/locations/", lastmod: SHARED_PUBLIC_LASTMOD },
+    { loc: "/products/",  lastmod: SHARED_PUBLIC_LASTMOD },
+    { loc: "/mounts/",    lastmod: SHARED_PUBLIC_LASTMOD },
   );
 
   // ---- Collection entries (drafts excluded) ----
@@ -73,41 +80,31 @@ export const GET: APIRoute = async () => {
   for (const p of blog) {
     urls.push({
       loc: `/blog/${p.slug}/`,
-      lastmod: lastmod(p.data.updatedDate ?? p.data.publishDate),
-      changefreq: "monthly",
-      priority: 0.7,
+      lastmod: lastmod(p.data.updatedDate ?? p.data.publishDate, SHARED_PUBLIC_LASTMOD),
     });
   }
   for (const s of services) {
     urls.push({
       loc: `/services/${s.slug}/`,
-      lastmod: lastmod(s.data.updatedDate ?? s.data.publishDate),
-      changefreq: "monthly",
-      priority: 0.8,
+      lastmod: lastmod(s.data.updatedDate ?? s.data.publishDate, SHARED_PUBLIC_LASTMOD),
     });
   }
   for (const l of locations) {
     urls.push({
       loc: `/locations/${l.slug}/`,
-      lastmod: lastmod(l.data.updatedDate ?? l.data.publishDate),
-      changefreq: "monthly",
-      priority: 0.8,
+      lastmod: lastmod(l.data.updatedDate ?? l.data.publishDate, SHARED_PUBLIC_LASTMOD),
     });
   }
   for (const p of products) {
     urls.push({
       loc: `/products/${p.slug}/`,
-      lastmod: lastmod(p.data.updatedDate ?? p.data.publishDate),
-      changefreq: "weekly",
-      priority: 0.6,
+      lastmod: lastmod(p.data.updatedDate ?? p.data.publishDate, SHARED_PUBLIC_LASTMOD),
     });
   }
   for (const m of mounts) {
     urls.push({
       loc: `/mounts/${m.slug}/`,
-      lastmod: lastmod(m.data.updatedDate ?? m.data.publishDate),
-      changefreq: "weekly",
-      priority: 0.6,
+      lastmod: lastmod(m.data.updatedDate ?? m.data.publishDate, SHARED_PUBLIC_LASTMOD),
     });
   }
 
@@ -118,8 +115,6 @@ export const GET: APIRoute = async () => {
       .map((u) => {
         const parts = [`  <url>`, `    <loc>${xml(SITE + u.loc)}</loc>`];
         if (u.lastmod) parts.push(`    <lastmod>${u.lastmod}</lastmod>`);
-        if (u.changefreq) parts.push(`    <changefreq>${u.changefreq}</changefreq>`);
-        if (typeof u.priority === "number") parts.push(`    <priority>${u.priority.toFixed(1)}</priority>`);
         parts.push(`  </url>`);
         return parts.join("\n");
       })

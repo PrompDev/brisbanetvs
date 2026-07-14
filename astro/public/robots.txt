@@ -6,6 +6,8 @@ Allow: /
 # crawl an SPA-style editor.
 Disallow: /admin/
 Disallow: /admin-nav/
+Disallow: /operations/
+Disallow: /login/
 Disallow: /templates/
 
 Sitemap: https://brisbanetvs.com/sitemap.xml

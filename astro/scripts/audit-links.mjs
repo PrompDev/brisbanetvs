@@ -59,8 +59,15 @@ const stats = { total: 0, internal: 0, checked: 0, broken: 0 };
 
 for (const file of htmlFiles) {
   const html = fs.readFileSync(file, "utf8");
+  // Only audit links that exist in the initial HTML document. JavaScript
+  // template strings can contain href="..." text that is not an actual link
+  // (and is invisible to a non-rendering crawler). CSS comments can contain
+  // example markup for the same reason.
+  const staticHtml = html
+    .replace(/<script\b[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style\b[\s\S]*?<\/style>/gi, " ");
   let m;
-  while ((m = HREF_RE.exec(html)) !== null) {
+  while ((m = HREF_RE.exec(staticHtml)) !== null) {
     const link = (m[1] ?? m[2] ?? "").trim();
     stats.total++;
     if (!link) continue;

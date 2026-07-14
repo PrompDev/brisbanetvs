@@ -24,6 +24,8 @@ you're not sure how a piece of the site works.
 8. [**Operations workspace**](./operations-workspace.md) - what the staff
    dashboard, lead register, inbox and analytics pages do, plus the small
    remaining Google Analytics and mail decisions.
+9. [**SEO crawlability and indexing**](./seo-crawlability.md) - what Google
+   receives, how the sitemap is checked, and the location-page quality plan.
 
 ## If something breaks
 

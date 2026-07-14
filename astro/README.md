@@ -1,13 +1,14 @@
 # Brisbane TVs — Astro (blog + CMS)
 
-This folder is the **blog engine** for brisbanetvs.com. The marketing
-homepage (`/index.html` in the repo root) is still hand-written HTML and
-is **not** managed by Astro. Astro here is used to:
+This folder is the production source for brisbanetvs.com. The marketing
+homepage remains hand-authored HTML at `public/index.html`; Astro copies it
+into the build and pre-renders every service, location, blog, product and
+legal route to static HTML. Astro also hosts the private admin and Operations
+shells and generates `sitemap.xml` at build time.
 
-1. Publish Markdown blog posts under `/blog/*`.
-2. Host the Decap CMS admin at `/admin/*` so you can write posts in a
-   browser instead of editing files by hand.
-3. Generate `sitemap.xml` automatically at build time.
+The production build now verifies every sitemap URL before deployment. A
+build fails if a public URL loses its HTML file, title, description, H1,
+self-canonical, initial text content or internal-link integrity.
 
 The marketing homepage and the Astro-generated blog share design tokens
 (fonts, colours, spacing) through `src/styles/global.css`.
@@ -51,6 +52,9 @@ Or double-click **`git.tools/start-astro-dev.bat`** from Windows —
 that wraps the same thing.
 
 ### Building for production
+
+Use Node 20–24. Cloudflare Pages is pinned to Node 20; Node 25 is not
+compatible with the Astro 4 filesystem cleanup used by this project.
 
 ```bash
 npm run build    # outputs static files to astro/dist/

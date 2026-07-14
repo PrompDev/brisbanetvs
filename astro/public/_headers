@@ -1,0 +1,25 @@
+# Keep Cloudflare's deployment hostnames out of search results so the custom
+# domain remains the single indexed copy of every page.
+https://:project.pages.dev/*
+  X-Robots-Tag: noindex
+
+https://:version.:project.pages.dev/*
+  X-Robots-Tag: noindex
+
+# These static shells are private or administrative. Their HTML also carries
+# a noindex meta tag; the response header is defense in depth.
+/admin/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: private, no-store
+
+/admin-nav/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: private, no-store
+
+/operations/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: private, no-store
+
+/login/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: private, no-store

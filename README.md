@@ -1,5 +1,11 @@
 # Brisbane TVs - Website
 
+> **Current production setup:** Cloudflare Pages builds the site from the
+> `astro/` directory with `npm run build`. The homepage is hand-authored HTML
+> at `astro/public/index.html`; Astro pre-renders the rest of the public site
+> to static HTML. The older root-level workflow below is retained as project
+> history and should not be used for production deployments.
+
 Professional TV wall mounting and Starlink installation service for North Brisbane.
 
 **Live site:** Hosted via Cloudflare Pages  
@@ -8,7 +14,8 @@ Professional TV wall mounting and Starlink installation service for North Brisba
 
 ## How This System Works
 
-This is a static HTML/CSS website. There is no build step, no framework, and no database. You edit the HTML files directly and what you see is what gets deployed.
+This paragraph describes the legacy root-level site. Current production uses
+the Astro build described in the notice above.
 
 The site is hosted on **Cloudflare Pages**, connected to this GitHub repo. When changes are pushed to the `main` branch, Cloudflare automatically picks them up and deploys the updated site to the live domain.
 
@@ -92,4 +99,4 @@ brisbanetvs/
 
 - **Email:** Email routing still needs to be connected back to SiteGround to send/receive emails.
 - **DNS/Hosting:** Domain and DNS are managed through Cloudflare.
-- **No build step:** This is plain HTML/CSS. There is nothing to compile. Just edit and push.
+- **Legacy root files:** These are plain HTML/CSS; production is built from `astro/`.

@@ -1,5 +1,5 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="en-AU">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -4712,7 +4712,14 @@
              The section will auto-render from that data.
              =================================================================== -->
         <div class="areas-regions" id="areasRegions">
-            <!-- Rendered from JS (see bottom of file) -->
+            <!-- This ordinary HTML link is present before JavaScript runs, so
+                 crawlers and no-script visitors can reach the complete static
+                 suburb directory. The enhanced region cards replace it in a
+                 browser. -->
+            <div class="areas-region">
+                <h3>All Brisbane service areas</h3>
+                <p><a href="/locations/">Browse the complete suburb directory</a></p>
+            </div>
         </div>
 
         <p class="areas-footnote">
@@ -6251,7 +6258,6 @@
         "opens": "07:00",
         "closes": "19:00"
     },
-    "founder": { "@type": "Person", "name": "Tom Reeves" },
     "hasOfferCatalog": {
         "@type": "OfferCatalog",
         "name": "Brisbane TV Mounting Services",
