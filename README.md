@@ -119,8 +119,10 @@ Activation requires these Worker secrets:
 - `META_APP_SECRET`
 - `META_PAGE_ACCESS_TOKEN`
 
-The Graph version is configured with `META_GRAPH_API_VERSION`. Keep
-`META_MONITOR_ENABLED = "false"` until the Page has subscribed to the app and a
-test lead has completed the full Meta -> Worker -> Sheet -> Calendar path. Then
-set it to `"true"` and redeploy so the monitor starts its grey two-minute checks,
-orange 30-minute blocks, purple hourly blocks, and blue daily rollups.
+The Graph version is configured with `META_GRAPH_API_VERSION`. Production intake
+was activated on 15 July 2026 after a signed Meta test lead completed the full
+Meta -> Worker -> Sheet delivery path with phone and email present. Keep
+`META_MONITOR_ENABLED = "true"` so the monitor runs its grey two-minute checks,
+orange 30-minute blocks, purple hourly blocks, and blue daily rollups. A value of
+`"false"` is only for deliberate maintenance while the Page subscription or
+credentials are unavailable.
