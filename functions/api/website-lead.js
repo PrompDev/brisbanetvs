@@ -825,7 +825,7 @@ async function persistCanonicalLeads(env, leads, event, options = {}) {
   }
 }
 
-async function persistCanonicalLead(env, lead, event, options = {}) {
+export async function persistCanonicalLead(env, lead, event, options = {}) {
   await persistCanonicalLeads(env, [lead], event, options);
   const db = requireOperationsDb(env);
   const storedId = await db
@@ -980,6 +980,37 @@ export function websiteSheetRow(lead) {
   ];
 }
 
+export function metaSheetRow(lead) {
+  const details = parsedObject(lead.details_json);
+  const value = (entry, maximum = 10_000) => String(entry == null ? "" : entry).slice(0, maximum);
+  const mountingIntent = value(details.mounting_intent, FIELD_LIMITS.service)
+    || websiteSheetMountingIntent(lead, details);
+  return [
+    value(lead.external_id, FIELD_LIMITS.externalId),
+    value(lead.received_at, 64),
+    value(details.ad_id, FIELD_LIMITS.externalId),
+    value(details.ad_name, FIELD_LIMITS.campaign),
+    value(details.adset_id, FIELD_LIMITS.externalId),
+    value(details.adset_name, FIELD_LIMITS.campaign),
+    value(details.campaign_id, FIELD_LIMITS.externalId),
+    value(details.campaign_name || lead.campaign, FIELD_LIMITS.campaign),
+    value(details.form_id, FIELD_LIMITS.externalId),
+    value(details.form_name, FIELD_LIMITS.campaign),
+    details.is_organic === true ? "true" : details.is_organic === false ? "false" : "",
+    websiteSheetPlatform(lead.platform),
+    mountingIntent,
+    value(lead.tv_size, FIELD_LIMITS.tvSize),
+    value(lead.email, FIELD_LIMITS.email),
+    value(lead.full_name, FIELD_LIMITS.name),
+    value(lead.phone, FIELD_LIMITS.phone),
+    value(lead.postcode, FIELD_LIMITS.postcode),
+  ];
+}
+
+export function leadSheetRow(lead) {
+  return lead?.source === "meta_lead_ads" ? metaSheetRow(lead) : websiteSheetRow(lead);
+}
+
 async function parseWebsiteSheetResponse(response) {
   const contentLength = Number(response.headers.get("content-length"));
   if (Number.isFinite(contentLength) && contentLength > WEBSITE_SHEET_MAX_RESPONSE_BYTES) {
@@ -1020,7 +1051,7 @@ async function parseWebsiteSheetResponse(response) {
   }
 }
 
-async function enqueueWebsiteSheetDelivery(env, leadId) {
+export async function enqueueWebsiteSheetDelivery(env, leadId) {
   const db = requireOperationsDb(env);
   const timestamp = nowIso();
   await db.prepare(
@@ -1118,9 +1149,9 @@ export async function deliverWebsiteLeadToSheet(env, leadId, force = false) {
   try {
     const config = websiteSheetConfig(env);
     const lead = await db.prepare(
-      "SELECT external_id, received_at, platform, campaign, tracking_json, details_json, " +
+      "SELECT source, external_id, received_at, platform, campaign, tracking_json, details_json, " +
       "page_url, service, tv_size, full_name, email, phone, suburb, postcode, wall_type, " +
-      "preferred_date, message FROM leads WHERE id = ? AND source = 'website'",
+      "preferred_date, message FROM leads WHERE id = ? AND source IN ('website', 'meta_lead_ads')",
     ).bind(leadId).first();
     if (!lead) throw new Error("lead_not_found");
 
@@ -1133,7 +1164,7 @@ export async function deliverWebsiteLeadToSheet(env, leadId, force = false) {
           secret: config.secret,
           sheetName: WEBSITE_SHEET_NAME,
           headers: WEBSITE_SHEET_HEADERS,
-          rows: [websiteSheetRow(lead)],
+          rows: [leadSheetRow(lead)],
         }),
         signal: AbortSignal.timeout(WEBSITE_SHEET_REQUEST_TIMEOUT_MS),
       });
@@ -1183,7 +1214,7 @@ export async function processPendingWebsiteSheetDeliveries(env) {
     ") SELECT lower(hex(randomblob(16))), leads.id, ?, 'pending', 0, ?, '', '', '', ?, ? " +
     "FROM leads LEFT JOIN lead_deliveries ON lead_deliveries.lead_id = leads.id " +
       "AND lead_deliveries.destination = ? " +
-    "WHERE leads.source = 'website' AND lead_deliveries.id IS NULL " +
+    "WHERE leads.source IN ('website', 'meta_lead_ads') AND lead_deliveries.id IS NULL " +
     "ORDER BY leads.created_at ASC LIMIT 20 " +
     "ON CONFLICT(lead_id, destination) DO NOTHING",
   ).bind(
@@ -1202,6 +1233,30 @@ export async function processPendingWebsiteSheetDeliveries(env) {
   for (const row of pending.results || []) {
     await deliverWebsiteLeadToSheet(env, row.lead_id, false);
   }
+}
+
+export async function sendRunLogToSheet(env, run) {
+  const config = websiteSheetConfig(env);
+  let response;
+  try {
+    response = await fetch(config.url, {
+      method: "POST",
+      headers: { "content-type": "application/json; charset=utf-8" },
+      body: JSON.stringify({
+        secret: config.secret,
+        type: "run",
+        runsSheetName: "Runs",
+        run,
+      }),
+      signal: AbortSignal.timeout(WEBSITE_SHEET_REQUEST_TIMEOUT_MS),
+    });
+  } catch {
+    throw new Error("request_failed");
+  }
+
+  const payload = await parseWebsiteSheetResponse(response);
+  if (!response.ok || payload.ok !== true) throw new Error("receiver_rejected");
+  return payload;
 }
 
 function fileExt(file) {

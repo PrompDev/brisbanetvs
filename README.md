@@ -100,3 +100,27 @@ brisbanetvs/
 - **Email:** Email routing still needs to be connected back to SiteGround to send/receive emails.
 - **DNS/Hosting:** Domain and DNS are managed through Cloudflare.
 - **Legacy root files:** These are plain HTML/CSS; production is built from `astro/`.
+
+## Official Meta Lead Ads intake
+
+The production lead Worker has a signed Meta Page webhook at:
+
+`https://brisbanetvs.com/api/meta-lead-webhook`
+
+It verifies Meta's `X-Hub-Signature-256`, queues only lead object IDs in D1,
+fetches the lead through Graph API, deduplicates by `leadgen_id`, and reuses the
+normal Google Sheet and Calendar delivery ledger. A two-minute Worker heartbeat
+feeds the existing `Runs` monitor; zero new leads is `OK`, while exhausted Graph
+or Sheet delivery failures are `ERROR`.
+
+Activation requires these Worker secrets:
+
+- `META_WEBHOOK_VERIFY_TOKEN`
+- `META_APP_SECRET`
+- `META_PAGE_ACCESS_TOKEN`
+
+The Graph version is configured with `META_GRAPH_API_VERSION`. Keep
+`META_MONITOR_ENABLED = "false"` until the Page has subscribed to the app and a
+test lead has completed the full Meta -> Worker -> Sheet -> Calendar path. Then
+set it to `"true"` and redeploy so the monitor starts its grey two-minute checks,
+orange 30-minute blocks, purple hourly blocks, and blue daily rollups.

@@ -7,9 +7,14 @@ route = "brisbanetvs.com/api/*"
 [vars]
 GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-3UnBWEg2cYkx-QjM29GNE7A48eMYQ5Dm9fOBnb2AxW1Wgesrt9fKs_YjEdVAMDC0YA/exec"
 CALL_RECORDING_RETENTION_DAYS = "90"
+META_GRAPH_API_VERSION = "v25.0"
+META_MONITOR_ENABLED = "false"
 
 [triggers]
-crons = ["*/5 * * * *"]
+crons = ["*/2 * * * *"]
+
+[observability]
+enabled = true
 
 [[r2_buckets]]
 binding = "LEAD_UPLOADS"
@@ -35,4 +40,7 @@ migrations_dir = "migrations"
 
 # Set with: npx wrangler secret put LEAD_SYNC_SECRET
 # Set with: npx wrangler secret put GOOGLE_APPS_SCRIPT_SECRET
+# Set with: npx wrangler secret put META_WEBHOOK_VERIFY_TOKEN
+# Set with: npx wrangler secret put META_APP_SECRET
+# Set with: npx wrangler secret put META_PAGE_ACCESS_TOKEN
 # This is intentionally a secret, never a [vars] value.

@@ -3,9 +3,13 @@ import {
   onN8nLeadPost,
   onRequestOptions,
   onRequestPost,
-  processPendingWebsiteSheetDeliveries,
 } from "../functions/api/website-lead.js";
 import { receiveInboundMail } from "./mail-ingest.js";
+import {
+  onMetaWebhookGet,
+  onMetaWebhookPost,
+  runMetaAutomationCycle,
+} from "./meta-lead-webhook.js";
 import {
   exchangeMobilePairing,
   getMobileLead,
@@ -37,6 +41,12 @@ export default {
       return new Response("Method Not Allowed", { status: 405 });
     }
 
+    if (url.pathname === "/api/meta-lead-webhook") {
+      if (request.method === "GET") return onMetaWebhookGet({ request, env, ctx });
+      if (request.method === "POST") return onMetaWebhookPost({ request, env, ctx });
+      return new Response("Method Not Allowed", { status: 405 });
+    }
+
     if (url.pathname === "/api/mobile-call/pair") {
       if (request.method === "POST") return exchangeMobilePairing(request, env);
       return new Response("Method Not Allowed", { status: 405 });
@@ -55,7 +65,7 @@ export default {
     return notFound();
   },
   async scheduled(_controller, env, ctx) {
-    ctx.waitUntil(processPendingWebsiteSheetDeliveries(env));
+    ctx.waitUntil(runMetaAutomationCycle(env));
   },
   email: receiveInboundMail,
 };
