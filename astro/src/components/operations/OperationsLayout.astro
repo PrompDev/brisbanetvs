@@ -9,13 +9,16 @@ interface Props {
 
 const { active, title, description } = Astro.props;
 
-const navigation: Array<{ key: OperationsSection; href: string; label: string; description: string }> = [
-  { key: "overview", href: "/operations/", label: "Overview", description: "Intake and workflow health" },
-  { key: "workspace", href: "/operations/workspace/", label: "Workspace", description: "Calls, quotes and job status" },
-  { key: "leads", href: "/operations/leads/", label: "Leads", description: "Protected customer register" },
-  { key: "inbox", href: "/operations/inbox/", label: "Inbox", description: "Team mail and saved drafts" },
-  { key: "analytics", href: "/operations/analytics/", label: "Analytics", description: "Consent-aware website activity" },
+const navigation: Array<{ key: OperationsSection; href: string; label: string; icon: string }> = [
+  { key: "overview", href: "/operations/", label: "Overview", icon: "⌂" },
+  { key: "leads", href: "/operations/leads/", label: "Leads", icon: "◎" },
+  { key: "workspace", href: "/operations/workspace/", label: "Calls, quotes & jobs", icon: "◇" },
+  { key: "inbox", href: "/operations/inbox/", label: "Mailbox", icon: "✉" },
+  { key: "analytics", href: "/operations/analytics/", label: "Google analytics", icon: "↗" },
 ];
+
+const coreNavigation = navigation.filter((item) => item.key !== "analytics");
+const marketingNavigation = navigation.filter((item) => item.key === "analytics");
 ---
 
 <!doctype html>
@@ -31,32 +34,48 @@ const navigation: Array<{ key: OperationsSection; href: string; label: string; d
     <div class="operations-shell">
       <aside class="operations-sidebar" aria-label="Operations navigation">
         <div class="operations-brand-wrap">
-          <a class="operations-brand" href="/" aria-label="Brisbane TVs home">BRISBANE <span>TVS</span></a>
-          <p class="operations-area">Staff operations</p>
+          <a class="operations-brand" href="/operations/" aria-label="Brisbane TVs operations">
+            <span class="operations-brand-mark" aria-hidden="true"><i></i><i></i></span>
+            <span><strong>BRISBANE</strong><small>TVS · OPERATIONS</small></span>
+          </a>
         </div>
 
         <nav class="operations-nav" aria-label="Staff workspace">
-          {navigation.map((item) => (
+          {coreNavigation.map((item) => (
             <a
               class:list={["operations-nav-link", { "is-active": active === item.key }]}
               href={item.href}
               aria-current={active === item.key ? "page" : undefined}
             >
+              <span class="operations-nav-icon" aria-hidden="true">{item.icon}</span>
               <span class="operations-nav-label">{item.label}</span>
-              <span class="operations-nav-description">{item.description}</span>
+            </a>
+          ))}
+          <p class="operations-nav-group-label">Marketing</p>
+          {marketingNavigation.map((item) => (
+            <a
+              class:list={["operations-nav-link", { "is-active": active === item.key }]}
+              href={item.href}
+              aria-current={active === item.key ? "page" : undefined}
+            >
+              <span class="operations-nav-icon" aria-hidden="true">{item.icon}</span>
+              <span class="operations-nav-label">{item.label}</span>
             </a>
           ))}
         </nav>
 
         <div class="operations-sidebar-note">
           <span class="operations-secure-dot" aria-hidden="true"></span>
-          <p><strong>Secure staff area</strong><br />Customer information is available only after the staff access check.</p>
+          <p><strong>Secure staff area</strong><br />Protected by Cloudflare Access</p>
         </div>
       </aside>
 
       <div class="operations-content">
         <header class="operations-mobile-header">
-          <a class="operations-brand" href="/" aria-label="Brisbane TVs home">BRISBANE <span>TVS</span></a>
+          <a class="operations-brand" href="/operations/" aria-label="Brisbane TVs operations">
+            <span class="operations-brand-mark" aria-hidden="true"><i></i><i></i></span>
+            <span><strong>BRISBANE</strong><small>TVS · OPERATIONS</small></span>
+          </a>
           <span class="operations-mobile-secure"><span class="operations-secure-dot" aria-hidden="true"></span> Secure</span>
         </header>
 
@@ -80,40 +99,45 @@ const navigation: Array<{ key: OperationsSection; href: string; label: string; d
 
 <style is:global>
   :root {
-    color: #172736;
-    background: #f5f3ee;
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #131619;
+    background: #f5f4f0;
+    font-family: "DM Sans", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
 
   * { box-sizing: border-box; }
-  body { min-width: 320px; margin: 0; background: #f5f3ee; }
+  body { min-width: 320px; margin: 0; background: #f5f4f0; }
   button, input, select, textarea { font: inherit; }
   button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 
-  .operations-shell { display: grid; grid-template-columns: 17.75rem minmax(0, 1fr); min-height: 100vh; }
-  .operations-sidebar { display: flex; position: sticky; top: 0; flex-direction: column; height: 100vh; padding: 2.1rem 1.35rem 1.45rem; border-right: 1px solid #dedbd4; background: #fffdf9; }
-  .operations-brand { color: #172736; font-size: .98rem; font-weight: 850; letter-spacing: .12em; text-decoration: none; }
-  .operations-brand span { color: #a98245; }
-  .operations-area { margin: .55rem 0 0; color: #8a7c69; font-size: .73rem; font-weight: 760; letter-spacing: .11em; text-transform: uppercase; }
-  .operations-nav { display: grid; gap: .35rem; margin-top: 3rem; }
-  .operations-nav-link { display: grid; gap: .18rem; border-radius: .7rem; padding: .85rem .9rem; color: #53636e; text-decoration: none; transition: background .18s ease, color .18s ease; }
-  .operations-nav-link:hover { background: #f1eee7; color: #172736; }
-  .operations-nav-link.is-active { background: #172e40; color: #fff; box-shadow: 0 8px 20px rgba(23, 46, 64, .14); }
-  .operations-nav-label { font-size: .91rem; font-weight: 790; }
-  .operations-nav-description { color: inherit; font-size: .72rem; line-height: 1.35; opacity: .74; }
-  .operations-sidebar-note { display: flex; align-items: flex-start; gap: .65rem; margin-top: auto; border-top: 1px solid #e6e2da; padding: 1.25rem .25rem 0; color: #61707b; }
+  .operations-shell { display: grid; grid-template-columns: 14.875rem minmax(0, 1fr); min-height: 100vh; }
+  .operations-sidebar { display: flex; position: sticky; top: 0; flex-direction: column; height: 100vh; padding: 1.55rem 1.05rem 1rem; background: #131619; color: #fff; }
+  .operations-brand { display: flex; align-items: center; gap: .7rem; color: #fff; text-decoration: none; }
+  .operations-brand-mark { position: relative; display: block; flex: 0 0 auto; width: 1.85rem; height: 1.85rem; border: 1.5px solid currentColor; }
+  .operations-brand-mark i { position: absolute; top: .52rem; left: .5rem; width: .72rem; height: 1px; background: currentColor; transform: rotate(45deg); }
+  .operations-brand-mark i + i { top: 1.02rem; transform: rotate(-45deg); }
+  .operations-brand strong, .operations-brand small { display: block; }
+  .operations-brand strong { font-size: .82rem; letter-spacing: .16em; }
+  .operations-brand small { margin-top: .12rem; color: #9ea4a8; font-size: .49rem; letter-spacing: .26em; }
+  .operations-nav { display: grid; gap: .2rem; margin-top: 2.35rem; }
+  .operations-nav-link { display: flex; align-items: center; gap: .68rem; border-radius: .5rem; padding: .66rem .7rem; color: #aeb3b8; text-decoration: none; transition: background .18s ease, color .18s ease; }
+  .operations-nav-link:hover { background: #202428; color: #fff; }
+  .operations-nav-link.is-active { background: #fff; color: #131619; box-shadow: none; }
+  .operations-nav-icon { display: grid; width: 1.12rem; place-items: center; font-size: 1rem; }
+  .operations-nav-label { font-size: .78rem; font-weight: 650; }
+  .operations-nav-group-label { margin: 1.45rem .7rem .4rem; color: #636a70; font-size: .55rem; font-weight: 750; letter-spacing: .18em; text-transform: uppercase; }
+  .operations-sidebar-note { display: flex; align-items: flex-start; gap: .65rem; margin-top: auto; border-top: 1px solid #292d30; padding: 1rem .35rem 0; color: #8c9499; }
   .operations-sidebar-note p { margin: 0; font-size: .76rem; line-height: 1.48; }
-  .operations-sidebar-note strong { color: #334451; font-weight: 790; }
+  .operations-sidebar-note strong { color: #fff; font-weight: 750; }
   .operations-secure-dot { display: inline-block; flex: 0 0 auto; width: .52rem; height: .52rem; margin-top: .31rem; border-radius: 999px; background: #29875d; box-shadow: 0 0 0 4px rgba(41, 135, 93, .12); }
 
   .operations-content { min-width: 0; }
   .operations-mobile-header, .operations-mobile-nav { display: none; }
-  .operations-main { width: min(1240px, calc(100% - 4.5rem)); margin: 0 auto; padding: 3.1rem 0 4.5rem; }
+  .operations-main { width: min(1400px, calc(100% - 4.5rem)); margin: 0 auto; padding: 2.15rem 0 4.5rem; }
   .operations-page-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; margin-bottom: 2rem; }
-  .operations-eyebrow { margin: 0 0 .55rem; color: #9c773f; font-size: .72rem; font-weight: 850; letter-spacing: .13em; text-transform: uppercase; }
-  .operations-title, .operations-section-title { margin: 0; color: #172736; font-family: Georgia, "Times New Roman", serif; letter-spacing: -.04em; }
-  .operations-title { font-size: clamp(2.6rem, 5.5vw, 4.7rem); line-height: .96; }
-  .operations-section-title { font-size: clamp(1.45rem, 2.3vw, 1.85rem); line-height: 1.05; }
+  .operations-eyebrow { margin: 0 0 .48rem; color: #8a8a82; font-size: .58rem; font-weight: 750; letter-spacing: .16em; text-transform: uppercase; }
+  .operations-title, .operations-section-title { margin: 0; color: #131619; font-family: Georgia, "Times New Roman", serif; font-weight: 400; letter-spacing: -.025em; }
+  .operations-title { font-size: clamp(2rem, 4vw, 3rem); line-height: 1; }
+  .operations-section-title { font-size: clamp(1.25rem, 2.1vw, 1.55rem); line-height: 1.08; }
   .operations-copy { max-width: 50rem; margin: 1rem 0 0; color: #5c6a75; font-size: .97rem; line-height: 1.65; }
   .operations-status { max-width: 21rem; margin: 0; border: 1px solid #ddd9cf; border-radius: .7rem; padding: .85rem .95rem; color: #5e6d78; background: #fffdf8; font-size: .84rem; line-height: 1.45; }
   .operations-status.is-ready { border-color: #b7d8c7; color: #176444; background: #f0faf4; }
@@ -121,19 +145,19 @@ const navigation: Array<{ key: OperationsSection; href: string; label: string; d
 
   .operations-grid { display: grid; gap: 1rem; }
   .operations-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .operations-panel, .operations-metric { border: 1px solid #dedbd4; border-radius: .9rem; background: #fffdf9; box-shadow: 0 14px 35px rgba(25, 33, 43, .045); }
+  .operations-panel, .operations-metric { border: 1px solid #e7e5e0; border-radius: .8rem; background: #fff; box-shadow: 0 1px 0 rgba(0, 0, 0, .01); }
   .operations-panel { padding: 1.45rem; }
   .operations-metric { display: flex; min-height: 9.5rem; flex-direction: column; padding: 1.3rem; }
   .operations-metric-label { margin: 0; color: #61707d; font-size: .84rem; font-weight: 700; }
   .operations-metric-value { display: block; margin: .7rem 0 .4rem; color: #172736; font-family: Georgia, "Times New Roman", serif; font-size: clamp(2.05rem, 3.7vw, 2.9rem); line-height: 1; }
   .operations-metric-copy { margin-top: auto; color: #7a858e; font-size: .76rem; line-height: 1.4; }
-  .operations-metric.is-dark { border-color: #172e40; color: #fff; background: #172e40; }
+  .operations-metric.is-dark { border-color: #131619; color: #fff; background: #131619; }
   .operations-metric.is-dark .operations-metric-label, .operations-metric.is-dark .operations-metric-copy { color: #c5d0d7; }
   .operations-metric.is-dark .operations-metric-value { color: #fff; }
   .operations-panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
   .operations-panel-copy { margin: .7rem 0 0; color: #697680; font-size: .88rem; line-height: 1.5; }
-  .operations-link { display: inline-flex; align-items: center; justify-content: center; min-height: 2.45rem; border: 1px solid #172e40; border-radius: .55rem; padding: .55rem .8rem; color: #fff; background: #172e40; font-size: .84rem; font-weight: 780; text-decoration: none; }
-  .operations-link:hover { background: #25445b; }
+  .operations-link { display: inline-flex; align-items: center; justify-content: center; min-height: 2.45rem; border: 1px solid #131619; border-radius: .55rem; padding: .55rem .8rem; color: #fff; background: #131619; font-size: .84rem; font-weight: 780; text-decoration: none; }
+  .operations-link:hover { background: #2a2f33; }
   .operations-link.is-quiet { border-color: #d9d6cf; color: #344352; background: #fffdf9; }
   .operations-link.is-quiet:hover { border-color: #82909a; background: #f4f2ed; }
   .operations-button { min-height: 2.45rem; border: 1px solid #d9d6cf; border-radius: .55rem; padding: .55rem .8rem; color: #344352; background: #fffdf9; cursor: pointer; font-size: .84rem; font-weight: 780; }
@@ -222,6 +246,8 @@ const navigation: Array<{ key: OperationsSection; href: string; label: string; d
     .operations-shell { grid-template-columns: 1fr; }
     .operations-sidebar { display: none; }
     .operations-mobile-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.2rem 1.3rem .95rem; border-bottom: 1px solid #e1ded7; background: #fffdf9; }
+    .operations-mobile-header .operations-brand { color: #131619; }
+    .operations-mobile-header .operations-brand small { color: #697076; }
     .operations-mobile-secure { display: inline-flex; align-items: center; gap: .45rem; color: #536270; font-size: .76rem; font-weight: 730; }
     .operations-mobile-secure .operations-secure-dot { margin: 0; }
     .operations-mobile-nav { display: flex; overflow-x: auto; gap: .35rem; padding: .7rem 1.25rem; border-bottom: 1px solid #dedbd4; background: #fffdf9; }

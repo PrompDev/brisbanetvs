@@ -12,9 +12,11 @@ const GOOGLE_READ_SCOPES = [
 const REQUEST_TIMEOUT_MS = 12_000;
 const MAX_SERVICE_ACCOUNT_JSON_BYTES = 32 * 1024;
 const MAX_TOKEN_RESPONSE_BYTES = 32 * 1024;
-const MAX_REPORT_RESPONSE_BYTES = 64 * 1024;
-const MAX_SEARCH_CONSOLE_RESPONSE_BYTES = 64 * 1024;
+const MAX_REPORT_RESPONSE_BYTES = 128 * 1024;
+const MAX_SEARCH_CONSOLE_RESPONSE_BYTES = 256 * 1024;
 const MAX_COUNT = Number.MAX_SAFE_INTEGER;
+const SEARCH_CONSOLE_LAG_DAYS = 3;
+const STABLE_WINDOW_DAYS = 28;
 
 // Session default channel groups are a controlled GA4 taxonomy. Deliberately
 // avoid free-form campaign, referrer and UTM dimensions: those can contain
@@ -124,6 +126,11 @@ function safeCount(value) {
 function safeDecimal(value) {
   const numeric = typeof value === "string" || typeof value === "number" ? Number(value) : Number.NaN;
   return Number.isFinite(numeric) && numeric >= 0 && numeric <= MAX_COUNT ? numeric : 0;
+}
+
+function safeRate(value) {
+  const numeric = safeDecimal(value);
+  return numeric >= 0 && numeric <= 1 ? numeric : 0;
 }
 
 function metricFromFirstRow(payload, metricIndex, parseValue = safeCount) {
@@ -332,6 +339,9 @@ function trafficReport(dateRange) {
       { name: "activeUsers" },
       { name: "screenPageViews" },
       { name: "averageSessionDuration" },
+      { name: "engagedSessions" },
+      { name: "engagementRate" },
+      { name: "screenPageViewsPerSession" },
     ],
   };
 }
@@ -349,9 +359,9 @@ function generateLeadReport(dateRange) {
   };
 }
 
-function topChannelsReport() {
+function topChannelsReport(dateRange) {
   return {
-    dateRanges: [{ startDate: "6daysAgo", endDate: "today" }],
+    dateRanges: [dateRange],
     dimensions: [{ name: "sessionDefaultChannelGroup" }],
     metrics: [{ name: "sessions" }],
     orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
@@ -359,24 +369,58 @@ function topChannelsReport() {
   };
 }
 
-function topPagesReport(dateRange) {
+function landingPagesReport(dateRange) {
   return {
     dateRanges: [dateRange],
-    dimensions: [{ name: "unifiedPagePathScreen" }],
-    metrics: [{ name: "screenPageViews" }, { name: "userEngagementDuration" }],
-    orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }],
-    limit: "20",
+    dimensions: [{ name: "landingPage" }],
+    metrics: [
+      { name: "sessions" },
+      { name: "engagedSessions" },
+      { name: "engagementRate" },
+      { name: "screenPageViews" },
+      { name: "screenPageViewsPerSession" },
+      { name: "userEngagementDuration" },
+    ],
+    orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+    limit: "50",
   };
 }
 
-function searchConsoleQueryReport() {
+function dailySessionsReport(dateRange) {
   return {
-    startDate: dateInPacificTime(30),
-    endDate: dateInPacificTime(3),
-    dimensions: ["query", "page"],
+    dateRanges: [dateRange],
+    dimensions: [{ name: "date" }],
+    metrics: [
+      { name: "sessions" },
+      { name: "engagedSessions" },
+      { name: "screenPageViews" },
+    ],
+    orderBys: [{ dimension: { dimensionName: "date" }, desc: false }],
+    limit: "60",
+  };
+}
+
+function sessionStartReport(dateRange) {
+  return {
+    dateRanges: [dateRange],
+    metrics: [{ name: "eventCount" }],
+    dimensionFilter: {
+      filter: {
+        fieldName: "eventName",
+        stringFilter: { matchType: "EXACT", value: "session_start", caseSensitive: true },
+      },
+    },
+  };
+}
+
+function searchConsoleReport(dimensions, startDaysAgo, endDaysAgo, rowLimit) {
+  return {
+    startDate: dateInPacificTime(startDaysAgo),
+    endDate: dateInPacificTime(endDaysAgo),
+    dimensions,
     type: "web",
     dataState: "final",
-    rowLimit: 10,
+    rowLimit,
   };
 }
 
@@ -397,6 +441,9 @@ function safeTraffic(payload, generateLeads) {
     activeUsers: metricFromFirstRow(payload, 1),
     pageViews: metricFromFirstRow(payload, 2),
     averageSessionDuration: metricFromFirstRow(payload, 3, safeDecimal),
+    engagedSessions: metricFromFirstRow(payload, 4),
+    engagementRate: metricFromFirstRow(payload, 5, safeRate),
+    viewsPerSession: metricFromFirstRow(payload, 6, safeDecimal),
     generateLeads,
   };
 }
@@ -406,28 +453,59 @@ function safePagePath(value) {
   return path && path.startsWith("/") && !/[?#\r\n]/.test(path) ? path : null;
 }
 
-function safeTopPages(currentPayload, previousPayload) {
-  const previousViews = new Map();
-  const previousRows = isRecord(previousPayload) && Array.isArray(previousPayload.rows) ? previousPayload.rows : [];
-  previousRows.forEach((row) => {
+function safeLandingPages(payload) {
+  const rows = isRecord(payload) && Array.isArray(payload.rows) ? payload.rows : [];
+  return rows.slice(0, 50).flatMap((row) => {
     const path = isRecord(row?.dimensionValues?.[0]) ? safePagePath(row.dimensionValues[0].value) : null;
-    if (path) previousViews.set(path, metricFromRow(row, 0));
-  });
+    const sessions = metricFromRow(row, 0);
+    if (!path || sessions < 1) return [];
 
-  const currentRows = isRecord(currentPayload) && Array.isArray(currentPayload.rows) ? currentPayload.rows : [];
-  return currentRows.slice(0, 20).flatMap((row) => {
-    const path = isRecord(row?.dimensionValues?.[0]) ? safePagePath(row.dimensionValues[0].value) : null;
-    const pageViews = metricFromRow(row, 0);
-    const engagementSeconds = metricFromRow(row, 1, safeDecimal);
-    if (!path || pageViews < 1) return [];
-
+    const engagementSeconds = metricFromRow(row, 5, safeDecimal);
     return [{
       path,
-      pageViews,
-      averageEngagementSeconds: engagementSeconds / pageViews,
-      changeFromPreviousWeek: pageViews - (previousViews.get(path) || 0),
+      sessions,
+      engagedSessions: metricFromRow(row, 1),
+      engagementRate: metricFromRow(row, 2, safeRate),
+      pageViews: metricFromRow(row, 3),
+      viewsPerSession: metricFromRow(row, 4, safeDecimal),
+      averageEngagementSeconds: engagementSeconds / sessions,
     }];
-  }).slice(0, 5);
+  }).slice(0, 20);
+}
+
+function safeDailySessions(payload) {
+  const rows = isRecord(payload) && Array.isArray(payload.rows) ? payload.rows : [];
+  return rows.slice(0, 60).flatMap((row) => {
+    const rawDate = isRecord(row?.dimensionValues?.[0]) ? nonEmptyString(row.dimensionValues[0].value, 8) : null;
+    if (!rawDate || !/^\d{8}$/.test(rawDate)) return [];
+    return [{
+      date: `${rawDate.slice(0, 4)}-${rawDate.slice(4, 6)}-${rawDate.slice(6, 8)}`,
+      sessions: metricFromRow(row, 0),
+      engagedSessions: metricFromRow(row, 1),
+      pageViews: metricFromRow(row, 2),
+    }];
+  });
+}
+
+function sessionDiagnostics(traffic, sessionStartEvents, dailySessions) {
+  const sessions = safeCount(traffic?.sessions);
+  const startEvents = safeCount(sessionStartEvents);
+  const difference = sessions - startEvents;
+  const daysWithSessions = dailySessions.filter((day) => safeCount(day.sessions) > 0).length;
+  const status = sessions === 0
+    ? "no_consent_data"
+    : Math.abs(difference) <= 1
+      ? "aligned"
+      : "processing_difference";
+
+  return {
+    status,
+    sessions,
+    sessionStartEvents: startEvents,
+    difference,
+    daysWithSessions,
+    daysReported: dailySessions.length,
+  };
 }
 
 function safeSearchQuery(value) {
@@ -438,19 +516,6 @@ function safeSearchQuery(value) {
     && /^[\p{L}\p{N}\s&'’.,+()\-/]+$/u.test(query)
     ? query
     : null;
-}
-
-function safeSearchQueries(payload) {
-  if (!isRecord(payload) || !Array.isArray(payload.rows)) return [];
-
-  return payload.rows.slice(0, 10).flatMap((row) => {
-    const query = Array.isArray(row?.keys) ? safeSearchQuery(row.keys[0]) : null;
-    const page = Array.isArray(row?.keys) ? safeSearchPage(row.keys[1]) : null;
-    const clicks = safeCount(row?.clicks);
-    const impressions = safeCount(row?.impressions);
-    if (!query || !page || (clicks < 1 && impressions < 1)) return [];
-    return [{ query, page, clicks, impressions, position: safeDecimal(row?.position) }];
-  });
 }
 
 function safeSearchPage(value) {
@@ -466,17 +531,211 @@ function safeSearchPage(value) {
   }
 }
 
+async function optionalReport(config, accessToken, reportRequest, reportName) {
+  try {
+    return { status: "ready", payload: await runReport(config, accessToken, reportRequest) };
+  } catch (error) {
+    console.error(JSON.stringify({
+      event: "operations_analytics_optional_report_unavailable",
+      report: reportName,
+      stage: error instanceof AnalyticsUpstreamError ? error.stage : "request_failed",
+      upstreamStatus: error instanceof AnalyticsUpstreamError ? error.status : null,
+    }));
+    return { status: "unavailable", payload: { rows: [] } };
+  }
+}
+
+function safeSearchPageRows(payload) {
+  if (!isRecord(payload) || !Array.isArray(payload.rows)) return [];
+
+  return payload.rows.slice(0, 250).flatMap((row) => {
+    const path = Array.isArray(row?.keys) ? safeSearchPage(row.keys[0]) : null;
+    const clicks = safeCount(row?.clicks);
+    const impressions = safeCount(row?.impressions);
+    if (!path || (clicks < 1 && impressions < 1)) return [];
+    return [{
+      path,
+      clicks,
+      impressions,
+      ctr: safeRate(row?.ctr),
+      position: safeDecimal(row?.position),
+    }];
+  });
+}
+
+function safeSearchQueryRows(payload) {
+  if (!isRecord(payload) || !Array.isArray(payload.rows)) return [];
+
+  return payload.rows.slice(0, 250).flatMap((row) => {
+    const query = Array.isArray(row?.keys) ? safeSearchQuery(row.keys[0]) : null;
+    const path = Array.isArray(row?.keys) ? safeSearchPage(row.keys[1]) : null;
+    const clicks = safeCount(row?.clicks);
+    const impressions = safeCount(row?.impressions);
+    if (!query || !path || (clicks < 1 && impressions < 1)) return [];
+    return [{
+      query,
+      path,
+      clicks,
+      impressions,
+      ctr: safeRate(row?.ctr),
+      position: safeDecimal(row?.position),
+    }];
+  });
+}
+
+function searchTotals(rows) {
+  const totals = rows.reduce((result, row) => {
+    result.clicks += safeCount(row.clicks);
+    result.impressions += safeCount(row.impressions);
+    result.weightedPosition += safeDecimal(row.position) * safeCount(row.impressions);
+    return result;
+  }, { clicks: 0, impressions: 0, weightedPosition: 0 });
+
+  return {
+    clicks: totals.clicks,
+    impressions: totals.impressions,
+    ctr: totals.impressions > 0 ? totals.clicks / totals.impressions : 0,
+    position: totals.impressions > 0 ? totals.weightedPosition / totals.impressions : 0,
+  };
+}
+
+function opportunityForPage(page) {
+  let type = "monitor";
+  let label = "Monitor";
+  let recommendation = "Keep watching this page as more search data arrives.";
+
+  if (page.impressions >= 8 && page.clicks === 0 && page.position > 0 && page.position <= 15) {
+    type = "snippet_gap";
+    label = "Shown, not clicked";
+    recommendation = "Review the title and search description so they answer the visible queries more clearly.";
+  } else if (page.position > 3 && page.position <= 12) {
+    type = "near_page_one";
+    label = "Within reach";
+    recommendation = "Strengthen the page around its top queries and add useful internal links from related pages.";
+  } else if (page.impressions >= 10 && page.ctr < 0.02) {
+    type = "low_ctr";
+    label = "Low click rate";
+    recommendation = "Compare the search snippet with competing results and make the title more specific to the query.";
+  } else if (page.impressionChange > 0) {
+    type = "growing_visibility";
+    label = "Growing visibility";
+    recommendation = "Expand the sections that match the new queries while the page is gaining visibility.";
+  }
+
+  const positionWeight = page.position > 0 && page.position <= 20 ? 1 : 0.5;
+  const score = page.impressions * Math.max(0.05, 1 - page.ctr) * positionWeight
+    + Math.max(0, page.impressionChange);
+  return { type, label, recommendation, score };
+}
+
+function searchPageInsights(currentPayload, previousPayload, queryPayload) {
+  const currentRows = safeSearchPageRows(currentPayload);
+  const previousRows = safeSearchPageRows(previousPayload);
+  const queryRows = safeSearchQueryRows(queryPayload);
+  const previousByPath = new Map(previousRows.map((row) => [row.path, row]));
+  const queriesByPath = new Map();
+
+  for (const row of queryRows) {
+    const pageQueries = queriesByPath.get(row.path) || [];
+    pageQueries.push(row);
+    queriesByPath.set(row.path, pageQueries);
+  }
+
+  const pages = currentRows.map((row) => {
+    const previous = previousByPath.get(row.path) || { clicks: 0, impressions: 0, ctr: 0, position: 0 };
+    const page = {
+      ...row,
+      previousClicks: previous.clicks,
+      previousImpressions: previous.impressions,
+      clickChange: row.clicks - previous.clicks,
+      impressionChange: row.impressions - previous.impressions,
+      ctrChange: row.ctr - previous.ctr,
+      positionChange: previous.position > 0 && row.position > 0 ? previous.position - row.position : 0,
+      topQueries: (queriesByPath.get(row.path) || [])
+        .sort((left, right) => right.impressions - left.impressions || right.clicks - left.clicks)
+        .slice(0, 5)
+        .map(({ query, clicks, impressions, ctr, position }) => ({ query, clicks, impressions, ctr, position })),
+    };
+    return { ...page, opportunity: opportunityForPage(page) };
+  });
+
+  const totals = searchTotals(currentRows);
+  const previousTotals = searchTotals(previousRows);
+  const changes = {
+    clicks: totals.clicks - previousTotals.clicks,
+    impressions: totals.impressions - previousTotals.impressions,
+    ctr: totals.ctr - previousTotals.ctr,
+    position: previousTotals.position > 0 && totals.position > 0
+      ? previousTotals.position - totals.position
+      : 0,
+  };
+  const opportunities = [...pages]
+    .sort((left, right) => right.opportunity.score - left.opportunity.score)
+    .slice(0, 30);
+
+  return {
+    totals,
+    previousTotals,
+    changes,
+    pages: pages.slice(0, 50),
+    opportunities,
+    queries: [...queryRows]
+      .sort((left, right) => right.impressions - left.impressions || right.clicks - left.clicks)
+      .slice(0, 10),
+  };
+}
+
+function emptySearchConsole(status) {
+  return {
+    status,
+    window: {
+      startDate: dateInPacificTime(30),
+      endDate: dateInPacificTime(SEARCH_CONSOLE_LAG_DAYS),
+      lagDays: SEARCH_CONSOLE_LAG_DAYS,
+    },
+    previousWindow: {
+      startDate: dateInPacificTime(58),
+      endDate: dateInPacificTime(31),
+    },
+    totals: { clicks: 0, impressions: 0, ctr: 0, position: 0 },
+    previousTotals: { clicks: 0, impressions: 0, ctr: 0, position: 0 },
+    changes: { clicks: 0, impressions: 0, ctr: 0, position: 0 },
+    pages: [],
+    opportunities: [],
+    queries: [],
+  };
+}
+
 async function searchConsoleSummary(config, accessToken) {
-  if (!config.searchConsoleSiteUrl) return { status: "not_configured", queries: [] };
+  if (!config.searchConsoleSiteUrl) return emptySearchConsole("not_configured");
 
   try {
-    const report = await runSearchConsoleReport(config, accessToken, searchConsoleQueryReport());
-    return { status: "ready", queries: safeSearchQueries(report) };
+    const currentPageRequest = searchConsoleReport(["page"], 30, SEARCH_CONSOLE_LAG_DAYS, 250);
+    const previousPageRequest = searchConsoleReport(["page"], 58, 31, 250);
+    const queryPageRequest = searchConsoleReport(["query", "page"], 30, SEARCH_CONSOLE_LAG_DAYS, 250);
+    const [currentPages, previousPages, queryPages] = await Promise.all([
+      runSearchConsoleReport(config, accessToken, currentPageRequest),
+      runSearchConsoleReport(config, accessToken, previousPageRequest),
+      runSearchConsoleReport(config, accessToken, queryPageRequest),
+    ]);
+    return {
+      status: "ready",
+      window: {
+        startDate: currentPageRequest.startDate,
+        endDate: currentPageRequest.endDate,
+        lagDays: SEARCH_CONSOLE_LAG_DAYS,
+      },
+      previousWindow: {
+        startDate: previousPageRequest.startDate,
+        endDate: previousPageRequest.endDate,
+      },
+      ...searchPageInsights(currentPages, previousPages, queryPages),
+    };
   } catch (error) {
     const stage = error instanceof AnalyticsUpstreamError ? error.stage : "request_failed";
     const upstreamStatus = error instanceof AnalyticsUpstreamError ? error.status : null;
     console.error(JSON.stringify({ event: "operations_search_console_unavailable", stage, upstreamStatus }));
-    return { status: "unavailable", queries: [] };
+    return emptySearchConsole("unavailable");
   }
 }
 
@@ -655,16 +914,30 @@ function analyticsWithoutGa(gaStatus, searchStatus, leadSignals) {
   return {
     gaStatus,
     measurementBasis: "consented_visitors_only",
+    dataWindows: {
+      today: { startDate: "today", endDate: "today", provisional: true },
+      stable: { startDate: "27daysAgo", endDate: "yesterday", days: STABLE_WINDOW_DAYS },
+    },
     realtime: {
       status: gaStatus === "not_configured" ? "not_configured" : "unavailable",
       activeUsersLast30Minutes: null,
       windowMinutes: 30,
     },
     today: null,
-    last7Days: null,
+    last28Days: null,
     topSources: [],
-    topPages: [],
-    searchConsole: { status: searchStatus, queries: [] },
+    landingPages: [],
+    dailySessions: [],
+    sessionDiagnostics: null,
+    reportHealth: {
+      todayLeadEvents: "unavailable",
+      stableLeadEvents: "unavailable",
+      trafficChannels: "unavailable",
+      landingPages: "unavailable",
+      dailySessions: "unavailable",
+      sessionStartEvents: "unavailable",
+    },
+    searchConsole: emptySearchConsole(searchStatus),
     leadSignals,
   };
 }
@@ -689,33 +962,56 @@ export async function onRequestGet({ request, env }) {
   }
 
   const today = { startDate: "today", endDate: "today" };
-  const last7Days = { startDate: "6daysAgo", endDate: "today" };
-  const previous7Days = { startDate: "13daysAgo", endDate: "7daysAgo" };
+  const stableWindow = { startDate: "27daysAgo", endDate: "yesterday" };
 
   try {
     const accessToken = await getAccessToken(config);
-    const [todayTraffic, last7DaysTraffic, todayLeads, last7DaysLeads, topChannels, topPages, previousTopPages, searchConsole, realtime] = await Promise.all([
+    const [todayTraffic, stableTraffic, todayLeads, stableLeads, topChannels, landingPages, dailySessions, sessionStarts, searchConsole, realtime] = await Promise.all([
       runReport(config, accessToken, trafficReport(today)),
-      runReport(config, accessToken, trafficReport(last7Days)),
-      runReport(config, accessToken, generateLeadReport(today)),
-      runReport(config, accessToken, generateLeadReport(last7Days)),
-      runReport(config, accessToken, topChannelsReport()),
-      runReport(config, accessToken, topPagesReport(last7Days)),
-      runReport(config, accessToken, topPagesReport(previous7Days)),
+      runReport(config, accessToken, trafficReport(stableWindow)),
+      optionalReport(config, accessToken, generateLeadReport(today), "today_lead_events"),
+      optionalReport(config, accessToken, generateLeadReport(stableWindow), "stable_lead_events"),
+      optionalReport(config, accessToken, topChannelsReport(stableWindow), "traffic_channels"),
+      optionalReport(config, accessToken, landingPagesReport(stableWindow), "landing_pages"),
+      optionalReport(config, accessToken, dailySessionsReport(stableWindow), "daily_sessions"),
+      optionalReport(config, accessToken, sessionStartReport(stableWindow), "session_start_events"),
       searchConsoleSummary(config, accessToken),
       realtimeSummary(config, accessToken),
     ]);
+
+    const stableTrafficSummary = safeTraffic(stableTraffic, metricFromFirstRow(stableLeads.payload, 0));
+    const safeDaily = safeDailySessions(dailySessions.payload);
 
     return json({
       ok: true,
       analytics: {
         gaStatus: "ready",
         measurementBasis: "consented_visitors_only",
+        dataWindows: {
+          today: { startDate: "today", endDate: "today", provisional: true },
+          stable: { startDate: stableWindow.startDate, endDate: stableWindow.endDate, days: STABLE_WINDOW_DAYS },
+        },
         realtime,
-        today: safeTraffic(todayTraffic, metricFromFirstRow(todayLeads, 0)),
-        last7Days: safeTraffic(last7DaysTraffic, metricFromFirstRow(last7DaysLeads, 0)),
-        topSources: safeTopSources(topChannels),
-        topPages: safeTopPages(topPages, previousTopPages),
+        today: safeTraffic(todayTraffic, metricFromFirstRow(todayLeads.payload, 0)),
+        last28Days: stableTrafficSummary,
+        topSources: safeTopSources(topChannels.payload),
+        landingPages: safeLandingPages(landingPages.payload),
+        dailySessions: safeDaily,
+        sessionDiagnostics: sessionStarts.status === "ready"
+          ? sessionDiagnostics(
+              stableTrafficSummary,
+              metricFromFirstRow(sessionStarts.payload, 0),
+              safeDaily,
+            )
+          : null,
+        reportHealth: {
+          todayLeadEvents: todayLeads.status,
+          stableLeadEvents: stableLeads.status,
+          trafficChannels: topChannels.status,
+          landingPages: landingPages.status,
+          dailySessions: dailySessions.status,
+          sessionStartEvents: sessionStarts.status,
+        },
         searchConsole,
         leadSignals,
       },

@@ -4,446 +4,519 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
 
 <OperationsLayout
   active="analytics"
-  title="Website analytics"
-  description="Protected consent-aware website reporting for Brisbane TVs staff."
+  title="Google analytics"
+  description="Protected consent-aware Google Analytics and Search Console reporting for Brisbane TVs staff."
 >
-  <section class="operations-page-header" aria-labelledby="analytics-title">
+  <section class="operations-page-header analytics-header" aria-labelledby="analytics-title">
     <div>
-      <p class="operations-eyebrow">Website insights</p>
-      <h1 id="analytics-title" class="operations-title">What is working.</h1>
-      <p class="operations-copy">A practical, aggregate-only view of consented website activity: the pages attracting attention, time spent on site, traffic sources and the Google searches that lead to Brisbane TVs.</p>
+      <p class="operations-eyebrow">Marketing · Google</p>
+      <h1 id="analytics-title" class="operations-title">See the page, query and next move.</h1>
+      <p class="operations-copy">A stable view of consented sessions plus the pages appearing in Google, the queries behind those impressions and the improvements most likely to help.</p>
     </div>
-    <p class="operations-status" data-analytics-status role="status">Connecting to secure reporting...</p>
+    <div class="analytics-actions">
+      <p class="operations-status" data-analytics-status role="status">Connecting to secure Google reporting...</p>
+      <button class="operations-button" type="button" data-analytics-refresh>Refresh</button>
+    </div>
   </section>
 
-  <section class="operations-grid operations-breakdown-grid" aria-label="Website activity periods">
-    <article class="operations-panel">
-      <div class="operations-panel-heading">
-        <div>
-          <p class="operations-eyebrow">Consented GA4: Today</p>
-          <h2 class="operations-section-title">Current activity</h2>
-        </div>
-        <span class="operations-pill is-muted" data-realtime-pill>Checking</span>
-      </div>
-      <p class="operations-panel-copy" data-realtime-copy>Checking whether consented visits are reaching Google Analytics...</p>
-      <div class="operations-grid operations-analytics-metrics" style="margin-top: 1.2rem;">
-        <div class="operations-metric"><p class="operations-metric-label">Sessions</p><strong class="operations-metric-value" data-today-sessions>—</strong><span class="operations-metric-copy">Consent-aware visits</span></div>
-        <div class="operations-metric"><p class="operations-metric-label">Avg. session</p><strong class="operations-metric-value" data-today-duration>—</strong><span class="operations-metric-copy">Time on site</span></div>
-        <div class="operations-metric"><p class="operations-metric-label">Page views</p><strong class="operations-metric-value" data-today-views>—</strong><span class="operations-metric-copy">Viewed pages</span></div>
-        <div class="operations-metric"><p class="operations-metric-label">Lead events</p><strong class="operations-metric-value" data-today-leads>—</strong><span class="operations-metric-copy">Successful form events</span></div>
-      </div>
-    </article>
-
-    <article class="operations-panel">
-      <p class="operations-eyebrow">Consented GA4: Last 7 days</p>
-      <h2 class="operations-section-title">Recent direction</h2>
-      <div class="operations-grid operations-analytics-metrics" style="margin-top: 1.2rem;">
-        <div class="operations-metric"><p class="operations-metric-label">Sessions</p><strong class="operations-metric-value" data-week-sessions>—</strong><span class="operations-metric-copy">Consent-aware visits</span></div>
-        <div class="operations-metric"><p class="operations-metric-label">Avg. session</p><strong class="operations-metric-value" data-week-duration>—</strong><span class="operations-metric-copy">Time on site</span></div>
-        <div class="operations-metric"><p class="operations-metric-label">Page views</p><strong class="operations-metric-value" data-week-views>—</strong><span class="operations-metric-copy">Viewed pages</span></div>
-        <div class="operations-metric"><p class="operations-metric-label">Lead events</p><strong class="operations-metric-value" data-week-leads>—</strong><span class="operations-metric-copy">Successful form events</span></div>
-      </div>
-    </article>
+  <section class="analytics-basis" aria-label="How to read these figures">
+    <div><strong>Search impressions</strong><span>A Brisbane TVs result appeared in Google. The visitor may never open the site.</span></div>
+    <div><strong>GA4 sessions</strong><span>A visit from someone who allowed analytics. Completed days are used below.</span></div>
+    <div><strong>Saved enquiries</strong><span>An accepted lead in Operations, regardless of the visitor's analytics choice.</span></div>
   </section>
 
-  <section class="operations-grid operations-breakdown-grid" aria-label="Saved lead signals" style="margin-top: 1rem;">
-    <article class="operations-panel">
-      <div class="operations-panel-heading">
-        <div>
-          <p class="operations-eyebrow">Actual enquiries</p>
-          <h2 class="operations-section-title">Leads saved, not just clicks</h2>
-        </div>
-        <span class="operations-pill is-muted" data-lead-signal-pill>Checking</span>
+  <section aria-labelledby="stable-period-title">
+    <div class="analytics-section-head">
+      <div><p class="operations-eyebrow">Consented GA4</p><h2 id="stable-period-title">Last 28 complete days</h2></div>
+      <span data-ga-window>27 days ago to yesterday</span>
+    </div>
+    <div class="analytics-metrics">
+      <article><span>Sessions</span><strong data-stable-sessions>—</strong><small>Consented visits</small></article>
+      <article><span>Engaged sessions</span><strong data-stable-engaged>—</strong><small>Meaningful visits</small></article>
+      <article><span>Engagement rate</span><strong data-stable-rate>—</strong><small>Engaged ÷ sessions</small></article>
+      <article><span>Page views</span><strong data-stable-views>—</strong><small>Across consented visits</small></article>
+      <article><span>Views per session</span><strong data-stable-vps>—</strong><small>Browsing depth</small></article>
+      <article class="is-featured"><span>GA lead events</span><strong data-stable-leads>—</strong><small>Consented form completions</small></article>
+    </div>
+  </section>
+
+  <section class="analytics-grid" aria-label="Session reporting health">
+    <article class="operations-panel analytics-panel">
+      <div class="analytics-panel-head">
+        <div><h2>Daily sessions</h2><p>Completed days make gaps and processing delays visible</p></div>
+        <span class="operations-pill is-muted" data-realtime-pill>Checking realtime</span>
       </div>
-      <p class="operations-panel-copy" data-lead-signal-copy>Loading the protected Operations lead register. Saved leads include every successful submission, regardless of analytics consent.</p>
-      <div class="operations-grid operations-analytics-metrics" style="margin-top: 1.2rem;">
-        <div class="operations-metric"><p class="operations-metric-label">Saved today</p><strong class="operations-metric-value" data-saved-today>—</strong><span class="operations-metric-copy">All lead sources</span></div>
-        <div class="operations-metric"><p class="operations-metric-label">Saved in 7 days</p><strong class="operations-metric-value" data-saved-week>—</strong><span class="operations-metric-copy">Real enquiries</span></div>
-        <div class="operations-metric"><p class="operations-metric-label">Website forms</p><strong class="operations-metric-value" data-saved-website>—</strong><span class="operations-metric-copy">Last 7 days</span></div>
-        <div class="operations-metric"><p class="operations-metric-label">Sheet waiting</p><strong class="operations-metric-value" data-sheet-waiting>—</strong><span class="operations-metric-copy">0 means healthy</span></div>
+      <div class="session-chart" data-session-chart role="img" aria-label="Daily consented GA4 sessions"><p>Loading daily sessions...</p></div>
+      <div class="today-strip">
+        <div><span>Today · provisional</span><strong data-today-sessions>—</strong><small>sessions</small></div>
+        <div><span>Today</span><strong data-today-views>—</strong><small>page views</small></div>
+        <p data-realtime-copy>Checking visitors active in the last 30 minutes...</p>
       </div>
     </article>
 
-    <article class="operations-panel">
-      <p class="operations-eyebrow">Decision signals</p>
-      <h2 class="operations-section-title">What is producing enquiries</h2>
-      <p class="operations-panel-copy">Actual saved leads by source, campaign and website landing page for the last seven days.</p>
-      <p class="operations-metric-label" style="margin-top: 1rem;">Lead sources</p>
-      <ul class="operations-list" data-lead-sources aria-live="polite">
-        <li class="operations-list-loading">Loading lead sources...</li>
-      </ul>
-      <p class="operations-metric-label" style="margin-top: 1rem;">Campaigns</p>
-      <ul class="operations-list" data-lead-campaigns aria-live="polite">
-        <li class="operations-list-loading">Loading campaigns...</li>
-      </ul>
-      <p class="operations-metric-label" style="margin-top: 1rem;">Website lead pages</p>
-      <ul class="operations-list" data-lead-pages aria-live="polite">
-        <li class="operations-list-loading">Loading lead pages...</li>
-      </ul>
+    <article class="operations-panel analytics-panel session-health">
+      <div class="analytics-panel-head"><div><h2>Session health check</h2><p>GA4 sessions compared with its session_start event</p></div><span class="operations-pill is-muted" data-session-health-pill>Checking</span></div>
+      <div class="session-compare">
+        <div><span>Sessions</span><strong data-diagnostic-sessions>—</strong></div>
+        <div><span>session_start</span><strong data-diagnostic-starts>—</strong></div>
+        <div><span>Difference</span><strong data-diagnostic-difference>—</strong></div>
+        <div><span>Days with visits</span><strong data-diagnostic-days>—</strong></div>
+      </div>
+      <p class="analytics-explanation" data-session-health-copy>Loading the session diagnostic...</p>
     </article>
   </section>
 
-  <section class="operations-grid operations-breakdown-grid" aria-label="Traffic detail" style="margin-top: 1rem;">
-    <article class="operations-panel">
-      <div class="operations-panel-heading">
-        <div>
-          <p class="operations-eyebrow">Acquisition</p>
-          <h2 class="operations-section-title">Top traffic sources</h2>
-        </div>
-        <span class="operations-pill is-muted" data-analytics-pill>Checking</span>
-      </div>
-      <p class="operations-panel-copy" data-analytics-copy>Only controlled GA4 channel groups from consented sessions are shown here.</p>
-      <ul class="operations-list" data-analytics-sources aria-live="polite">
-        <li class="operations-list-loading">Loading traffic sources...</li>
-      </ul>
-    </article>
+  <section class="search-section" aria-labelledby="search-performance-title">
+    <div class="analytics-section-head">
+      <div><p class="operations-eyebrow">Google Search Console</p><h2 id="search-performance-title">Pages appearing in search</h2></div>
+      <span data-search-window>Final data ends three days ago</span>
+    </div>
+    <div class="search-metrics">
+      <article><span>Clicks</span><strong data-search-clicks>—</strong><small data-click-change>vs previous period</small></article>
+      <article><span>Impressions</span><strong data-search-impressions>—</strong><small data-impression-change>vs previous period</small></article>
+      <article><span>Click-through rate</span><strong data-search-ctr>—</strong><small data-ctr-change>vs previous period</small></article>
+      <article><span>Average position</span><strong data-search-position>—</strong><small data-position-change>Higher is better</small></article>
+    </div>
 
-    <article class="operations-panel">
-      <div class="operations-panel-heading">
-        <div>
-          <p class="operations-eyebrow">Popular pages</p>
-          <h2 class="operations-section-title">Top and trending pages</h2>
+    <article class="operations-panel analytics-panel opportunity-panel">
+      <div class="analytics-panel-head opportunity-heading">
+        <div><h2>Page improvement queue</h2><p>Prioritised from impressions, clicks, rank movement and top queries</p></div>
+        <div class="analytics-filters">
+          <label><span>Find page</span><input type="search" data-page-search placeholder="e.g. mount or repair" /></label>
+          <label><span>Opportunity</span><select data-opportunity-filter><option value="all">All pages</option><option value="snippet_gap">Shown, not clicked</option><option value="near_page_one">Within reach</option><option value="low_ctr">Low click rate</option><option value="growing_visibility">Growing visibility</option><option value="monitor">Monitor</option></select></label>
         </div>
-        <span class="operations-pill is-muted">7 days</span>
       </div>
-      <p class="operations-panel-copy">Consented GA4 page views, average engagement time and movement against the previous seven days.</p>
-      <ul class="operations-list" data-analytics-pages aria-live="polite">
-        <li class="operations-list-loading">Loading page trends...</li>
-      </ul>
+      <div class="opportunity-list" data-opportunity-list aria-live="polite"><p class="analytics-empty">Loading page and query details...</p></div>
+      <p class="analytics-footnote" data-search-note>Search Console data is finalised with a short delay.</p>
     </article>
   </section>
 
-  <section class="operations-grid operations-breakdown-grid" aria-label="Organic search and reporting connection" style="margin-top: 1rem;">
-    <article class="operations-panel">
-      <div class="operations-panel-heading">
-        <div>
-          <p class="operations-eyebrow">Google Search</p>
-          <h2 class="operations-section-title">Searches bringing people in</h2>
-        </div>
-        <span class="operations-pill is-muted" data-search-pill>Checking</span>
-      </div>
-      <p class="operations-panel-copy" data-search-copy>Loading aggregated Google Search queries and landing pages...</p>
-      <ul class="operations-list" data-analytics-queries aria-live="polite">
-        <li class="operations-list-loading">Loading search terms...</li>
-      </ul>
+  <section class="analytics-grid" aria-label="Landing pages and acquisition">
+    <article class="operations-panel analytics-panel">
+      <div class="analytics-panel-head"><div><h2>GA4 landing pages</h2><p>Where consented sessions began</p></div><span class="operations-pill is-muted">28 complete days</span></div>
+      <ul class="analytics-list" data-landing-pages><li>Loading landing pages...</li></ul>
     </article>
+    <article class="operations-panel analytics-panel">
+      <div class="analytics-panel-head"><div><h2>Traffic channels</h2><p>Controlled GA4 channel groups only</p></div><span class="operations-pill is-muted" data-ga-pill>Checking</span></div>
+      <ul class="analytics-list" data-traffic-sources><li>Loading channels...</li></ul>
+    </article>
+  </section>
 
-    <article class="operations-panel" data-analytics-setup>
-      <p class="operations-eyebrow">Reporting connection</p>
-      <h2 class="operations-section-title">Private by design</h2>
-      <p class="operations-panel-copy" data-analytics-setup-copy>Checking the server-side reporting connection...</p>
-      <ul class="operations-setup-list">
-        <li>GA4 tracking remains consent-aware on the public website.</li>
-        <li>A restricted service-account credential is kept only in Cloudflare's encrypted environment settings.</li>
-        <li>Google Search queries require a verified Search Console property and read-only access for that reporting account.</li>
-      </ul>
+  <section class="analytics-grid" aria-label="Saved lead signals">
+    <article class="operations-panel analytics-panel saved-leads-panel">
+      <div class="analytics-panel-head"><div><h2>Saved enquiries</h2><p>All accepted submissions, independent of analytics consent</p></div><span class="operations-pill is-muted" data-leads-pill>Checking</span></div>
+      <div class="saved-lead-metrics">
+        <div><span>Today</span><strong data-saved-today>—</strong></div>
+        <div><span>Last 7 days</span><strong data-saved-week>—</strong></div>
+        <div><span>Website forms</span><strong data-saved-web>—</strong></div>
+        <div><span>Sheet waiting</span><strong data-sheet-waiting>—</strong></div>
+      </div>
+    </article>
+    <article class="operations-panel analytics-panel">
+      <div class="analytics-panel-head"><div><h2>Enquiry sources</h2><p>Saved lead mix for the last seven days</p></div></div>
+      <ul class="analytics-list" data-lead-sources><li>Loading saved lead sources...</li></ul>
     </article>
   </section>
 
   <section class="operations-privacy-note">
     <span aria-hidden="true">✓</span>
-    <p>Analytics stays aggregate-only: no visitor names, emails, phone numbers or free-text form answers are requested or displayed. Campaign labels and Brisbane TVs landing-page paths are privacy-filtered and shown only as grouped lead counts.</p>
+    <p>This page requests fixed, aggregate reports only. Search queries and Brisbane TVs page paths are privacy-filtered; visitor identities, contact details and free-text form answers are not requested from Google or displayed here.</p>
   </section>
 
   <script>
     const numberFormat = new Intl.NumberFormat("en-AU");
-    const status = document.querySelector("[data-analytics-status]");
-    const pill = document.querySelector("[data-analytics-pill]");
-    const copy = document.querySelector("[data-analytics-copy]");
-    const setupCopy = document.querySelector("[data-analytics-setup-copy]");
-    const sourceList = document.querySelector("[data-analytics-sources]");
-    const pageList = document.querySelector("[data-analytics-pages]");
-    const queryList = document.querySelector("[data-analytics-queries]");
-    const searchPill = document.querySelector("[data-search-pill]");
-    const searchCopy = document.querySelector("[data-search-copy]");
-    const leadSignalPill = document.querySelector("[data-lead-signal-pill]");
-    const leadSignalCopy = document.querySelector("[data-lead-signal-copy]");
-    const leadSourceList = document.querySelector("[data-lead-sources]");
-    const leadCampaignList = document.querySelector("[data-lead-campaigns]");
-    const leadPageList = document.querySelector("[data-lead-pages]");
-    const realtimePill = document.querySelector("[data-realtime-pill]");
-    const realtimeCopy = document.querySelector("[data-realtime-copy]");
-    const values = {
-      todaySessions: document.querySelector("[data-today-sessions]"),
-      todayDuration: document.querySelector("[data-today-duration]"),
-      todayViews: document.querySelector("[data-today-views]"),
-      todayLeads: document.querySelector("[data-today-leads]"),
-      weekSessions: document.querySelector("[data-week-sessions]"),
-      weekDuration: document.querySelector("[data-week-duration]"),
-      weekViews: document.querySelector("[data-week-views]"),
-      weekLeads: document.querySelector("[data-week-leads]"),
-      savedToday: document.querySelector("[data-saved-today]"),
-      savedWeek: document.querySelector("[data-saved-week]"),
-      savedWebsite: document.querySelector("[data-saved-website]"),
-      sheetWaiting: document.querySelector("[data-sheet-waiting]"),
-    };
+    const decimalFormat = new Intl.NumberFormat("en-AU", { maximumFractionDigits: 1 });
+    const percentFormat = new Intl.NumberFormat("en-AU", { style: "percent", maximumFractionDigits: 1 });
+    const statusElement = document.querySelector("[data-analytics-status]");
+    const refreshButton = document.querySelector("[data-analytics-refresh]");
+    const pageSearch = document.querySelector("[data-page-search]");
+    const opportunityFilter = document.querySelector("[data-opportunity-filter]");
+    let currentAnalytics = null;
 
-    async function requestJson(path) {
-      const response = await fetch(path, {
+    const numeric = (value) => Math.max(0, Number(value) || 0);
+    const setText = (selector, value) => { const element = document.querySelector(selector); if (element) element.textContent = value; };
+    const setNumber = (selector, value) => setText(selector, numberFormat.format(numeric(value)));
+
+    function signed(value, suffix = "") {
+      const amount = Number(value) || 0;
+      if (amount === 0) return `No change${suffix}`;
+      return `${amount > 0 ? "+" : "−"}${decimalFormat.format(Math.abs(amount))}${suffix}`;
+    }
+
+    async function requestAnalytics() {
+      const response = await fetch("/operations/api/analytics", {
         cache: "no-store",
         credentials: "same-origin",
         headers: { accept: "application/json" },
       });
       const payload = await response.json().catch(() => null);
-      return { response, payload };
+      if (!response.ok || !payload?.ok || !payload.analytics) {
+        throw Object.assign(new Error("analytics unavailable"), { status: response.status });
+      }
+      return payload.analytics;
     }
 
-    function formatDuration(value) {
-      const seconds = Math.max(0, Math.round(Number(value) || 0));
-      const minutes = Math.floor(seconds / 60);
-      return minutes ? `${minutes}m ${seconds % 60}s` : `${seconds}s`;
+    function replaceWithMessage(target, message) {
+      target.replaceChildren();
+      const element = document.createElement(target.tagName === "UL" ? "li" : "p");
+      element.className = "analytics-empty";
+      element.textContent = message;
+      target.append(element);
     }
 
-    function emptyList(list, message) {
-      list.replaceChildren();
-      const item = document.createElement("li");
-      item.className = "operations-list-loading";
-      item.textContent = message;
-      list.append(item);
-    }
-
-    function renderSources(sources) {
-      if (!sources?.length) {
-        emptyList(sourceList, "No traffic sources recorded in this period.");
+    function renderDailySessions(days) {
+      const target = document.querySelector("[data-session-chart]");
+      target.replaceChildren();
+      if (!days?.length) {
+        replaceWithMessage(target, "No consented sessions were reported in the completed-day window.");
         return;
       }
-
-      sourceList.replaceChildren();
-      sources.forEach((source) => {
-        const item = document.createElement("li");
-        const label = document.createElement("span");
-        const value = document.createElement("strong");
-        label.textContent = source.label;
-        value.textContent = `${numberFormat.format(Number(source.sessions) || 0)} sessions`;
-        item.append(label, value);
-        sourceList.append(item);
+      const maximum = Math.max(1, ...days.map((day) => numeric(day.sessions)));
+      days.forEach((day, index) => {
+        const column = document.createElement("div");
+        const bar = document.createElement("span");
+        const label = document.createElement("small");
+        const sessions = numeric(day.sessions);
+        const date = new Date(`${day.date}T00:00:00+10:00`);
+        column.title = `${day.date}: ${numberFormat.format(sessions)} sessions, ${numberFormat.format(numeric(day.pageViews))} page views`;
+        column.setAttribute("aria-label", column.title);
+        bar.style.height = `${Math.max(sessions > 0 ? 6 : 1, Math.round((sessions / maximum) * 100))}%`;
+        label.textContent = index % 7 === 0 ? new Intl.DateTimeFormat("en-AU", { day: "numeric", month: "short" }).format(date) : "";
+        column.append(bar, label);
+        target.append(column);
       });
     }
 
-    function renderPages(pages) {
-      if (!pages?.length) {
-        emptyList(pageList, "No page activity recorded in this period.");
+    function renderRealtime(realtime) {
+      const pill = document.querySelector("[data-realtime-pill]");
+      const ready = realtime?.status === "ready";
+      const active = ready ? numeric(realtime.activeUsersLast30Minutes) : null;
+      pill.classList.toggle("is-muted", !ready || active === 0);
+      pill.textContent = ready ? `${numberFormat.format(active)} active now` : "Realtime unavailable";
+      setText("[data-realtime-copy]", ready
+        ? active > 0
+          ? `${numberFormat.format(active)} consented visitor${active === 1 ? "" : "s"} active in the last 30 minutes.`
+          : "Connected, with no consented visitors active in the last 30 minutes."
+        : "Realtime is unavailable; the completed-day report remains the reliable view.");
+    }
+
+    function renderSessionHealth(diagnostic) {
+      const pill = document.querySelector("[data-session-health-pill]");
+      if (!diagnostic) {
+        pill.textContent = "Unavailable";
+        setText("[data-session-health-copy]", "The session comparison could not be loaded.");
         return;
       }
+      setNumber("[data-diagnostic-sessions]", diagnostic.sessions);
+      setNumber("[data-diagnostic-starts]", diagnostic.sessionStartEvents);
+      setText("[data-diagnostic-difference]", signed(diagnostic.difference));
+      setText("[data-diagnostic-days]", `${numberFormat.format(numeric(diagnostic.daysWithSessions))}/${numberFormat.format(numeric(diagnostic.daysReported))}`);
+      pill.classList.toggle("is-muted", diagnostic.status !== "aligned");
+      pill.classList.toggle("is-warning", diagnostic.status === "processing_difference");
+      if (diagnostic.status === "aligned") {
+        pill.textContent = "Aligned";
+        setText("[data-session-health-copy]", "Sessions and session_start events agree. Collection is working for visitors who allow analytics.");
+      } else if (diagnostic.status === "no_consent_data") {
+        pill.textContent = "No consented visits";
+        setText("[data-session-health-copy]", "GA4 received no consented sessions in this window. Search impressions can still exist because appearing in Google does not mean someone opened the site or allowed analytics.");
+      } else {
+        pill.textContent = "Processing difference";
+        setText("[data-session-health-copy]", "The two GA4 counts differ. Standard reports can continue processing for 24–48 hours; this completed-day window avoids today's largest delay, but the newest days can still settle.");
+      }
+    }
 
-      pageList.replaceChildren();
-      pages.forEach((page) => {
-        const item = document.createElement("li");
-        const path = document.createElement("span");
-        const value = document.createElement("strong");
-        const views = numberFormat.format(Number(page.pageViews) || 0);
-        const change = Number(page.changeFromPreviousWeek) || 0;
-        const trend = change > 0 ? `↑ ${numberFormat.format(change)}` : change < 0 ? `↓ ${numberFormat.format(Math.abs(change))}` : "No change";
+    function renderSearchMetrics(search) {
+      const ready = search?.status === "ready";
+      if (!ready) {
+        ["[data-search-clicks]", "[data-search-impressions]", "[data-search-ctr]", "[data-search-position]"].forEach((selector) => setText(selector, "—"));
+        setText("[data-search-window]", search?.status === "not_configured" ? "Search Console setup needed" : "Search Console unavailable");
+        return;
+      }
+      setNumber("[data-search-clicks]", search.totals?.clicks);
+      setNumber("[data-search-impressions]", search.totals?.impressions);
+      setText("[data-search-ctr]", percentFormat.format(numeric(search.totals?.ctr)));
+      setText("[data-search-position]", decimalFormat.format(numeric(search.totals?.position)));
+      setText("[data-click-change]", `${signed(search.changes?.clicks)} clicks vs previous 28 days`);
+      setText("[data-impression-change]", `${signed(search.changes?.impressions)} impressions vs previous 28 days`);
+      setText("[data-ctr-change]", `${signed((Number(search.changes?.ctr) || 0) * 100, " points")} vs previous period`);
+      setText("[data-position-change]", `${signed(search.changes?.position)} positions vs previous period`);
+      setText("[data-search-window]", `${search.window.startDate} to ${search.window.endDate} · final data`);
+      setText("[data-search-note]", `Showing privacy-filtered page rows for ${search.window.startDate} to ${search.window.endDate}. Search Console dates use Pacific Time and finish ${search.window.lagDays} days behind today.`);
+    }
+
+    function landingPageMap(landingPages) {
+      return new Map((landingPages || []).map((page) => [page.path, page]));
+    }
+
+    function renderOpportunities() {
+      const target = document.querySelector("[data-opportunity-list]");
+      const search = currentAnalytics?.searchConsole;
+      if (search?.status !== "ready") {
+        replaceWithMessage(target, search?.status === "not_configured" ? "Search Console needs its read-only connection before page opportunities can appear." : "Search Console is temporarily unavailable.");
+        return;
+      }
+      const term = String(pageSearch.value || "").trim().toLowerCase();
+      const filter = opportunityFilter.value;
+      const gaPages = landingPageMap(currentAnalytics?.landingPages);
+      const pages = (search.opportunities || []).filter((page) => {
+        const matchesTerm = !term || String(page.path).toLowerCase().includes(term) || (page.topQueries || []).some((query) => String(query.query).toLowerCase().includes(term));
+        const matchesFilter = filter === "all" || page.opportunity?.type === filter;
+        return matchesTerm && matchesFilter;
+      });
+      target.replaceChildren();
+      if (!pages.length) {
+        replaceWithMessage(target, "No page opportunities match that filter.");
+        return;
+      }
+      pages.forEach((page, index) => {
+        const card = document.createElement("article");
+        card.className = "opportunity-card";
+        card.id = encodeURIComponent(page.path);
+        const rank = document.createElement("span");
+        rank.className = "opportunity-rank";
+        rank.textContent = String(index + 1).padStart(2, "0");
+        const body = document.createElement("div");
+        body.className = "opportunity-body";
+        const heading = document.createElement("div");
+        heading.className = "opportunity-title";
+        const path = document.createElement("a");
+        path.href = `https://brisbanetvs.com${page.path}`;
+        path.target = "_blank";
+        path.rel = "noreferrer";
         path.textContent = page.path;
-        value.textContent = `${views} views · ${formatDuration(page.averageEngagementSeconds)} avg. engagement · ${trend}`;
-        item.append(path, value);
-        pageList.append(item);
+        const badge = document.createElement("span");
+        badge.className = `opportunity-badge is-${page.opportunity?.type || "monitor"}`;
+        badge.textContent = page.opportunity?.label || "Monitor";
+        heading.append(path, badge);
+        const recommendation = document.createElement("p");
+        recommendation.textContent = page.opportunity?.recommendation || "Keep watching this page as more data arrives.";
+        const queries = document.createElement("div");
+        queries.className = "query-list";
+        if (page.topQueries?.length) {
+          page.topQueries.forEach((query) => {
+            const item = document.createElement("span");
+            const label = document.createElement("b");
+            const detail = document.createElement("small");
+            label.textContent = query.query;
+            detail.textContent = `${numberFormat.format(numeric(query.impressions))} imp · ${numberFormat.format(numeric(query.clicks))} click · pos ${decimalFormat.format(numeric(query.position))}`;
+            item.append(label, detail);
+            queries.append(item);
+          });
+        } else {
+          const unavailable = document.createElement("small");
+          unavailable.textContent = "No privacy-safe query rows were returned for this page.";
+          queries.append(unavailable);
+        }
+        body.append(heading, recommendation, queries);
+
+        const gaPage = gaPages.get(page.path);
+        const metrics = document.createElement("dl");
+        metrics.className = "opportunity-metrics";
+        const values = [
+          ["Impressions", numberFormat.format(numeric(page.impressions)), signed(page.impressionChange)],
+          ["Clicks / CTR", `${numberFormat.format(numeric(page.clicks))} / ${percentFormat.format(numeric(page.ctr))}`, signed(page.clickChange)],
+          ["Avg. position", decimalFormat.format(numeric(page.position)), page.positionChange ? `${signed(page.positionChange)} better` : "No movement"],
+          ["GA landing sessions", gaPage ? numberFormat.format(numeric(gaPage.sessions)) : "0", gaPage ? `${percentFormat.format(numeric(gaPage.engagementRate))} engaged` : "No consented session match"],
+        ];
+        values.forEach(([labelText, valueText, detailText]) => {
+          const wrapper = document.createElement("div");
+          const termElement = document.createElement("dt");
+          const valueElement = document.createElement("dd");
+          const detailElement = document.createElement("small");
+          termElement.textContent = labelText;
+          valueElement.textContent = valueText;
+          detailElement.textContent = detailText;
+          wrapper.append(termElement, valueElement, detailElement);
+          metrics.append(wrapper);
+        });
+        card.append(rank, body, metrics);
+        target.append(card);
       });
     }
 
-    function renderSearch(searchConsole) {
-      const search = searchConsole || { status: "not_configured", queries: [] };
-      const statusName = search.status;
-      const isReady = statusName === "ready";
-      searchPill.classList.toggle("is-muted", !isReady);
-      searchPill.textContent = isReady ? "Live" : statusName === "not_configured" ? "Setup needed" : "Unavailable";
-      searchCopy.textContent = isReady
-        ? "Top Google Search queries and landing pages from the last 28 completed days. Search data normally arrives a few days behind."
-        : statusName === "not_configured"
-          ? "Connect a verified Google Search Console property to see the searches and pages that bring visitors in."
-          : "Google Search data is temporarily unavailable. GA4 website activity remains available above.";
-
-      if (!isReady || !search.queries?.length) {
-        emptyList(queryList, isReady ? "No Google Search queries recorded in this period." : "Search terms will appear here once connected.");
+    function renderLandingPages(pages) {
+      const target = document.querySelector("[data-landing-pages]");
+      target.replaceChildren();
+      if (!pages?.length) {
+        replaceWithMessage(target, "No consented landing-page sessions were reported.");
         return;
       }
-
-      queryList.replaceChildren();
-      search.queries.forEach((result) => {
+      pages.slice(0, 10).forEach((page) => {
         const item = document.createElement("li");
         const label = document.createElement("span");
-        const value = document.createElement("strong");
-        label.textContent = `${result.query} · ${result.page}`;
-        value.textContent = `${numberFormat.format(Number(result.clicks) || 0)} clicks · ${numberFormat.format(Number(result.impressions) || 0)} impressions`;
-        item.append(label, value);
-        queryList.append(item);
+        const metrics = document.createElement("strong");
+        label.textContent = page.path;
+        metrics.textContent = `${numberFormat.format(numeric(page.sessions))} sessions · ${percentFormat.format(numeric(page.engagementRate))} engaged`;
+        item.append(label, metrics);
+        target.append(item);
       });
     }
 
-    function renderLeadList(list, entries, emptyMessage) {
+    function renderSimpleList(selector, entries, valueKey, suffix, emptyMessage) {
+      const target = document.querySelector(selector);
+      target.replaceChildren();
       if (!entries?.length) {
-        emptyList(list, emptyMessage);
+        replaceWithMessage(target, emptyMessage);
         return;
       }
-
-      list.replaceChildren();
-      entries.forEach((entry) => {
+      entries.slice(0, 10).forEach((entry) => {
         const item = document.createElement("li");
         const label = document.createElement("span");
         const value = document.createElement("strong");
-        label.textContent = entry.label;
-        value.textContent = `${numberFormat.format(Number(entry.leads) || 0)} leads`;
+        label.textContent = entry.label || "Other";
+        value.textContent = `${numberFormat.format(numeric(entry[valueKey]))} ${suffix}`;
         item.append(label, value);
-        list.append(item);
+        target.append(item);
       });
     }
 
     function renderLeadSignals(signals) {
-      const ready = signals?.status === "ready";
+      const pill = document.querySelector("[data-leads-pill]");
       const delivery = signals?.sheetDelivery || {};
-      const waiting = (Number(delivery.pending) || 0)
-        + (Number(delivery.failed) || 0)
-        + (Number(delivery.missing) || 0);
-      setValue(values.savedToday, signals?.today);
-      setValue(values.savedWeek, signals?.last7Days);
-      setValue(values.savedWebsite, signals?.websiteLast7Days);
-      setValue(values.sheetWaiting, waiting);
-
-      leadSignalPill.classList.toggle("is-muted", !ready || waiting > 0);
-      leadSignalPill.textContent = !ready ? "Unavailable" : waiting > 0 ? "Check delivery" : "Live";
-      leadSignalCopy.textContent = ready
-        ? `${numberFormat.format(Number(delivery.delivered) || 0)} website lead copies confirmed in the private Sheet. Saved leads include every successful submission, regardless of analytics consent. ${waiting ? `${numberFormat.format(waiting)} still need attention.` : "Nothing is waiting to sync."}`
-        : "The protected lead signal summary is temporarily unavailable.";
-      renderLeadList(leadSourceList, signals?.bySource, "No saved leads in this period.");
-      renderLeadList(leadCampaignList, signals?.topCampaigns, "No tagged campaigns have produced a saved lead yet.");
-      renderLeadList(leadPageList, signals?.topLandingPages, "No website form leads have been saved in this period.");
-    }
-
-    function renderRealtime(realtime) {
-      const realtimeStatus = realtime?.status || "unavailable";
-      const activeUsers = realtimeStatus === "ready"
-        ? Math.max(0, Number(realtime.activeUsersLast30Minutes) || 0)
-        : null;
-      const ready = realtimeStatus === "ready";
-      realtimePill.classList.toggle("is-muted", !ready || activeUsers === 0);
-
-      if (!ready) {
-        realtimePill.textContent = realtimeStatus === "not_configured" ? "Setup needed" : "Realtime unavailable";
-        realtimeCopy.textContent = realtimeStatus === "not_configured"
-          ? "Realtime collection will appear after the secure GA4 reporting connection is completed."
-          : "Realtime is temporarily unavailable; the standard consented GA4 reports below remain separate.";
-        return;
-      }
-
-      realtimePill.textContent = activeUsers > 0 ? `Receiving: ${numberFormat.format(activeUsers)} active` : "Connected";
-      realtimeCopy.textContent = activeUsers > 0
-        ? `${numberFormat.format(activeUsers)} consented active visitor${activeUsers === 1 ? "" : "s"} in the last 30 minutes.`
-        : "Connected, with no consented active visitors in the last 30 minutes.";
-    }
-
-    function setValue(target, value) {
-      target.textContent = numberFormat.format(Number(value) || 0);
-    }
-
-    function setDuration(target, value) {
-      target.textContent = formatDuration(value);
-    }
-
-    function clearGaMetrics() {
-      [
-        values.todaySessions,
-        values.todayDuration,
-        values.todayViews,
-        values.todayLeads,
-        values.weekSessions,
-        values.weekDuration,
-        values.weekViews,
-        values.weekLeads,
-      ].forEach((target) => { target.textContent = "—"; });
+      const waiting = numeric(delivery.pending) + numeric(delivery.failed) + numeric(delivery.missing);
+      setNumber("[data-saved-today]", signals?.today);
+      setNumber("[data-saved-week]", signals?.last7Days);
+      setNumber("[data-saved-web]", signals?.websiteLast7Days);
+      setNumber("[data-sheet-waiting]", waiting);
+      pill.textContent = signals?.status === "ready" ? waiting ? "Check delivery" : "Live" : "Unavailable";
+      pill.classList.toggle("is-muted", signals?.status !== "ready" || waiting > 0);
+      pill.classList.toggle("is-warning", waiting > 0);
+      renderSimpleList("[data-lead-sources]", signals?.bySource, "leads", "leads", "No saved leads in this period.");
     }
 
     function renderAnalytics(analytics) {
-      const gaStatus = analytics.gaStatus || "ready";
-      const gaReady = gaStatus === "ready";
-      renderLeadSignals(analytics.leadSignals);
-      renderSearch(analytics.searchConsole);
+      currentAnalytics = analytics;
+      const gaReady = analytics.gaStatus === "ready";
+      const stable = analytics.last28Days;
+      setNumber("[data-stable-sessions]", stable?.sessions);
+      setNumber("[data-stable-engaged]", stable?.engagedSessions);
+      setText("[data-stable-rate]", stable ? percentFormat.format(numeric(stable.engagementRate)) : "—");
+      setNumber("[data-stable-views]", stable?.pageViews);
+      setText("[data-stable-vps]", stable ? decimalFormat.format(numeric(stable.viewsPerSession)) : "—");
+      setNumber("[data-stable-leads]", stable?.generateLeads);
+      setNumber("[data-today-sessions]", analytics.today?.sessions);
+      setNumber("[data-today-views]", analytics.today?.pageViews);
+      setText("[data-ga-window]", "27 days ago to yesterday · completed days");
       renderRealtime(analytics.realtime);
+      renderSessionHealth(analytics.sessionDiagnostics);
+      renderDailySessions(analytics.dailySessions);
+      renderSearchMetrics(analytics.searchConsole);
+      renderLandingPages(analytics.landingPages);
+      renderSimpleList("[data-traffic-sources]", analytics.topSources, "sessions", "sessions", "No consented traffic channels were reported.");
+      renderLeadSignals(analytics.leadSignals);
+      renderOpportunities();
 
-      if (!gaReady) {
-        clearGaMetrics();
-        emptyList(sourceList, gaStatus === "not_configured"
-          ? "Traffic sources will appear after the secure GA4 reporting connection is completed."
-          : "Traffic sources are temporarily unavailable.");
-        emptyList(pageList, gaStatus === "not_configured"
-          ? "Page trends will appear after the secure GA4 reporting connection is completed."
-          : "Page trends are temporarily unavailable.");
-        status.textContent = gaStatus === "not_configured"
-          ? "Saved enquiries and Sheet delivery are live. GA4 traffic reporting still needs its secure connection."
-          : "Saved enquiries and Sheet delivery are live. GA4 traffic reporting is temporarily unavailable.";
-        status.classList.remove("is-ready");
-        status.classList.toggle("is-warning", gaStatus === "not_configured");
-        pill.textContent = gaStatus === "not_configured" ? "Leads live · GA setup" : "Leads live · GA unavailable";
-        pill.classList.add("is-muted");
-        copy.textContent = "Lead totals, campaigns, landing pages and Sheet health remain available below.";
-        setupCopy.textContent = gaStatus === "not_configured"
-          ? "Complete the read-only GA4 reporting credential to add sessions, engagement and page trends."
-          : "The GA4 connection can be retried without affecting lead capture or Sheet delivery.";
-        return;
-      }
-
-      setValue(values.todaySessions, analytics.today?.sessions);
-      setDuration(values.todayDuration, analytics.today?.averageSessionDuration);
-      setValue(values.todayViews, analytics.today?.pageViews);
-      setValue(values.todayLeads, analytics.today?.generateLeads);
-      setValue(values.weekSessions, analytics.last7Days?.sessions);
-      setDuration(values.weekDuration, analytics.last7Days?.averageSessionDuration);
-      setValue(values.weekViews, analytics.last7Days?.pageViews);
-      setValue(values.weekLeads, analytics.last7Days?.generateLeads);
-      renderSources(analytics.topSources);
-      renderPages(analytics.topPages);
-      status.textContent = "Secure consented website reporting is live.";
-      status.classList.add("is-ready");
-      status.classList.remove("is-warning");
-      pill.textContent = "Live";
-      pill.classList.remove("is-muted");
-      copy.textContent = "Fixed aggregate reports for visitors who allowed analytics, refreshed when this page opens.";
-      setupCopy.textContent = "Connected. The reporting credential stays server-side and is never exposed to this page.";
-    }
-
-    function renderUnavailable(needsSetup) {
-      status.textContent = needsSetup
-        ? "GA4 is collecting consented website activity; secure reporting access still needs its server-side credential."
-        : "Analytics reporting is temporarily unavailable. Please refresh shortly.";
-      status.classList.toggle("is-warning", needsSetup);
-      pill.textContent = needsSetup ? "Setup needed" : "Unavailable";
-      copy.textContent = needsSetup
-        ? "Tracking is separate from reporting. Once the restricted GA4 service credential is stored in Cloudflare, figures will populate here."
-        : "No traffic sources are available while reporting is unavailable.";
-      setupCopy.textContent = needsSetup
-        ? "One read-only reporting credential remains to be stored securely in Cloudflare; it is not committed to the website or sent to staff browsers."
-        : "Check the restricted reporting connection and refresh this page.";
-      renderSources([]);
-      renderPages([]);
-      renderSearch({ status: needsSetup ? "not_configured" : "unavailable", queries: [] });
-      renderRealtime({ status: needsSetup ? "not_configured" : "unavailable" });
-      renderLeadSignals({ status: "unavailable" });
+      const gaPill = document.querySelector("[data-ga-pill]");
+      gaPill.textContent = gaReady ? "Connected" : analytics.gaStatus === "not_configured" ? "Setup needed" : "Unavailable";
+      gaPill.classList.toggle("is-muted", !gaReady);
+      statusElement.textContent = gaReady
+        ? "Google reporting is connected. Completed-day session data and final Search Console data are shown."
+        : analytics.gaStatus === "not_configured"
+          ? "Saved lead data is live; the read-only GA4 reporting connection still needs setup."
+          : "Saved lead data is live; GA4 reporting is temporarily unavailable.";
+      statusElement.classList.toggle("is-ready", gaReady);
+      statusElement.classList.toggle("is-warning", !gaReady);
     }
 
     async function loadAnalytics() {
+      refreshButton.disabled = true;
+      statusElement.textContent = "Refreshing Google reporting...";
       try {
-        const { response, payload } = await requestJson("/operations/api/analytics");
-        if (response.ok && payload?.ok && payload.analytics) {
-          renderAnalytics(payload.analytics);
-          return;
-        }
-
-        if (response.status === 403) {
-          status.textContent = "Your secure session has expired. Sign in again to view Analytics.";
-          pill.textContent = "Sign in needed";
-          renderSources([]);
-          renderPages([]);
-          renderSearch({ status: "unavailable", queries: [] });
-          renderRealtime({ status: "unavailable" });
-          renderLeadSignals({ status: "unavailable" });
-          return;
-        }
-
-        renderUnavailable(payload?.error === "analytics_not_configured");
-      } catch {
-        renderUnavailable(false);
+        renderAnalytics(await requestAnalytics());
+      } catch (error) {
+        statusElement.textContent = error?.status === 403
+          ? "Your secure session has expired. Sign in again to view Analytics."
+          : "Google reporting is temporarily unavailable. Please refresh shortly.";
+        statusElement.classList.remove("is-ready");
+      } finally {
+        refreshButton.disabled = false;
       }
     }
 
+    pageSearch.addEventListener("input", renderOpportunities);
+    opportunityFilter.addEventListener("change", renderOpportunities);
+    refreshButton.addEventListener("click", loadAnalytics);
     loadAnalytics();
   </script>
+
+  <style>
+    .analytics-header { padding-bottom: 1.5rem; border-bottom: 1px solid #e7e5e0; }
+    .analytics-actions { display: flex; align-items: center; gap: .6rem; }
+    .analytics-basis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; overflow: hidden; margin-bottom: 1.7rem; border: 1px solid #e7e5e0; border-radius: .75rem; background: #e7e5e0; }
+    .analytics-basis > div { display: grid; gap: .3rem; padding: 1rem; background: #fff; }
+    .analytics-basis strong { font-size: .7rem; }
+    .analytics-basis span { color: #71777b; font-size: .64rem; line-height: 1.45; }
+    .analytics-section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin: 1.7rem 0 .85rem; }
+    .analytics-section-head h2, .analytics-panel-head h2 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 1.35rem; font-weight: 400; }
+    .analytics-section-head > span { color: #7c838c; font-size: .65rem; }
+    .analytics-metrics { display: grid; grid-template-columns: repeat(6, 1fr); gap: .7rem; }
+    .analytics-metrics article, .search-metrics article { display: flex; min-width: 0; min-height: 8.2rem; flex-direction: column; border: 1px solid #e7e5e0; border-radius: .75rem; padding: 1rem; background: #fff; }
+    .analytics-metrics span, .search-metrics span, .session-compare span, .saved-lead-metrics span { color: #83847f; font-size: .57rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+    .analytics-metrics strong, .search-metrics strong { margin: .7rem 0 .35rem; font-family: Georgia, "Times New Roman", serif; font-size: 1.7rem; font-weight: 400; }
+    .analytics-metrics small, .search-metrics small { margin-top: auto; color: #8a8d8a; font-size: .58rem; line-height: 1.35; }
+    .analytics-metrics .is-featured { border-color: #131619; color: #fff; background: #131619; }
+    .analytics-metrics .is-featured span, .analytics-metrics .is-featured small { color: #aeb3b5; }
+    .analytics-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(19rem, .75fr); gap: 1rem; margin-top: 1rem; }
+    .analytics-panel { padding: 0; overflow: hidden; }
+    .analytics-panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; border-bottom: 1px solid #e7e5e0; padding: 1rem 1.15rem; }
+    .analytics-panel-head p { margin: .3rem 0 0; color: #7c838c; font-size: .64rem; }
+    .session-chart { display: flex; height: 10rem; align-items: flex-end; gap: .22rem; padding: 1.2rem 1.15rem .8rem; }
+    .session-chart > div { display: flex; flex: 1; height: 100%; min-width: 0; flex-direction: column; justify-content: flex-end; gap: .35rem; }
+    .session-chart > div span { display: block; width: 100%; min-height: 1px; border-radius: .18rem .18rem 0 0; background: #65796d; }
+    .session-chart > div small { height: .75rem; color: #858a86; font-size: .48rem; white-space: nowrap; }
+    .today-strip { display: grid; grid-template-columns: auto auto 1fr; gap: 1.2rem; align-items: center; border-top: 1px solid #e7e5e0; padding: .9rem 1.15rem; }
+    .today-strip > div { display: grid; grid-template-columns: auto auto; gap: .15rem .35rem; align-items: baseline; }
+    .today-strip span { grid-column: 1 / -1; color: #83847f; font-size: .54rem; text-transform: uppercase; }
+    .today-strip strong { font-family: Georgia, "Times New Roman", serif; font-size: 1.25rem; font-weight: 400; }
+    .today-strip small { color: #777; font-size: .58rem; }
+    .today-strip p { margin: 0 0 0 auto; color: #687076; font-size: .62rem; text-align: right; }
+    .session-compare { display: grid; grid-template-columns: repeat(2, 1fr); }
+    .session-compare > div { display: flex; min-height: 6.2rem; flex-direction: column; border-right: 1px solid #e7e5e0; border-bottom: 1px solid #e7e5e0; padding: 1rem; }
+    .session-compare > div:nth-child(2n) { border-right: 0; }
+    .session-compare strong { margin-top: .55rem; font-family: Georgia, "Times New Roman", serif; font-size: 1.45rem; font-weight: 400; }
+    .analytics-explanation { margin: 0; padding: 1rem 1.15rem; color: #687076; font-size: .66rem; line-height: 1.55; }
+    .search-section { margin-top: 1.8rem; }
+    .search-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: .7rem; }
+    .opportunity-panel { margin-top: 1rem; }
+    .opportunity-heading { align-items: flex-end; }
+    .analytics-filters { display: flex; gap: .6rem; }
+    .analytics-filters label { display: grid; gap: .25rem; }
+    .analytics-filters label span { color: #777d80; font-size: .52rem; text-transform: uppercase; }
+    .analytics-filters input, .analytics-filters select { min-width: 10rem; height: 2.25rem; border: 1px solid #dedcd6; border-radius: .45rem; padding: 0 .6rem; color: #31363a; background: #fff; font-size: .67rem; }
+    .opportunity-list { display: grid; }
+    .opportunity-card { display: grid; grid-template-columns: 2.25rem minmax(15rem, 1fr) minmax(22rem, .85fr); gap: 1rem; border-bottom: 1px solid #e7e5e0; padding: 1.15rem; }
+    .opportunity-card:last-child { border: 0; }
+    .opportunity-rank { color: #9b9e9a; font-family: Georgia, "Times New Roman", serif; font-size: 1.05rem; }
+    .opportunity-body { min-width: 0; }
+    .opportunity-title { display: flex; align-items: center; gap: .6rem; }
+    .opportunity-title > a { overflow: hidden; color: #131619; font-size: .74rem; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+    .opportunity-badge { flex: 0 0 auto; border-radius: .3rem; padding: .26rem .42rem; color: #555; background: #eee; font-size: .53rem; font-weight: 700; text-transform: uppercase; }
+    .opportunity-badge.is-snippet_gap, .opportunity-badge.is-low_ctr { color: #99463f; background: #f4e4e2; }
+    .opportunity-badge.is-near_page_one { color: #8d641c; background: #f3ead8; }
+    .opportunity-badge.is-growing_visibility { color: #26704d; background: #e2f1e8; }
+    .opportunity-body > p { margin: .55rem 0 .7rem; color: #60686d; font-size: .66rem; line-height: 1.45; }
+    .query-list { display: flex; flex-wrap: wrap; gap: .35rem; }
+    .query-list > span { display: grid; gap: .1rem; border: 1px solid #e8e5df; border-radius: .4rem; padding: .38rem .48rem; background: #faf9f6; }
+    .query-list b { font-size: .58rem; }
+    .query-list small { color: #7a8084; font-size: .5rem; }
+    .opportunity-metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: .6rem; margin: 0; }
+    .opportunity-metrics > div { display: flex; min-width: 0; flex-direction: column; border-left: 2px solid #ebe8e2; padding-left: .65rem; }
+    .opportunity-metrics dt { color: #83847f; font-size: .51rem; text-transform: uppercase; }
+    .opportunity-metrics dd { margin: .28rem 0 .16rem; font-size: .72rem; font-weight: 750; }
+    .opportunity-metrics small { color: #7b8083; font-size: .52rem; }
+    .analytics-footnote { margin: 0; border-top: 1px solid #e7e5e0; padding: .8rem 1.15rem; color: #7a8083; background: #faf9f6; font-size: .58rem; line-height: 1.45; }
+    .analytics-list { display: grid; gap: 0; margin: 0; padding: .35rem 1.15rem; list-style: none; }
+    .analytics-list li { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px solid #efede8; padding: .7rem 0; color: #5c6469; font-size: .66rem; }
+    .analytics-list li:last-child { border: 0; }
+    .analytics-list li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .analytics-list li strong { flex: 0 0 auto; color: #131619; font-size: .61rem; text-align: right; }
+    .saved-lead-metrics { display: grid; grid-template-columns: repeat(4, 1fr); }
+    .saved-lead-metrics > div { display: flex; min-height: 6.6rem; flex-direction: column; border-right: 1px solid #e7e5e0; padding: 1rem; }
+    .saved-lead-metrics > div:last-child { border: 0; }
+    .saved-lead-metrics strong { margin-top: .6rem; font-family: Georgia, "Times New Roman", serif; font-size: 1.55rem; font-weight: 400; }
+    .analytics-empty { margin: auto; padding: 1.5rem; color: #7c838c; font-size: .68rem; text-align: center; }
+    @media (max-width: 1200px) { .analytics-metrics { grid-template-columns: repeat(3, 1fr); } .opportunity-card { grid-template-columns: 2rem 1fr; } .opportunity-metrics { grid-column: 2; } }
+    @media (max-width: 850px) { .analytics-basis, .analytics-grid { grid-template-columns: 1fr; } .search-metrics { grid-template-columns: repeat(2, 1fr); } .opportunity-heading { align-items: stretch; flex-direction: column; } .analytics-filters { width: 100%; } .analytics-filters label { flex: 1; } .analytics-filters input, .analytics-filters select { width: 100%; min-width: 0; } }
+    @media (max-width: 620px) { .analytics-actions { align-items: stretch; flex-direction: column; width: 100%; } .analytics-metrics, .search-metrics { grid-template-columns: repeat(2, 1fr); } .opportunity-card { grid-template-columns: 1fr; } .opportunity-rank { display: none; } .opportunity-metrics { grid-column: auto; } .today-strip { grid-template-columns: 1fr 1fr; } .today-strip p { grid-column: 1 / -1; margin: 0; text-align: left; } .saved-lead-metrics { grid-template-columns: repeat(2, 1fr); } .saved-lead-metrics > div:nth-child(2) { border-right: 0; border-bottom: 1px solid #e7e5e0; } .saved-lead-metrics > div:first-child { border-bottom: 1px solid #e7e5e0; } }
+  </style>
 </OperationsLayout>

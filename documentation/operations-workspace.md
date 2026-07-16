@@ -5,8 +5,10 @@ customer-facing website or a replacement for the public quote form.
 
 ## Safe port from `brisbanetvs-ops`
 
-The operations design was reviewed from
-`bigdonnnybra/brisbanetvs-ops` commit `831207d`. The safe port reuses its screen
+The operations design is tracked from
+`https://github.com/bigdonnnybra/brisbanetvs-ops` at commit `831207d`. Its dark
+navigation, compact overview metrics, pipeline and panel layout are now the
+visual basis of the live Operations portal. The safe port reuses its screen
 structure and workflow concepts for calls, quotes, jobs, stock, finance and an
 approval-gated SMS outbox. It does not import the demo pricing data.
 
@@ -15,6 +17,10 @@ database, runtime-created schema, demo customer records or seeded integration
 statuses. It also does not copy its root `/api/*` routes, unsigned PBX and
 Stripe webhooks, or direct Android gateway send handler. Those parts do not
 fit the existing Cloudflare architecture or its customer-data controls.
+
+Only the existing Brisbane TVs Google reporting is added to that dashboard.
+No telephony, payment, SMS, social, AI or other connector from the standalone
+repository becomes live merely because its design appears in Operations.
 
 The current systems remain authoritative:
 
@@ -28,6 +34,23 @@ The current systems remain authoritative:
 
 The new operations tables reference the existing D1 lead IDs. They do not
 create another lead register or another Sheet-to-Calendar path.
+
+### Updating from Tom's repository
+
+Tom's repository is treated as an upstream design source, not as a deployable
+backend dependency. When Tom publishes another commit:
+
+1. Fetch or clone the repository and record the exact new commit ID.
+2. Review its dashboard HTML, styles and view changes against the pinned commit.
+3. Port the useful presentation and workflow changes into the Astro Operations
+   pages while retaining Cloudflare Access, Pages Functions, D1 and the existing
+   read-only boundaries.
+4. Do not copy its local Node server, SQLite database, demo data, unsigned
+   webhooks or direct send/write handlers.
+5. Run the Operations API tests, Astro build and an authenticated visual check,
+   then update the pinned commit in this document.
+
+This keeps later updates small and reviewable while Tom is still iterating.
 
 ## Where to work
 
@@ -210,6 +233,22 @@ The Analytics page labels these figures as consented traffic and uses the GA4
 Realtime API for a separate last-30-minutes collection health signal. Saved
 lead counts come from D1 and include every accepted enquiry regardless of the
 visitor's analytics choice.
+
+The primary GA4 period is the last 28 complete days (`27daysAgo` through
+`yesterday`). Today is shown separately as provisional because standard GA4
+reports can continue processing after activity occurs. A session health panel
+compares `sessions` with `session_start` event counts and shows how many days
+actually contain consented visits. This distinguishes collection or processing
+issues from a quiet period.
+
+Search Console uses a final 28-day window ending three days ago and compares it
+with the preceding 28 days. Page-only rows supply clicks, impressions, CTR and
+average position; a separate query-plus-page report adds the privacy-filtered
+queries behind each page's visibility. The page queue combines those signals
+with consented GA4 landing sessions and highlights pages that are shown but not
+clicked, close to page one, low in CTR or gaining visibility. Search impressions
+are result appearances, not visits, and therefore must not be expected to match
+consented GA4 sessions.
 
 Facebook/Instagram campaign attribution is retained for the browser session,
 so a visitor can move from an ad landing page to `/quote/` without losing the

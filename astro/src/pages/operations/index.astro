@@ -5,242 +5,330 @@ import OperationsLayout from "../../components/operations/OperationsLayout.astro
 <OperationsLayout
   active="overview"
   title="Operations overview"
-  description="Protected Brisbane TVs operations overview for staff."
+  description="Protected Brisbane TVs operations dashboard for staff."
 >
-  <section class="operations-page-header" aria-labelledby="operations-overview-title">
+  <section class="operations-page-header dashboard-header" aria-labelledby="operations-overview-title">
     <div>
-      <p class="operations-eyebrow">Operations</p>
-      <h1 id="operations-overview-title" class="operations-title">Know what needs attention.</h1>
-      <p class="operations-copy">Start with the Workspace for current work. Leads, Inbox and Analytics remain the source pages for customer records, mail and website reporting.</p>
+      <p class="operations-eyebrow" data-dashboard-date>Brisbane operations</p>
+      <h1 id="operations-overview-title" class="operations-title">The business at a glance.</h1>
+      <p class="operations-copy">Leads, work in progress and the Google signals worth acting on, brought into Tom's dashboard layout.</p>
     </div>
-    <p class="operations-status" data-summary-state role="status">Connecting to the protected lead register...</p>
+    <div class="dashboard-actions">
+      <p class="operations-status" data-dashboard-status role="status">Connecting to the protected workspace...</p>
+      <button class="operations-button" type="button" data-dashboard-refresh>Refresh</button>
+    </div>
   </section>
 
-  <section class="operations-grid operations-metrics" aria-label="Lead summary">
-    <article class="operations-metric">
-      <p class="operations-metric-label">Total leads</p>
-      <strong class="operations-metric-value" data-summary-total>—</strong>
-      <span class="operations-metric-copy">Protected master register</span>
-    </article>
-    <article class="operations-metric">
-      <p class="operations-metric-label">Received today</p>
-      <strong class="operations-metric-value" data-summary-today>—</strong>
-      <span class="operations-metric-copy">Brisbane time</span>
-    </article>
-    <article class="operations-metric">
-      <p class="operations-metric-label">Last 7 days</p>
-      <strong class="operations-metric-value" data-summary-week>—</strong>
-      <span class="operations-metric-copy">New customer enquiries</span>
-    </article>
-    <article class="operations-metric is-dark">
-      <p class="operations-metric-label">Intake health</p>
-      <strong class="operations-metric-value" data-summary-health>Checking</strong>
-      <span class="operations-metric-copy" data-summary-recency>Checking latest intake</span>
-    </article>
+  <section class="dashboard-metrics" aria-label="Business summary">
+    <article class="dashboard-metric"><span>Total leads</span><strong data-total-leads>—</strong><small>Protected register</small></article>
+    <article class="dashboard-metric"><span>Leads today</span><strong data-today-leads>—</strong><small>Brisbane time</small></article>
+    <article class="dashboard-metric"><span>Last 7 days</span><strong data-week-leads>—</strong><small>New enquiries</small></article>
+    <article class="dashboard-metric"><span>Missed calls</span><strong data-missed-calls>—</strong><small>Need attention</small></article>
+    <article class="dashboard-metric"><span>Quotes to review</span><strong data-quotes-review>—</strong><small>Before sending</small></article>
+    <article class="dashboard-metric is-featured"><span>Active jobs</span><strong data-active-jobs>—</strong><small>Scheduled or underway</small></article>
   </section>
 
-  <section class="operations-grid operations-action-grid" aria-label="Operations sections">
-    <article class="operations-panel operations-action-card is-workspace">
-      <p class="operations-eyebrow">Workspace</p>
-      <h2 class="operations-section-title">Daily work board.</h2>
-      <p class="operations-panel-copy">Review live calls, quotes, jobs, stock, finance, social activity and phone connection status. This screen is read-only.</p>
-      <a class="operations-link" href="/operations/workspace/">Open workspace</a>
-    </article>
-    <article class="operations-panel operations-action-card is-leads">
-      <p class="operations-eyebrow">Lead register</p>
-      <h2 class="operations-section-title">Every customer contact in one place.</h2>
-      <p class="operations-panel-copy" data-lead-register-copy>Loading the protected register status...</p>
-      <a class="operations-link" href="/operations/leads/">Open master lead list</a>
-    </article>
-    <article class="operations-panel operations-action-card is-inbox">
-      <div class="operations-panel-heading">
-        <div>
-          <p class="operations-eyebrow">Team inbox</p>
-          <h2 class="operations-section-title">Mail, without sending.</h2>
-        </div>
-        <span class="operations-pill is-muted" data-inbox-state>Checking</span>
+  <section class="dashboard-grid is-wide" aria-label="Lead pipeline and attention items">
+    <article class="operations-panel dashboard-panel">
+      <div class="dashboard-panel-head">
+        <div><h2>Lead pipeline</h2><p>Status of every protected lead</p></div>
+        <a href="/operations/leads/">Open leads</a>
       </div>
-      <p class="operations-panel-copy" data-inbox-copy>Checking the team inbox connection...</p>
-      <a class="operations-link is-quiet" href="/operations/inbox/">Open inbox and drafts</a>
+      <div class="dashboard-pipeline" data-pipeline aria-live="polite"><p>Loading pipeline...</p></div>
     </article>
-    <article class="operations-panel operations-action-card is-analytics">
-      <div class="operations-panel-heading">
-        <div>
-          <p class="operations-eyebrow">Google Analytics</p>
-          <h2 class="operations-section-title">Website activity, separately.</h2>
-        </div>
-        <span class="operations-pill is-muted" data-analytics-state>Checking</span>
+
+    <article class="operations-panel dashboard-panel">
+      <div class="dashboard-panel-head">
+        <div><h2>Needs attention</h2><p>Work that should be checked next</p></div>
+        <a href="/operations/workspace/">Open workspace</a>
       </div>
-      <p class="operations-panel-copy" data-analytics-copy>Checking consent-aware reporting access...</p>
-      <a class="operations-link is-quiet" href="/operations/analytics/">Open analytics</a>
+      <ul class="dashboard-attention" data-attention aria-live="polite"><li>Loading work status...</li></ul>
     </article>
   </section>
 
-  <section class="operations-grid operations-breakdown-grid" aria-label="Lead mix">
-    <article class="operations-panel">
-      <p class="operations-eyebrow">Source mix</p>
-      <h2 class="operations-section-title">By platform</h2>
-      <ul class="operations-list" data-summary-platform aria-live="polite">
-        <li class="operations-list-loading">Loading lead sources...</li>
-      </ul>
+  <section class="dashboard-grid" aria-label="Google performance">
+    <article class="operations-panel dashboard-panel analytics-overview">
+      <div class="dashboard-panel-head">
+        <div><h2>Google performance</h2><p>Completed reporting windows, not today's partial totals</p></div>
+        <a href="/operations/analytics/">Full analytics</a>
+      </div>
+      <div class="google-summary">
+        <div><span>Consented sessions</span><strong data-ga-sessions>—</strong><small>Last 28 complete days</small></div>
+        <div><span>Engagement rate</span><strong data-ga-engagement>—</strong><small>GA4 consented visits</small></div>
+        <div><span>Search impressions</span><strong data-search-impressions>—</strong><small>Final Search Console data</small></div>
+        <div><span>Search clicks</span><strong data-search-clicks>—</strong><small>From Google results</small></div>
+      </div>
+      <div class="dashboard-insight-head"><strong>Pages to improve first</strong><span data-search-window>Waiting for Search Console...</span></div>
+      <ol class="dashboard-opportunities" data-opportunities aria-live="polite"><li>Loading page opportunities...</li></ol>
     </article>
-    <article class="operations-panel">
-      <p class="operations-eyebrow">Demand signal</p>
-      <h2 class="operations-section-title">TV size</h2>
-      <ul class="operations-list" data-summary-size aria-live="polite">
-        <li class="operations-list-loading">Loading TV preferences...</li>
-      </ul>
+
+    <article class="operations-panel dashboard-panel">
+      <div class="dashboard-panel-head">
+        <div><h2>Lead sources</h2><p>Saved enquiries, regardless of analytics consent</p></div>
+      </div>
+      <ul class="dashboard-source-list" data-source-mix aria-live="polite"><li>Loading source mix...</li></ul>
+      <div class="dashboard-quick-links">
+        <a href="/operations/workspace/?view=calls"><span>Calls & transcripts</span><strong>Review →</strong></a>
+        <a href="/operations/workspace/?view=quotes"><span>Quotes</span><strong>Review →</strong></a>
+        <a href="/operations/workspace/?view=jobs"><span>Jobs</span><strong>Review →</strong></a>
+        <a href="/operations/inbox/"><span>Mailbox</span><strong>Open →</strong></a>
+      </div>
     </article>
   </section>
 
   <section class="operations-privacy-note">
     <span aria-hidden="true">✓</span>
-    <p>This overview deliberately excludes customer names, phone numbers, emails and lead IDs. Open <a href="/operations/leads/">Leads</a> only when you need to work with the restricted customer register.</p>
+    <p>Search impressions mean a Brisbane TVs result appeared in Google. GA4 sessions count only visitors who allowed analytics, so those totals will never match. Saved lead figures come from the protected register and include all accepted enquiries.</p>
   </section>
 
   <script>
     const numberFormat = new Intl.NumberFormat("en-AU");
-    const summaryState = document.querySelector("[data-summary-state]");
-    const total = document.querySelector("[data-summary-total]");
-    const today = document.querySelector("[data-summary-today]");
-    const week = document.querySelector("[data-summary-week]");
-    const health = document.querySelector("[data-summary-health]");
-    const recency = document.querySelector("[data-summary-recency]");
-    const platform = document.querySelector("[data-summary-platform]");
-    const size = document.querySelector("[data-summary-size]");
-    const leadRegisterCopy = document.querySelector("[data-lead-register-copy]");
-    const inboxState = document.querySelector("[data-inbox-state]");
-    const inboxCopy = document.querySelector("[data-inbox-copy]");
-    const analyticsState = document.querySelector("[data-analytics-state]");
-    const analyticsCopy = document.querySelector("[data-analytics-copy]");
+    const percentFormat = new Intl.NumberFormat("en-AU", { style: "percent", maximumFractionDigits: 1 });
+    const dateElement = document.querySelector("[data-dashboard-date]");
+    const statusElement = document.querySelector("[data-dashboard-status]");
+    const refreshButton = document.querySelector("[data-dashboard-refresh]");
 
-    const recencyCopy = {
-      today: "Latest contact arrived today",
-      yesterday: "Latest contact arrived yesterday",
-      older: "Latest contact is older",
-      none: "No contacts yet",
-      unknown: "Latest intake time is unavailable",
+    const setNumber = (selector, value) => {
+      const element = document.querySelector(selector);
+      if (element) element.textContent = numberFormat.format(Math.max(0, Number(value) || 0));
     };
-    const healthCopy = { ready: "Ready", attention: "Needs attention", empty: "No leads yet" };
 
-    async function requestJson(path) {
+    const requestJson = async (path) => {
       const response = await fetch(path, {
         cache: "no-store",
         credentials: "same-origin",
         headers: { accept: "application/json" },
       });
       const payload = await response.json().catch(() => null);
-      return { response, payload };
-    }
+      if (!response.ok || !payload?.ok) {
+        const error = new Error(response.status === 403 ? "signin" : "unavailable");
+        error.status = response.status;
+        throw error;
+      }
+      return payload;
+    };
 
-    function renderBuckets(target, items) {
+    function renderPipeline(entries) {
+      const target = document.querySelector("[data-pipeline]");
       target.replaceChildren();
-      if (!items?.length) {
-        const item = document.createElement("li");
-        item.className = "operations-list-loading";
-        item.textContent = "No lead data yet.";
-        target.append(item);
+      if (!entries?.length) {
+        const empty = document.createElement("p");
+        empty.textContent = "No lead statuses have been recorded yet.";
+        target.append(empty);
         return;
       }
-      items.forEach((entry) => {
-        const row = document.createElement("li");
-        const label = document.createElement("span");
-        const value = document.createElement("strong");
-        label.textContent = entry.label;
-        value.textContent = numberFormat.format(entry.count);
-        row.append(label, value);
-        target.append(row);
+      const maximum = Math.max(1, ...entries.map((entry) => Number(entry.count) || 0));
+      entries.slice(0, 8).forEach((entry) => {
+        const column = document.createElement("div");
+        const count = document.createElement("strong");
+        const barWrap = document.createElement("div");
+        const bar = document.createElement("span");
+        const label = document.createElement("small");
+        const value = Math.max(0, Number(entry.count) || 0);
+        count.textContent = numberFormat.format(value);
+        bar.style.height = `${Math.max(8, Math.round((value / maximum) * 72))}px`;
+        barWrap.append(bar);
+        label.textContent = String(entry.status || "New").replaceAll("_", " ");
+        column.append(count, barWrap, label);
+        target.append(column);
       });
     }
 
-    async function loadSummary() {
-      try {
-        const { response, payload } = await requestJson("/operations/api/summary");
-        if (!response.ok || !payload?.ok || !payload.summary) {
-          summaryState.textContent = response.status === 403
-            ? "Your secure session has expired. Sign in again to view Operations."
-            : "The protected lead register is temporarily unavailable. Please refresh shortly.";
-          return;
-        }
-
-        const summary = payload.summary;
-        total.textContent = numberFormat.format(summary.totalLeads);
-        today.textContent = numberFormat.format(summary.leadsToday);
-        week.textContent = numberFormat.format(summary.leadsLast7Days);
-        health.textContent = healthCopy[summary.syncHealth] || "Checking";
-        recency.textContent = recencyCopy[summary.latestLeadRecency] || recencyCopy.unknown;
-        leadRegisterCopy.textContent = summary.totalLeads
-          ? `${numberFormat.format(summary.totalLeads)} protected customer contact${summary.totalLeads === 1 ? "" : "s"} ready for staff follow-up.`
-          : "No customer contacts have been imported yet.";
-        renderBuckets(platform, summary.byPlatform);
-        renderBuckets(size, summary.byTvSize);
-        summaryState.textContent = "The protected lead register is up to date.";
-        summaryState.classList.add("is-ready");
-      } catch {
-        summaryState.textContent = "The protected lead register is temporarily unavailable. Please refresh shortly.";
-      }
+    function renderAttention(operations) {
+      const target = document.querySelector("[data-attention]");
+      const items = [
+        ["Missed calls", operations?.calls?.missed, "/operations/workspace/?view=calls"],
+        ["Quotes needing review", operations?.quotes?.needsReview, "/operations/workspace/?view=quotes"],
+        ["Open follow-ups", operations?.activities?.openFollowups, "/operations/workspace/"],
+        ["Low-stock supplies", operations?.stock?.lowStock, "/operations/workspace/?view=stock"],
+      ];
+      target.replaceChildren();
+      items.forEach(([labelText, rawValue, href]) => {
+        const value = Math.max(0, Number(rawValue) || 0);
+        const item = document.createElement("li");
+        const label = document.createElement("span");
+        const count = document.createElement("strong");
+        const link = document.createElement("a");
+        label.textContent = labelText;
+        count.textContent = numberFormat.format(value);
+        link.href = href;
+        link.textContent = value > 0 ? "Review" : "Clear";
+        item.classList.toggle("is-clear", value === 0);
+        item.append(label, count, link);
+        target.append(item);
+      });
     }
 
-    async function loadInboxState() {
-      try {
-        const { response, payload } = await requestJson("/operations/api/inbox");
-        if (!response.ok || !payload?.ok) throw new Error("inbox unavailable");
-        const enabled = payload.inboundEnabled === true;
-        inboxState.textContent = enabled ? "Receiving" : "Staged";
-        inboxState.classList.toggle("is-muted", !enabled);
-        inboxCopy.textContent = enabled
-          ? "Incoming mail is stored in the protected team inbox. Outbound sending remains disabled."
-          : "Inbound delivery has not been moved here. The current business mail service remains unchanged.";
-      } catch {
-        inboxState.textContent = "Unavailable";
-        inboxCopy.textContent = "The team inbox status could not be checked.";
+    function renderSources(entries) {
+      const target = document.querySelector("[data-source-mix]");
+      target.replaceChildren();
+      if (!entries?.length) {
+        const empty = document.createElement("li");
+        empty.textContent = "No lead source data yet.";
+        target.append(empty);
+        return;
       }
+      const maximum = Math.max(1, ...entries.map((entry) => Number(entry.count) || 0));
+      entries.slice(0, 7).forEach((entry) => {
+        const item = document.createElement("li");
+        const label = document.createElement("span");
+        const track = document.createElement("span");
+        const fill = document.createElement("i");
+        const count = document.createElement("strong");
+        const value = Math.max(0, Number(entry.count) || 0);
+        label.textContent = entry.label || "Other";
+        fill.style.width = `${Math.max(3, (value / maximum) * 100)}%`;
+        track.append(fill);
+        count.textContent = numberFormat.format(value);
+        item.append(label, track, count);
+        target.append(item);
+      });
     }
 
-    async function loadAnalyticsState() {
-      try {
-        const { response, payload } = await requestJson("/operations/api/analytics");
-        if (response.ok && payload?.ok && payload.analytics) {
-          const analytics = payload.analytics;
-          const gaStatus = analytics.gaStatus || "unavailable";
-          if (gaStatus !== "ready") {
-            analyticsState.textContent = gaStatus === "not_configured" ? "Setup needed" : "Unavailable";
-            analyticsState.classList.add("is-muted");
-            analyticsCopy.textContent = gaStatus === "not_configured"
-              ? "GA4 collection may be active, but secure reporting still needs its server-side connection."
-              : "GA4 reporting is temporarily unavailable; saved lead reporting is unaffected.";
-            return;
-          }
+    function renderAnalytics(analytics) {
+      const stable = analytics?.last28Days;
+      const search = analytics?.searchConsole;
+      setNumber("[data-ga-sessions]", stable?.sessions);
+      const engagement = document.querySelector("[data-ga-engagement]");
+      engagement.textContent = stable ? percentFormat.format(Number(stable.engagementRate) || 0) : "—";
+      setNumber("[data-search-impressions]", search?.totals?.impressions);
+      setNumber("[data-search-clicks]", search?.totals?.clicks);
 
-          const sessions = Number(analytics.today?.sessions) || 0;
-          const realtime = analytics.realtime || {};
-          const activeUsers = realtime.status === "ready"
-            ? Math.max(0, Number(realtime.activeUsersLast30Minutes) || 0)
-            : null;
-          analyticsState.textContent = activeUsers > 0
-            ? "Receiving"
-            : activeUsers === 0
-              ? "Connected"
-              : "Reports live";
-          analyticsState.classList.toggle("is-muted", activeUsers === 0);
-          analyticsCopy.textContent = activeUsers > 0
-            ? `${numberFormat.format(activeUsers)} consented active visitor${activeUsers === 1 ? "" : "s"} in the last 30 minutes; ${numberFormat.format(sessions)} consented session${sessions === 1 ? "" : "s"} recorded today.`
-            : activeUsers === 0
-              ? `No consented active visitors in the last 30 minutes; ${numberFormat.format(sessions)} consented session${sessions === 1 ? "" : "s"} recorded today.`
-              : `${numberFormat.format(sessions)} consented session${sessions === 1 ? "" : "s"} recorded today. Realtime is temporarily unavailable.`;
-          return;
-        }
-        analyticsState.textContent = "Unavailable";
-        analyticsState.classList.add("is-muted");
-        analyticsCopy.textContent = "Analytics reporting is temporarily unavailable.";
-      } catch {
-        analyticsState.textContent = "Unavailable";
-        analyticsCopy.textContent = "Analytics reporting is temporarily unavailable.";
+      const windowElement = document.querySelector("[data-search-window]");
+      windowElement.textContent = search?.status === "ready"
+        ? `${search.window.startDate} to ${search.window.endDate}`
+        : "Search Console is not available";
+
+      const target = document.querySelector("[data-opportunities]");
+      target.replaceChildren();
+      if (search?.status !== "ready" || !search.opportunities?.length) {
+        const empty = document.createElement("li");
+        empty.textContent = search?.status === "not_configured"
+          ? "Connect Search Console to see impression pages and queries."
+          : "No page opportunities are available yet.";
+        target.append(empty);
+        return;
       }
+      search.opportunities.slice(0, 4).forEach((page) => {
+        const item = document.createElement("li");
+        const text = document.createElement("div");
+        const path = document.createElement("a");
+        const reason = document.createElement("span");
+        const metrics = document.createElement("strong");
+        path.href = `/operations/analytics/#${encodeURIComponent(page.path)}`;
+        path.textContent = page.path;
+        reason.textContent = page.opportunity?.label || "Monitor";
+        metrics.textContent = `${numberFormat.format(Number(page.impressions) || 0)} impressions · ${numberFormat.format(Number(page.clicks) || 0)} clicks`;
+        text.append(path, reason);
+        item.append(text, metrics);
+        target.append(item);
+      });
     }
 
-    loadSummary();
-    loadInboxState();
-    loadAnalyticsState();
+    async function loadDashboard() {
+      refreshButton.disabled = true;
+      statusElement.textContent = "Refreshing the protected dashboard...";
+      const results = await Promise.allSettled([
+        requestJson("/operations/api/workspace?view=overview&limit=12"),
+        requestJson("/operations/api/summary"),
+        requestJson("/operations/api/analytics"),
+      ]);
+      const [workspaceResult, summaryResult, analyticsResult] = results;
+      if (workspaceResult.status === "fulfilled") {
+        const data = workspaceResult.value.data;
+        setNumber("[data-total-leads]", data?.leads?.total);
+        setNumber("[data-today-leads]", data?.leads?.today);
+        setNumber("[data-week-leads]", data?.leads?.last7Days);
+        setNumber("[data-missed-calls]", data?.operations?.calls?.missed);
+        setNumber("[data-quotes-review]", data?.operations?.quotes?.needsReview);
+        setNumber("[data-active-jobs]", data?.operations?.jobs?.active);
+        renderPipeline(data?.leads?.pipeline);
+        renderAttention(data?.operations);
+      }
+      if (summaryResult.status === "fulfilled") renderSources(summaryResult.value.summary?.byPlatform);
+      if (analyticsResult.status === "fulfilled") renderAnalytics(analyticsResult.value.analytics);
+
+      const fulfilled = results.filter((result) => result.status === "fulfilled").length;
+      const needsSignIn = results.some((result) => result.status === "rejected" && result.reason?.status === 403);
+      statusElement.textContent = needsSignIn
+        ? "Your secure session has expired. Sign in again to view Operations."
+        : fulfilled === results.length
+          ? "Dashboard is up to date."
+          : fulfilled > 0
+            ? "Core data is live; one reporting panel could not refresh."
+            : "The protected dashboard is temporarily unavailable.";
+      statusElement.classList.toggle("is-ready", fulfilled === results.length);
+      refreshButton.disabled = false;
+    }
+
+    dateElement.textContent = new Intl.DateTimeFormat("en-AU", {
+      timeZone: "Australia/Brisbane",
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    }).format(new Date()).toUpperCase();
+    refreshButton.addEventListener("click", loadDashboard);
+    loadDashboard();
   </script>
+
+  <style>
+    .dashboard-header { padding-bottom: 1.5rem; border-bottom: 1px solid #e7e5e0; }
+    .dashboard-actions { display: flex; align-items: center; gap: .6rem; }
+    .dashboard-metrics { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .7rem; margin-bottom: 1.15rem; }
+    .dashboard-metric { display: flex; min-width: 0; min-height: 8.4rem; flex-direction: column; border: 1px solid #e7e5e0; border-radius: .8rem; padding: 1.05rem; background: #fff; }
+    .dashboard-metric span { color: #83847f; font-size: .58rem; font-weight: 750; letter-spacing: .1em; text-transform: uppercase; }
+    .dashboard-metric strong { margin: .75rem 0 .45rem; font-family: Georgia, "Times New Roman", serif; font-size: 1.8rem; font-weight: 400; }
+    .dashboard-metric small { margin-top: auto; color: #888b88; font-size: .62rem; }
+    .dashboard-metric.is-featured { border-color: #131619; color: #fff; background: #131619; }
+    .dashboard-metric.is-featured span, .dashboard-metric.is-featured small { color: #aeb3b5; }
+    .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(18rem, .85fr); gap: 1.1rem; margin-top: 1.1rem; }
+    .dashboard-grid.is-wide { grid-template-columns: minmax(0, 1.45fr) minmax(18rem, .75fr); }
+    .dashboard-panel { padding: 0; overflow: hidden; }
+    .dashboard-panel-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; border-bottom: 1px solid #e7e5e0; padding: 1.1rem 1.2rem; }
+    .dashboard-panel-head h2 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 1.3rem; font-weight: 400; }
+    .dashboard-panel-head p { margin: .3rem 0 0; color: #7c838c; font-size: .68rem; }
+    .dashboard-panel-head a { color: #131619; font-size: .68rem; font-weight: 700; text-decoration: none; border-bottom: 1px solid #aaa; }
+    .dashboard-pipeline { display: flex; align-items: flex-end; gap: .4rem; min-height: 10rem; padding: 1.2rem; }
+    .dashboard-pipeline > div { display: grid; flex: 1; min-width: 0; align-items: end; }
+    .dashboard-pipeline strong { margin-bottom: .3rem; font-size: .7rem; }
+    .dashboard-pipeline div div { display: flex; height: 4.5rem; align-items: flex-end; }
+    .dashboard-pipeline div div span { display: block; width: 100%; border-radius: .35rem .35rem .12rem .12rem; background: #dcd8cf; }
+    .dashboard-pipeline > div:nth-child(2n) div span { background: #b9c2c8; }
+    .dashboard-pipeline > div:nth-child(3n) div span { background: #8ea291; }
+    .dashboard-pipeline small { overflow: hidden; margin-top: .5rem; color: #777; font-size: .54rem; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+    .dashboard-pipeline > p { align-self: center; margin: auto; color: #7c838c; font-size: .76rem; }
+    .dashboard-attention, .dashboard-source-list, .dashboard-opportunities { margin: 0; padding: .35rem 1.2rem; list-style: none; }
+    .dashboard-attention li { display: grid; grid-template-columns: 1fr auto auto; gap: .8rem; align-items: center; border-bottom: 1px solid #efede8; padding: .78rem 0; font-size: .72rem; }
+    .dashboard-attention li:last-child { border: 0; }
+    .dashboard-attention li strong { display: grid; width: 1.65rem; height: 1.65rem; place-items: center; border-radius: 50%; color: #99463f; background: #f4e4e2; }
+    .dashboard-attention li.is-clear strong { color: #26704d; background: #e2f1e8; }
+    .dashboard-attention a { color: #6a7074; font-size: .64rem; font-weight: 700; }
+    .google-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid #e7e5e0; }
+    .google-summary > div { display: flex; min-height: 7rem; flex-direction: column; border-right: 1px solid #e7e5e0; padding: 1rem; }
+    .google-summary > div:last-child { border: 0; }
+    .google-summary span { color: #83847f; font-size: .58rem; text-transform: uppercase; }
+    .google-summary strong { margin: .55rem 0 .3rem; font-family: Georgia, "Times New Roman", serif; font-size: 1.55rem; font-weight: 400; }
+    .google-summary small { margin-top: auto; color: #8b8e8c; font-size: .57rem; }
+    .dashboard-insight-head { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem 1.2rem .35rem; font-size: .67rem; }
+    .dashboard-insight-head span { color: #8b8e8c; font-size: .58rem; }
+    .dashboard-opportunities { padding-bottom: 1rem; }
+    .dashboard-opportunities li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1rem; align-items: center; border-bottom: 1px solid #efede8; padding: .65rem 0; }
+    .dashboard-opportunities li:last-child { border: 0; }
+    .dashboard-opportunities div { display: grid; min-width: 0; gap: .15rem; }
+    .dashboard-opportunities a { overflow: hidden; color: #131619; font-size: .7rem; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+    .dashboard-opportunities span { color: #a66b16; font-size: .59rem; }
+    .dashboard-opportunities > li > strong { color: #696f72; font-size: .61rem; font-weight: 600; text-align: right; }
+    .dashboard-source-list { padding-top: .8rem; }
+    .dashboard-source-list li { display: grid; grid-template-columns: 6rem 1fr 2rem; gap: .6rem; align-items: center; padding: .48rem 0; color: #6b7073; font-size: .65rem; }
+    .dashboard-source-list li > span:nth-child(2) { height: .38rem; overflow: hidden; border-radius: 999px; background: #efede8; }
+    .dashboard-source-list i { display: block; height: 100%; border-radius: inherit; background: #63796b; }
+    .dashboard-source-list strong { color: #131619; font-size: .65rem; text-align: right; }
+    .dashboard-quick-links { display: grid; margin-top: .6rem; border-top: 1px solid #e7e5e0; }
+    .dashboard-quick-links a { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px solid #efede8; padding: .78rem 1.2rem; color: #131619; font-size: .68rem; text-decoration: none; }
+    .dashboard-quick-links a:last-child { border: 0; }
+    .dashboard-quick-links strong { font-size: .62rem; }
+    @media (max-width: 1200px) { .dashboard-metrics { grid-template-columns: repeat(3, 1fr); } .google-summary { grid-template-columns: repeat(2, 1fr); } .google-summary > div:nth-child(2) { border-right: 0; } .google-summary > div:nth-child(-n+2) { border-bottom: 1px solid #e7e5e0; } }
+    @media (max-width: 760px) { .dashboard-actions { align-items: stretch; flex-direction: column; width: 100%; } .dashboard-grid, .dashboard-grid.is-wide { grid-template-columns: 1fr; } }
+    @media (max-width: 520px) { .dashboard-metrics { grid-template-columns: repeat(2, 1fr); } .dashboard-opportunities li { grid-template-columns: 1fr; gap: .25rem; } .dashboard-opportunities > li > strong { text-align: left; } }
+  </style>
 </OperationsLayout>
