@@ -22,6 +22,14 @@ Only the existing Brisbane TVs Google reporting is added to that dashboard.
 No telephony, payment, SMS, social, AI or other connector from the standalone
 repository becomes live merely because its design appears in Operations.
 
+### Dark mode
+
+Operations opens in a low-glare dark theme based on the GPT app palette. The
+sun/moon control at the bottom of the desktop navigation, or in the mobile
+header, switches between dark and light mode. The choice is saved in that
+browser and applies to every Operations page; it does not affect the public
+Brisbane TVs website.
+
 The current systems remain authoritative:
 
 | Data or function | Authoritative system |

@@ -27,8 +27,18 @@ const marketingNavigation = navigation.filter((item) => item.key === "analytics"
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex,nofollow" />
+    <meta name="color-scheme" content="dark light" />
     <title>{title} | Brisbane TVs Operations</title>
     <meta name="description" content={description} />
+    <script is:inline>
+      (() => {
+        let savedTheme = "";
+        try {
+          savedTheme = localStorage.getItem("brisbane-operations-theme") || "";
+        } catch {}
+        document.documentElement.dataset.theme = savedTheme === "light" ? "light" : "dark";
+      })();
+    </script>
   </head>
   <body>
     <div class="operations-shell">
@@ -64,9 +74,15 @@ const marketingNavigation = navigation.filter((item) => item.key === "analytics"
           ))}
         </nav>
 
-        <div class="operations-sidebar-note">
-          <span class="operations-secure-dot" aria-hidden="true"></span>
-          <p><strong>Secure staff area</strong><br />Protected by Cloudflare Access</p>
+        <div class="operations-sidebar-footer">
+          <button class="operations-theme-toggle" type="button" data-theme-toggle>
+            <span class="operations-theme-icon" data-theme-icon aria-hidden="true">☀</span>
+            <span data-theme-label>Light mode</span>
+          </button>
+          <div class="operations-sidebar-note">
+            <span class="operations-secure-dot" aria-hidden="true"></span>
+            <p><strong>Secure staff area</strong><br />Protected by Cloudflare Access</p>
+          </div>
         </div>
       </aside>
 
@@ -76,7 +92,13 @@ const marketingNavigation = navigation.filter((item) => item.key === "analytics"
             <span class="operations-brand-mark" aria-hidden="true"><i></i><i></i></span>
             <span><strong>BRISBANE</strong><small>TVS · OPERATIONS</small></span>
           </a>
-          <span class="operations-mobile-secure"><span class="operations-secure-dot" aria-hidden="true"></span> Secure</span>
+          <div class="operations-mobile-actions">
+            <span class="operations-mobile-secure"><span class="operations-secure-dot" aria-hidden="true"></span> Secure</span>
+            <button class="operations-theme-toggle is-compact" type="button" data-theme-toggle>
+              <span class="operations-theme-icon" data-theme-icon aria-hidden="true">☀</span>
+              <span data-theme-label>Light mode</span>
+            </button>
+          </div>
         </header>
 
         <nav class="operations-mobile-nav" aria-label="Staff workspace">
@@ -94,6 +116,43 @@ const marketingNavigation = navigation.filter((item) => item.key === "analytics"
         </main>
       </div>
     </div>
+    <script is:inline>
+      (() => {
+        const root = document.documentElement;
+        const toggles = Array.from(document.querySelectorAll("[data-theme-toggle]"));
+
+        const renderTheme = () => {
+          const dark = root.dataset.theme !== "light";
+          toggles.forEach((toggle) => {
+            const label = toggle.querySelector("[data-theme-label]");
+            const icon = toggle.querySelector("[data-theme-icon]");
+            const nextTheme = dark ? "light" : "dark";
+            toggle.setAttribute("aria-label", `Switch to ${nextTheme} mode`);
+            toggle.setAttribute("aria-pressed", String(dark));
+            if (label) label.textContent = `${nextTheme[0].toUpperCase()}${nextTheme.slice(1)} mode`;
+            if (icon) icon.textContent = dark ? "☀" : "☾";
+          });
+        };
+
+        toggles.forEach((toggle) => {
+          toggle.addEventListener("click", () => {
+            root.dataset.theme = root.dataset.theme === "light" ? "dark" : "light";
+            try {
+              localStorage.setItem("brisbane-operations-theme", root.dataset.theme);
+            } catch {}
+            renderTheme();
+          });
+        });
+
+        window.addEventListener("storage", (event) => {
+          if (event.key !== "brisbane-operations-theme") return;
+          root.dataset.theme = event.newValue === "light" ? "light" : "dark";
+          renderTheme();
+        });
+
+        renderTheme();
+      })();
+    </script>
   </body>
 </html>
 
@@ -101,7 +160,32 @@ const marketingNavigation = navigation.filter((item) => item.key === "analytics"
   :root {
     color: #131619;
     background: #f5f4f0;
+    color-scheme: light;
     font-family: "DM Sans", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  :root[data-theme="dark"] {
+    color: #ececec;
+    background: #212121;
+    color-scheme: dark;
+    --operations-canvas: #212121;
+    --operations-sidebar: #171717;
+    --operations-surface: #2f2f2f;
+    --operations-surface-soft: #282828;
+    --operations-surface-hover: #3a3a3a;
+    --operations-border: #424242;
+    --operations-border-soft: #363636;
+    --operations-text: #ececec;
+    --operations-text-strong: #f7f7f8;
+    --operations-muted: #b4b4b4;
+    --operations-subtle: #8e8e8e;
+    --operations-accent: #10a37f;
+    --operations-accent-soft: #163c33;
+    --operations-warning: #f0b45a;
+    --operations-warning-soft: #44351c;
+    --operations-danger: #ff8c85;
+    --operations-danger-soft: #4a2725;
+    --operations-info-soft: #263238;
   }
 
   * { box-sizing: border-box; }
@@ -125,13 +209,19 @@ const marketingNavigation = navigation.filter((item) => item.key === "analytics"
   .operations-nav-icon { display: grid; width: 1.12rem; place-items: center; font-size: 1rem; }
   .operations-nav-label { font-size: .78rem; font-weight: 650; }
   .operations-nav-group-label { margin: 1.45rem .7rem .4rem; color: #636a70; font-size: .55rem; font-weight: 750; letter-spacing: .18em; text-transform: uppercase; }
-  .operations-sidebar-note { display: flex; align-items: flex-start; gap: .65rem; margin-top: auto; border-top: 1px solid #292d30; padding: 1rem .35rem 0; color: #8c9499; }
+  .operations-sidebar-footer { display: grid; gap: .8rem; margin-top: auto; }
+  .operations-theme-toggle { display: flex; width: 100%; min-height: 2.45rem; align-items: center; gap: .65rem; border: 1px solid #34383b; border-radius: .55rem; padding: .55rem .7rem; color: #d5d7d8; background: #202224; cursor: pointer; font-size: .76rem; font-weight: 720; text-align: left; transition: border-color .18s ease, background .18s ease, color .18s ease; }
+  .operations-theme-toggle:hover { border-color: #565b5f; color: #fff; background: #292c2f; }
+  .operations-theme-toggle:focus-visible { outline: 3px solid rgba(16, 163, 127, .35); outline-offset: 2px; }
+  .operations-theme-icon { display: grid; width: 1.2rem; height: 1.2rem; place-items: center; font-size: .95rem; line-height: 1; }
+  .operations-sidebar-note { display: flex; align-items: flex-start; gap: .65rem; border-top: 1px solid #292d30; padding: 1rem .35rem 0; color: #8c9499; }
   .operations-sidebar-note p { margin: 0; font-size: .76rem; line-height: 1.48; }
   .operations-sidebar-note strong { color: #fff; font-weight: 750; }
   .operations-secure-dot { display: inline-block; flex: 0 0 auto; width: .52rem; height: .52rem; margin-top: .31rem; border-radius: 999px; background: #29875d; box-shadow: 0 0 0 4px rgba(41, 135, 93, .12); }
 
   .operations-content { min-width: 0; }
   .operations-mobile-header, .operations-mobile-nav { display: none; }
+  .operations-mobile-actions { display: flex; align-items: center; gap: .65rem; }
   .operations-main { width: min(1400px, calc(100% - 4.5rem)); margin: 0 auto; padding: 2.15rem 0 4.5rem; }
   .operations-page-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; margin-bottom: 2rem; }
   .operations-eyebrow { margin: 0 0 .48rem; color: #8a8a82; font-size: .58rem; font-weight: 750; letter-spacing: .16em; text-transform: uppercase; }
@@ -242,6 +332,75 @@ const marketingNavigation = navigation.filter((item) => item.key === "analytics"
   .operations-setup-list li { position: relative; padding-left: 1.25rem; color: #5b6872; font-size: .86rem; line-height: 1.5; }
   .operations-setup-list li::before { position: absolute; left: 0; color: #a98245; content: "•"; font-weight: 900; }
 
+  :root[data-theme="dark"] body,
+  :root[data-theme="dark"] .operations-content { background: var(--operations-canvas); }
+  :root[data-theme="dark"] .operations-sidebar { background: var(--operations-sidebar); }
+  :root[data-theme="dark"] .operations-nav-link:hover { background: var(--operations-surface); }
+  :root[data-theme="dark"] .operations-nav-link.is-active { color: var(--operations-text); background: var(--operations-surface); }
+  :root[data-theme="dark"] .operations-nav-group-label { color: #777; }
+  :root[data-theme="dark"] .operations-sidebar-note { border-color: var(--operations-border-soft); color: var(--operations-subtle); }
+  :root[data-theme="dark"] .operations-theme-toggle { border-color: var(--operations-border); color: var(--operations-text); background: var(--operations-surface); }
+  :root[data-theme="dark"] .operations-theme-toggle:hover { border-color: #5a5a5a; background: var(--operations-surface-hover); }
+
+  :root[data-theme="dark"] .operations-main :where(h1, h2, h3, h4, strong, b, dt),
+  :root[data-theme="dark"] :where(.operations-title, .operations-section-title, .operations-metric-value, .operations-list li strong, .operations-table td strong, .operations-message strong, .workspace-metric-value, .workspace-module-title, .workspace-pipeline-row strong, .workspace-followup-main strong, .workspace-connector-heading h3, .workspace-connector-number, .dashboard-panel-head a, .dashboard-opportunities a, .dashboard-source-list strong, .dashboard-quick-links a, .opportunity-title > a, .analytics-list li strong) { color: var(--operations-text-strong); }
+  :root[data-theme="dark"] .operations-main :where(.operations-eyebrow, .operations-copy, .operations-metric-label, .operations-metric-copy, .operations-panel-copy, .operations-list li, .operations-toolbar-copy, .operations-field, .operations-table td, .operations-table-detail, .operations-table-footer p, .operations-message span, .operations-message-reader-meta, .operations-draft-status, .operations-setup-list li, .workspace-loading, .workspace-metric-label, .workspace-metric-detail, .workspace-module-copy, .workspace-empty, .workspace-pipeline-row, .workspace-followup-main span, .workspace-followup-meta time, .workspace-table td, .workspace-pagination-note, .workspace-connector-copy, .workspace-next-step p, .workspace-source-note, .dashboard-metric span, .dashboard-metric small, .dashboard-panel-head p, .dashboard-pipeline small, .dashboard-pipeline > p, .dashboard-attention a, .google-summary span, .google-summary small, .dashboard-insight-head span, .dashboard-opportunities > li > strong, .dashboard-source-list li, .analytics-basis span, .analytics-section-head > span, .analytics-metrics span, .search-metrics span, .session-compare span, .saved-lead-metrics span, .analytics-metrics small, .search-metrics small, .analytics-panel-head p, .session-chart > div small, .today-strip span, .today-strip small, .today-strip p, .analytics-explanation, .analytics-filters label span, .opportunity-rank, .opportunity-body > p, .query-list small, .opportunity-metrics dt, .opportunity-metrics small, .analytics-footnote, .analytics-list li, .analytics-empty) { color: var(--operations-muted); }
+
+  :root[data-theme="dark"] .operations-shell .operations-main :where(.operations-panel, .operations-metric, .operations-message, .dashboard-metric, .analytics-basis > div, .analytics-metrics article, .search-metrics article, .workspace-metric-card, .workspace-module) { border-color: var(--operations-border); background: var(--operations-surface); box-shadow: none; }
+  :root[data-theme="dark"] .operations-shell .operations-main :where(.operations-action-card.is-leads, .operations-action-card.is-workspace, .operations-action-card.is-inbox, .operations-action-card.is-analytics, .operations-message-reader, .operations-message-body, .operations-lead-details, .workspace-view-bar, .workspace-surface, .workspace-empty, .workspace-connector-card, .query-list > span, .analytics-footnote) { border-color: var(--operations-border); background: var(--operations-surface-soft); box-shadow: none; }
+  :root[data-theme="dark"] .operations-shell .operations-main :where(.operations-status, .operations-input, .analytics-filters input, .analytics-filters select) { border-color: var(--operations-border); color: var(--operations-text); background: var(--operations-surface); }
+  :root[data-theme="dark"] .operations-shell .operations-main :where(.operations-input, .analytics-filters input)::placeholder { color: var(--operations-subtle); }
+  :root[data-theme="dark"] :where(.operations-link, .operations-primary-button) { border-color: #ececec; color: #171717; background: #ececec; }
+  :root[data-theme="dark"] :where(.operations-link, .operations-primary-button):hover { border-color: #fff; color: #171717; background: #fff; }
+  :root[data-theme="dark"] :where(.operations-link.is-quiet, .operations-button:not(.operations-primary-button)) { border-color: var(--operations-border); color: var(--operations-text); background: var(--operations-surface); }
+  :root[data-theme="dark"] :where(.operations-link.is-quiet, .operations-button:not(.operations-primary-button)):hover:not(:disabled) { border-color: #5a5a5a; color: var(--operations-text); background: var(--operations-surface-hover); }
+
+  :root[data-theme="dark"] .operations-main :where(.operations-table-wrap, .workspace-table-wrap) { border-color: var(--operations-border); }
+  :root[data-theme="dark"] .operations-main :where(.operations-table th, .operations-table td, .workspace-table th, .workspace-table td, .dashboard-header, .dashboard-panel-head, .dashboard-attention li, .google-summary, .google-summary > div, .dashboard-opportunities li, .dashboard-quick-links, .dashboard-quick-links a, .analytics-header, .analytics-panel-head, .today-strip, .session-compare > div, .opportunity-card, .opportunity-metrics > div, .analytics-list li, .saved-lead-metrics > div, .workspace-followup, .workspace-next-step) { border-color: var(--operations-border); }
+  :root[data-theme="dark"] .operations-main :where(.operations-table th, .workspace-table th) { color: var(--operations-muted); background: var(--operations-surface-soft); }
+  :root[data-theme="dark"] .operations-main .workspace-table tbody tr:hover td { background: var(--operations-surface-hover); }
+  :root[data-theme="dark"] .operations-main .operations-message.is-clickable:hover { border-color: #5a5a5a; background: var(--operations-surface-hover); }
+  :root[data-theme="dark"] .operations-main .operations-message-body { color: var(--operations-text); }
+  :root[data-theme="dark"] .operations-main .operations-lead-details dt { color: var(--operations-subtle); }
+  :root[data-theme="dark"] .operations-main .operations-lead-details dd { color: var(--operations-text); }
+  :root[data-theme="dark"] .operations-main .operations-lead-disclosure summary { color: #7fc9ff; }
+
+  :root[data-theme="dark"] .operations-main :where(.operations-privacy-note, .workspace-source-note) { color: var(--operations-muted); background: var(--operations-info-soft); }
+  :root[data-theme="dark"] .operations-main :where(.operations-status.is-ready, .operations-pill, .workspace-status-pill.is-ready, .dashboard-attention li.is-clear strong, .opportunity-badge.is-growing_visibility) { border-color: var(--operations-accent); color: #6ee7bd; background: var(--operations-accent-soft); }
+  :root[data-theme="dark"] .operations-main :where(.operations-status.is-warning, .operations-pill.is-warning, .workspace-status-pill.is-warning, .opportunity-badge.is-near_page_one) { border-color: var(--operations-warning); color: var(--operations-warning); background: var(--operations-warning-soft); }
+  :root[data-theme="dark"] .operations-main :where(.workspace-status-pill.is-error, .dashboard-attention li strong, .opportunity-badge.is-snippet_gap, .opportunity-badge.is-low_ctr) { color: var(--operations-danger); background: var(--operations-danger-soft); }
+  :root[data-theme="dark"] .operations-main .operations-pill.is-muted,
+  :root[data-theme="dark"] .operations-main .workspace-status-pill { color: var(--operations-muted); background: var(--operations-border-soft); }
+  :root[data-theme="dark"] .operations-main .operations-no-send-note { color: var(--operations-warning); }
+  :root[data-theme="dark"] .operations-main .operations-no-send-note strong { color: #ffd28a; }
+
+  :root[data-theme="dark"] .operations-main .dashboard-metric.is-featured,
+  :root[data-theme="dark"] .operations-main .analytics-metrics .is-featured,
+  :root[data-theme="dark"] .operations-main .operations-metric.is-dark { border-color: #5a5a5a; color: var(--operations-text); background: #171717; }
+  :root[data-theme="dark"] .operations-main :where(.dashboard-metric.is-featured span, .dashboard-metric.is-featured small, .analytics-metrics .is-featured span, .analytics-metrics .is-featured small, .operations-metric.is-dark .operations-metric-label, .operations-metric.is-dark .operations-metric-copy) { color: var(--operations-muted); }
+  :root[data-theme="dark"] .operations-main :where(.dashboard-metric.is-featured strong, .analytics-metrics .is-featured strong, .operations-metric.is-dark .operations-metric-value) { color: var(--operations-text-strong); }
+  :root[data-theme="dark"] .operations-main .analytics-basis { border-color: var(--operations-border); background: var(--operations-border); }
+  :root[data-theme="dark"] .operations-main .analytics-filters select { accent-color: var(--operations-accent); }
+  :root[data-theme="dark"] .operations-main .query-list > span { border-color: var(--operations-border); }
+  :root[data-theme="dark"] .operations-main .opportunity-badge { color: var(--operations-muted); background: var(--operations-border-soft); }
+  :root[data-theme="dark"] .operations-main .dashboard-pipeline div div span { background: #5b5b5b; }
+  :root[data-theme="dark"] .operations-main .dashboard-pipeline > div:nth-child(2n) div span { background: #717171; }
+  :root[data-theme="dark"] .operations-main .dashboard-pipeline > div:nth-child(3n) div span,
+  :root[data-theme="dark"] .operations-main :where(.dashboard-source-list i, .session-chart > div span, .workspace-pipeline-bar) { background: var(--operations-accent); }
+  :root[data-theme="dark"] .operations-main :where(.dashboard-source-list li > span:nth-child(2), .workspace-pipeline-track) { background: var(--operations-border-soft); }
+  :root[data-theme="dark"] .operations-main .dashboard-opportunities span,
+  :root[data-theme="dark"] .operations-main .workspace-next-step span { color: var(--operations-warning); }
+  :root[data-theme="dark"] .operations-main .workspace-view-button { color: var(--operations-muted); }
+  :root[data-theme="dark"] .operations-main .workspace-view-button:hover { color: var(--operations-text); background: var(--operations-surface-hover); }
+  :root[data-theme="dark"] .operations-main .workspace-view-button.is-active { color: #171717; background: #ececec; box-shadow: none; }
+  :root[data-theme="dark"] .operations-main .workspace-empty-mark { color: var(--operations-muted); background: var(--operations-border-soft); }
+  :root[data-theme="dark"] .operations-main .workspace-error { color: var(--operations-muted); }
+  :root[data-theme="dark"] .operations-main .workspace-error strong { color: var(--operations-danger); }
+  :root[data-theme="dark"] .operations-main .workspace-error .workspace-error-help { color: var(--operations-subtle); }
+
+  :root[data-theme="dark"] .operations-shell .operations-main :where(.dashboard-metric span, .dashboard-metric small, .dashboard-panel-head p, .dashboard-pipeline small, .dashboard-pipeline > p, .dashboard-attention a, .google-summary span, .google-summary small, .dashboard-insight-head span, .dashboard-opportunities > li > strong, .dashboard-source-list li, .analytics-basis span, .analytics-section-head > span, .analytics-metrics span, .search-metrics span, .session-compare span, .saved-lead-metrics span, .analytics-metrics small, .search-metrics small, .analytics-panel-head p, .session-chart > div small, .today-strip span, .today-strip small, .today-strip p, .analytics-explanation, .analytics-filters label span, .opportunity-rank, .opportunity-body > p, .query-list small, .opportunity-metrics dt, .opportunity-metrics small, .analytics-footnote, .analytics-list li, .analytics-empty, .workspace-loading, .workspace-metric-label, .workspace-metric-detail, .workspace-module-copy, .workspace-empty, .workspace-pipeline-row, .workspace-followup-main span, .workspace-followup-meta time, .workspace-table td, .workspace-pagination-note, .workspace-connector-copy, .workspace-next-step p, .workspace-source-note) { color: var(--operations-muted); }
+  :root[data-theme="dark"] .operations-shell .operations-main :where(.dashboard-panel-head a, .dashboard-opportunities a, .dashboard-source-list strong, .dashboard-quick-links a, .opportunity-title > a, .analytics-list li strong, .workspace-metric-value, .workspace-module-title, .workspace-pipeline-row strong, .workspace-followup-main strong, .workspace-connector-heading h3, .workspace-connector-number) { color: var(--operations-text-strong); }
+
   @media (max-width: 980px) {
     .operations-shell { grid-template-columns: 1fr; }
     .operations-sidebar { display: none; }
@@ -253,6 +412,14 @@ const marketingNavigation = navigation.filter((item) => item.key === "analytics"
     .operations-mobile-nav { display: flex; overflow-x: auto; gap: .35rem; padding: .7rem 1.25rem; border-bottom: 1px solid #dedbd4; background: #fffdf9; }
     .operations-mobile-nav-link { flex: 0 0 auto; border-radius: 999px; padding: .52rem .75rem; color: #596874; font-size: .8rem; font-weight: 760; text-decoration: none; }
     .operations-mobile-nav-link.is-active { color: #fff; background: #172e40; }
+    .operations-theme-toggle.is-compact { width: auto; min-height: 2.15rem; padding: .42rem .58rem; }
+    :root[data-theme="dark"] .operations-mobile-header,
+    :root[data-theme="dark"] .operations-mobile-nav { border-color: var(--operations-border); background: var(--operations-sidebar); }
+    :root[data-theme="dark"] .operations-mobile-header .operations-brand { color: var(--operations-text); }
+    :root[data-theme="dark"] .operations-mobile-header .operations-brand small,
+    :root[data-theme="dark"] .operations-mobile-secure,
+    :root[data-theme="dark"] .operations-mobile-nav-link { color: var(--operations-muted); }
+    :root[data-theme="dark"] .operations-mobile-nav-link.is-active { color: #171717; background: #ececec; }
     .operations-main { width: min(1240px, calc(100% - 2.5rem)); padding-top: 2.3rem; }
     .operations-inbox-grid { grid-template-columns: 1fr; }
   }
@@ -269,6 +436,8 @@ const marketingNavigation = navigation.filter((item) => item.key === "analytics"
     .operations-main { width: min(100% - 1.25rem, 1240px); padding-top: 1.7rem; padding-bottom: 3rem; }
     .operations-mobile-header { padding-right: .75rem; padding-left: .75rem; }
     .operations-mobile-nav { padding-right: .7rem; padding-left: .7rem; }
+    .operations-mobile-secure { display: none; }
+    .operations-theme-toggle.is-compact [data-theme-label] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     .operations-title { font-size: clamp(2.45rem, 13vw, 3.5rem); }
     .operations-panel { padding: 1.1rem; }
     .operations-metrics, .operations-action-grid, .operations-breakdown-grid { grid-template-columns: 1fr; }
