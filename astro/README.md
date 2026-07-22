@@ -135,6 +135,11 @@ together.
 The staff-only `/operations/analytics/` page reports aggregate, consent-aware
 website activity. It is protected by Cloudflare Access and its Google
 credential is never delivered to a staff browser or committed to the repo.
+Its product and visual rules are recorded in
+`../documentation/ANALYTICS-DESIGN-CERTIFICATE.md`; the page is ordered around
+Find → Visit → Engage → Enquire, a short improvement queue, landing-page
+attention and acquisition evidence. It shows attention/drop-off signals but
+does not claim to know why a visitor left.
 It also reports a separate GA4 Realtime last-30-minutes health signal. A zero
 means the connection is healthy but no consenting visitor is currently active;
 it does not mean that accepted website enquiries were lost. Actual lead counts

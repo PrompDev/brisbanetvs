@@ -9,7 +9,7 @@ const source = fs.readFileSync(
 )
   .replace(/^import .*;\r?\n/gm, "")
   .replace("export async function onRequestGet", "async function onRequestGet")
-  + "\nglobalThis.__analyticsTest = { trafficReport, landingPagesReport, safeTraffic, safeLandingPages, safeDailySessions, sessionDiagnostics, searchPageInsights, optionalReport, runRealtimeReport, realtimeSummary };\n";
+  + "\nglobalThis.__analyticsTest = { trafficReport, landingPagesReport, searchConsoleReport, safeTraffic, safeLandingPages, safeDailySessions, safeSearchQuery, sessionDiagnostics, searchPageInsights, operationalLeadSignals, optionalReport, runRealtimeReport, realtimeSummary };\n";
 
 function loadAnalyticsApi(fetchImpl) {
   const context = vm.createContext({
@@ -34,11 +34,11 @@ function loadAnalyticsApi(fetchImpl) {
     console: { error() {}, warn() {}, log() {} },
     importPKCS8: async () => ({}),
     SignJWT: class {},
-    hasOperationsDatabase: () => false,
+    hasOperationsDatabase: (env) => Boolean(env?.OPERATIONS_DB),
     json: (value) => value,
     requireOperationsAccess: async () => ({ response: null }),
     brisbaneDay: () => "2026-07-14",
-    brisbaneDayDaysAgo: () => "2026-07-08",
+    brisbaneDayDaysAgo: (days) => days === 6 ? "2026-07-08" : "2026-06-17",
   });
   vm.runInContext(source, context);
   return context.__analyticsTest;
@@ -186,4 +186,73 @@ test("Search Console rows become page-level opportunities with their safe querie
   assert.equal(wallMounting.opportunity.type, "snippet_gap");
   assert.equal(wallMounting.topQueries.length, 1);
   assert.equal(wallMounting.topQueries[0].query, "tv wall mounting brisbane");
+});
+
+test("Search Console property totals do not depend on truncated page rows", () => {
+  const api = loadAnalyticsApi(async () => new Response("{}"));
+  const currentPages = {
+    rows: [{ keys: ["https://brisbanetvs.com/"], clicks: 3, impressions: 20, ctr: 0.15, position: 12 }],
+  };
+  const previousPages = {
+    rows: [{ keys: ["https://brisbanetvs.com/"], clicks: 1, impressions: 10, ctr: 0.1, position: 14 }],
+  };
+  const currentTotal = { rows: [{ clicks: 8, impressions: 80, ctr: 0.1, position: 18 }] };
+  const previousTotal = { rows: [{ clicks: 4, impressions: 40, ctr: 0.1, position: 20 }] };
+  const result = api.searchPageInsights(currentPages, previousPages, { rows: [] }, currentTotal, previousTotal);
+  assert.equal(result.pages[0].impressions, 20);
+  assert.equal(result.totals.impressions, 80);
+  assert.equal(result.changes.clicks, 4);
+  assert.equal(result.changes.position, 2);
+  assert.equal("dimensions" in api.searchConsoleReport([], 30, 3, 1), false);
+});
+
+test("Search Console normalises duplicate hosts and removes phone-like queries", () => {
+  const api = loadAnalyticsApi(async () => new Response("{}"));
+  const current = {
+    rows: [
+      { keys: ["https://brisbanetvs.com/quote"], clicks: 1, impressions: 10, ctr: 0.1, position: 8 },
+      { keys: ["https://www.brisbanetvs.com/quote/"], clicks: 2, impressions: 20, ctr: 0.1, position: 6 },
+    ],
+  };
+  const queries = {
+    rows: [
+      { keys: ["tv mounting 0412 345 678", "https://brisbanetvs.com/quote/"], clicks: 0, impressions: 5, ctr: 0, position: 7 },
+      { keys: ["tv mounting quote", "https://www.brisbanetvs.com/quote"], clicks: 1, impressions: 8, ctr: 0.125, position: 6 },
+    ],
+  };
+  const result = api.searchPageInsights(current, { rows: [] }, queries);
+  assert.equal(result.pages.length, 1);
+  assert.equal(result.pages[0].path, "/quote/");
+  assert.equal(result.pages[0].impressions, 30);
+  assert.equal(result.pages[0].topQueries.length, 1);
+  assert.equal(result.pages[0].topQueries[0].query, "tv mounting quote");
+  assert.equal(api.safeSearchQuery("0412 345 678"), null);
+});
+
+test("saved enquiry signals expose matching seven and twenty-eight day totals", async () => {
+  const api = loadAnalyticsApi(async () => new Response("{}"));
+  const database = {
+    prepare(sql) {
+      return {
+        bind(...values) {
+          return {
+            async first() {
+              if (sql.includes("source = 'website'")) return { count: values[0] === "2026-07-08" ? 3 : 9 };
+              if (sql.includes("received_day >=")) return { count: values[0] === "2026-07-08" ? 7 : 28 };
+              return { count: 1 };
+            },
+            async all() { return { results: [] }; },
+          };
+        },
+        async first() { return { count: 0 }; },
+        async all() { return { results: [] }; },
+      };
+    },
+  };
+  const result = await api.operationalLeadSignals({ OPERATIONS_DB: database });
+  assert.equal(result.status, "ready");
+  assert.equal(result.last7Days, 7);
+  assert.equal(result.last28Days, 28);
+  assert.equal(result.websiteLast7Days, 3);
+  assert.equal(result.websiteLast28Days, 9);
 });

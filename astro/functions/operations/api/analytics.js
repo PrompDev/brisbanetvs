@@ -414,14 +414,15 @@ function sessionStartReport(dateRange) {
 }
 
 function searchConsoleReport(dimensions, startDaysAgo, endDaysAgo, rowLimit) {
-  return {
+  const report = {
     startDate: dateInPacificTime(startDaysAgo),
     endDate: dateInPacificTime(endDaysAgo),
-    dimensions,
     type: "web",
     dataState: "final",
     rowLimit,
   };
+  if (dimensions.length) report.dimensions = dimensions;
+  return report;
 }
 
 function dateInPacificTime(daysAgo) {
@@ -450,7 +451,8 @@ function safeTraffic(payload, generateLeads) {
 
 function safePagePath(value) {
   const path = nonEmptyString(value, 512);
-  return path && path.startsWith("/") && !/[?#\r\n]/.test(path) ? path : null;
+  if (!path || !path.startsWith("/") || /[?#\r\n]/.test(path)) return null;
+  return path === "/" ? "/" : `${path.replace(/\/+$/, "")}/`;
 }
 
 function safeLandingPages(payload) {
@@ -513,6 +515,7 @@ function safeSearchQuery(value) {
   return query
     && !/[\r\n\t@]/.test(query)
     && !/https?:|www\.|\d{7,}/i.test(query)
+    && (query.match(/\d/g) || []).length < 7
     && /^[\p{L}\p{N}\s&'’.,+()\-/]+$/u.test(query)
     ? query
     : null;
@@ -525,7 +528,7 @@ function safeSearchPage(value) {
   try {
     const url = new URL(pageUrl);
     const allowedHost = url.hostname === "brisbanetvs.com" || url.hostname === "www.brisbanetvs.com";
-    return url.protocol === "https:" && allowedHost && !url.search && !url.hash ? url.pathname : null;
+    return url.protocol === "https:" && allowedHost && !url.search && !url.hash ? safePagePath(url.pathname) : null;
   } catch {
     return null;
   }
@@ -548,7 +551,7 @@ async function optionalReport(config, accessToken, reportRequest, reportName) {
 function safeSearchPageRows(payload) {
   if (!isRecord(payload) || !Array.isArray(payload.rows)) return [];
 
-  return payload.rows.slice(0, 250).flatMap((row) => {
+  const rows = payload.rows.slice(0, 250).flatMap((row) => {
     const path = Array.isArray(row?.keys) ? safeSearchPage(row.keys[0]) : null;
     const clicks = safeCount(row?.clicks);
     const impressions = safeCount(row?.impressions);
@@ -561,12 +564,27 @@ function safeSearchPageRows(payload) {
       position: safeDecimal(row?.position),
     }];
   });
+  const byPath = new Map();
+  for (const row of rows) {
+    const current = byPath.get(row.path) || { path: row.path, clicks: 0, impressions: 0, weightedPosition: 0 };
+    current.clicks += row.clicks;
+    current.impressions += row.impressions;
+    current.weightedPosition += row.position * row.impressions;
+    byPath.set(row.path, current);
+  }
+  return Array.from(byPath.values(), (row) => ({
+    path: row.path,
+    clicks: row.clicks,
+    impressions: row.impressions,
+    ctr: row.impressions > 0 ? row.clicks / row.impressions : 0,
+    position: row.impressions > 0 ? row.weightedPosition / row.impressions : 0,
+  }));
 }
 
 function safeSearchQueryRows(payload) {
   if (!isRecord(payload) || !Array.isArray(payload.rows)) return [];
 
-  return payload.rows.slice(0, 250).flatMap((row) => {
+  const rows = payload.rows.slice(0, 250).flatMap((row) => {
     const query = Array.isArray(row?.keys) ? safeSearchQuery(row.keys[0]) : null;
     const path = Array.isArray(row?.keys) ? safeSearchPage(row.keys[1]) : null;
     const clicks = safeCount(row?.clicks);
@@ -581,6 +599,34 @@ function safeSearchQueryRows(payload) {
       position: safeDecimal(row?.position),
     }];
   });
+  const combined = new Map();
+  for (const row of rows) {
+    const key = `${row.path}\u0000${row.query}`;
+    const current = combined.get(key) || { query: row.query, path: row.path, clicks: 0, impressions: 0, weightedPosition: 0 };
+    current.clicks += row.clicks;
+    current.impressions += row.impressions;
+    current.weightedPosition += row.position * row.impressions;
+    combined.set(key, current);
+  }
+  return Array.from(combined.values(), (row) => ({
+    query: row.query,
+    path: row.path,
+    clicks: row.clicks,
+    impressions: row.impressions,
+    ctr: row.impressions > 0 ? row.clicks / row.impressions : 0,
+    position: row.impressions > 0 ? row.weightedPosition / row.impressions : 0,
+  }));
+}
+
+function safeSearchAggregate(payload) {
+  const row = isRecord(payload) && Array.isArray(payload.rows) ? payload.rows[0] : null;
+  if (!isRecord(row)) return { clicks: 0, impressions: 0, ctr: 0, position: 0 };
+  return {
+    clicks: safeCount(row.clicks),
+    impressions: safeCount(row.impressions),
+    ctr: safeRate(row.ctr),
+    position: safeDecimal(row.position),
+  };
 }
 
 function searchTotals(rows) {
@@ -608,7 +654,7 @@ function opportunityForPage(page) {
     type = "snippet_gap";
     label = "Shown, not clicked";
     recommendation = "Review the title and search description so they answer the visible queries more clearly.";
-  } else if (page.position > 3 && page.position <= 12) {
+  } else if (page.impressions >= 3 && page.position > 3 && page.position <= 12) {
     type = "near_page_one";
     label = "Within reach";
     recommendation = "Strengthen the page around its top queries and add useful internal links from related pages.";
@@ -619,7 +665,7 @@ function opportunityForPage(page) {
   } else if (page.impressionChange > 0) {
     type = "growing_visibility";
     label = "Growing visibility";
-    recommendation = "Expand the sections that match the new queries while the page is gaining visibility.";
+    recommendation = "Review the page's visible queries and strengthen the sections that already match them.";
   }
 
   const positionWeight = page.position > 0 && page.position <= 20 ? 1 : 0.5;
@@ -628,7 +674,7 @@ function opportunityForPage(page) {
   return { type, label, recommendation, score };
 }
 
-function searchPageInsights(currentPayload, previousPayload, queryPayload) {
+function searchPageInsights(currentPayload, previousPayload, queryPayload, currentAggregatePayload = null, previousAggregatePayload = null) {
   const currentRows = safeSearchPageRows(currentPayload);
   const previousRows = safeSearchPageRows(previousPayload);
   const queryRows = safeSearchQueryRows(queryPayload);
@@ -659,8 +705,8 @@ function searchPageInsights(currentPayload, previousPayload, queryPayload) {
     return { ...page, opportunity: opportunityForPage(page) };
   });
 
-  const totals = searchTotals(currentRows);
-  const previousTotals = searchTotals(previousRows);
+  const totals = currentAggregatePayload ? safeSearchAggregate(currentAggregatePayload) : searchTotals(currentRows);
+  const previousTotals = previousAggregatePayload ? safeSearchAggregate(previousAggregatePayload) : searchTotals(previousRows);
   const changes = {
     clicks: totals.clicks - previousTotals.clicks,
     impressions: totals.impressions - previousTotals.impressions,
@@ -713,10 +759,14 @@ async function searchConsoleSummary(config, accessToken) {
     const currentPageRequest = searchConsoleReport(["page"], 30, SEARCH_CONSOLE_LAG_DAYS, 250);
     const previousPageRequest = searchConsoleReport(["page"], 58, 31, 250);
     const queryPageRequest = searchConsoleReport(["query", "page"], 30, SEARCH_CONSOLE_LAG_DAYS, 250);
-    const [currentPages, previousPages, queryPages] = await Promise.all([
+    const currentTotalRequest = searchConsoleReport([], 30, SEARCH_CONSOLE_LAG_DAYS, 1);
+    const previousTotalRequest = searchConsoleReport([], 58, 31, 1);
+    const [currentPages, previousPages, queryPages, currentTotal, previousTotal] = await Promise.all([
       runSearchConsoleReport(config, accessToken, currentPageRequest),
       runSearchConsoleReport(config, accessToken, previousPageRequest),
       runSearchConsoleReport(config, accessToken, queryPageRequest),
+      runSearchConsoleReport(config, accessToken, currentTotalRequest),
+      runSearchConsoleReport(config, accessToken, previousTotalRequest),
     ]);
     return {
       status: "ready",
@@ -729,7 +779,7 @@ async function searchConsoleSummary(config, accessToken) {
         startDate: previousPageRequest.startDate,
         endDate: previousPageRequest.endDate,
       },
-      ...searchPageInsights(currentPages, previousPages, queryPages),
+      ...searchPageInsights(currentPages, previousPages, queryPages, currentTotal, previousTotal),
     };
   } catch (error) {
     const stage = error instanceof AnalyticsUpstreamError ? error.stage : "request_failed";
@@ -821,7 +871,9 @@ async function operationalLeadSignals(env) {
       status: "not_configured",
       today: 0,
       last7Days: 0,
+      last28Days: 0,
       websiteLast7Days: 0,
+      websiteLast28Days: 0,
       bySource: [],
       topCampaigns: [],
       topLandingPages: [],
@@ -832,9 +884,10 @@ async function operationalLeadSignals(env) {
   const now = new Date();
   const today = brisbaneDay(now);
   const weekStart = brisbaneDayDaysAgo(6, now);
+  const periodStart = brisbaneDayDaysAgo(27, now);
 
   try {
-    const [todayRow, weekRow, websiteRow, sourceResult, campaignResult, pageResult, deliveryResult, missingDeliveryRow] = await Promise.all([
+    const [todayRow, weekRow, periodRow, websiteRow, websitePeriodRow, sourceResult, campaignResult, pageResult, deliveryResult, missingDeliveryRow] = await Promise.all([
       env.OPERATIONS_DB.prepare("SELECT COUNT(*) AS count FROM leads WHERE received_day = ?")
         .bind(today)
         .first(),
@@ -842,8 +895,14 @@ async function operationalLeadSignals(env) {
         "SELECT COUNT(*) AS count FROM leads WHERE received_day >= ? AND received_day <= ?",
       ).bind(weekStart, today).first(),
       env.OPERATIONS_DB.prepare(
+        "SELECT COUNT(*) AS count FROM leads WHERE received_day >= ? AND received_day <= ?",
+      ).bind(periodStart, today).first(),
+      env.OPERATIONS_DB.prepare(
         "SELECT COUNT(*) AS count FROM leads WHERE source = 'website' AND received_day >= ? AND received_day <= ?",
       ).bind(weekStart, today).first(),
+      env.OPERATIONS_DB.prepare(
+        "SELECT COUNT(*) AS count FROM leads WHERE source = 'website' AND received_day >= ? AND received_day <= ?",
+      ).bind(periodStart, today).first(),
       env.OPERATIONS_DB.prepare(
         "SELECT platform AS value, COUNT(*) AS count FROM leads " +
         "WHERE received_day >= ? AND received_day <= ? GROUP BY platform LIMIT 30",
@@ -886,7 +945,9 @@ async function operationalLeadSignals(env) {
       status: "ready",
       today: safeCount(todayRow?.count),
       last7Days: safeCount(weekRow?.count),
+      last28Days: safeCount(periodRow?.count),
       websiteLast7Days: safeCount(websiteRow?.count),
+      websiteLast28Days: safeCount(websitePeriodRow?.count),
       bySource: aggregateOperationalSources(sourceResult.results),
       topCampaigns: aggregateSafeLabels(campaignResult.results, safeCampaignLabel, "leads"),
       topLandingPages: aggregateSafeLabels(pageResult.results, safeOperationalPage, "leads"),
@@ -901,7 +962,9 @@ async function operationalLeadSignals(env) {
       status: "unavailable",
       today: 0,
       last7Days: 0,
+      last28Days: 0,
       websiteLast7Days: 0,
+      websiteLast28Days: 0,
       bySource: [],
       topCampaigns: [],
       topLandingPages: [],

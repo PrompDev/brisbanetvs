@@ -234,6 +234,13 @@ until the labelled tests pass and Tom approves the cutover.
 
 ## Website analytics and lead signals
 
+The Analytics page is governed by
+[`ANALYTICS-DESIGN-CERTIFICATE.md`](./ANALYTICS-DESIGN-CERTIFICATE.md). New
+content must justify which improvement decision it supports, use the stable
+definitions in that certificate, and remain readable in both themes and at a
+390 px viewport. The required order is Site pulse, Do next, Attention,
+Acquisition, collapsed reporting health, then definitions and privacy.
+
 GA4 and Search Console reporting are connected. Public GA4 tracking waits for
 visitor consent and records aggregate use plus successful `generate_lead`
 events; names, emails, phone numbers and form answers are never sent to GA4.
@@ -257,6 +264,19 @@ with consented GA4 landing sessions and highlights pages that are shown but not
 clicked, close to page one, low in CTR or gaining visibility. Search impressions
 are result appearances, not visits, and therefore must not be expected to match
 consented GA4 sessions.
+
+Property-wide Search Console totals come from separate reports with no page
+dimension, so the Site pulse is not limited to the first page rows returned for
+the improvement queue. Normalised `www` and apex URLs are combined before page
+scoring, obvious contact-like queries are removed, and only three queries are
+shown per action card. The Attention section uses the existing landing-page
+session, average engaged-time and views-per-session fields. These are review
+signals; the page never claims to know why somebody left.
+
+Operations D1 now supplies matching 28-day all-source and website-enquiry
+counts for the Enquire stage. Saved enquiries remain authoritative and are
+never divided by consented GA4 sessions. GA `generate_lead` events and Sheet
+delivery state live under reporting health as collection diagnostics.
 
 Facebook/Instagram campaign attribution is retained for the browser session,
 so a visitor can move from an ad landing page to `/quote/` without losing the
