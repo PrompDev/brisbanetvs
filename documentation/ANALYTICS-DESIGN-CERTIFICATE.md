@@ -19,17 +19,19 @@ If a piece of content does not help answer one of the questions below, it does n
 - Which pages hold attention?
 - Are they moving toward an enquiry?
 - What is the next page-level action?
+- What will the agent change, where will it start, and how will we decide whether the change won?
 
 ## Required reading order
 
 Every viewport must preserve this order:
 
 1. **Site pulse** — Find → Visit → Engage → Enquire.
-2. **Do next** — a short, ranked page-improvement queue.
-3. **Attention** — popular landing pages, time engaged and browsing depth.
-4. **Acquisition** — search and channel evidence that explains how people arrived.
-5. **Collection health** — enough diagnostics to trust the report, visually secondary.
-6. **Definitions and privacy** — plain-language meaning and limitations.
+2. **Improvement loop** — Detect → Task → Publish → Measure → Decide.
+3. **Do next** — a short, ranked page-improvement queue whose cards are ready to hand to an agent.
+4. **Attention** — popular landing pages, time engaged and browsing depth.
+5. **Acquisition** — search and channel evidence that explains how people arrived.
+6. **Collection health** — enough diagnostics to trust the report, visually secondary.
+7. **Definitions and privacy** — plain-language meaning and limitations.
 
 Health checks never outrank customer or improvement information when reporting is healthy.
 
@@ -38,7 +40,8 @@ Health checks never outrank customer or improvement information when reporting i
 - One page title and one short purpose sentence.
 - One reporting-state line and one refresh action.
 - Four primary outcome cards at most: Find, Visit, Engage and Enquire.
-- A ranked action card must contain: page, reason, one recommended action, evidence, and no more than three top queries by default.
+- A ranked action card must contain: public page, likely source file or a route-tracing instruction, reason, evidence baseline, hypothesis, one focused change, success rule, and no more than three top queries by default.
+- Every ranked action card has an **Open live page** action and a **Copy agent task** action. Copying prepares a task; it never starts an autonomous edit or release.
 - Supporting lists use a shared row pattern: label on the left; one primary value and one optional explanation on the right.
 - Definitions live beside their first use or in the final glossary. The same definition is not repeated in several panels.
 - Advanced diagnostics use disclosure or a clearly secondary region.
@@ -63,6 +66,22 @@ Health checks never outrank customer or improvement information when reporting i
 The interface must never claim to know *why* a person left. It may show observable drop-off signals — short engaged time, low engagement, or shallow browsing — and label them as signals requiring a page review.
 
 The private `/operations/*` workspace is never customer evidence. Its layouts must not load the public analytics client; the client must refuse to run there if included accidentally; reporting requests and output sanitizers must exclude Operations paths. The public homepage is displayed as **Homepage (/)** rather than an unexplained slash.
+
+## Agent task contract
+
+Every copied SEO task must carry enough context for a fresh agent to act without guessing:
+
+1. the public URL and likely repo source, with an instruction to verify both before editing;
+2. the exact final Search Console reporting window and its baseline impressions, clicks, click-through rate and position;
+3. any matching consented landing-page behaviour and saved-enquiry evidence, with missing matches described as missing rather than zero;
+4. no more than three privacy-safe visible queries;
+5. a clearly labelled hypothesis that the agent must verify against the live page;
+6. one focused change, truthful-content constraints, the Operations analytics exclusion and required validation;
+7. a release record: files changed, exact change, publication date and starting baseline;
+8. a success rule and review timing: the first complete 28 post-release days, read only after Search Console finalises them;
+9. a final decision: keep, iterate or undo, with the result fed into the next task.
+
+The task must explicitly permit a **no change** result when the evidence is weak or the proposed content would be misleading. The dashboard recommends; DeAndre decides when to task an agent and when to publish.
 
 ## Visual law
 
@@ -93,7 +112,9 @@ If any answer is missing, revise the content or remove it.
 The page is ready only when:
 
 - the first screen communicates Find → Visit → Engage → Enquire;
+- the five-step improvement loop explains how a recommendation becomes a measured decision;
 - the highest-priority improvement and its evidence are visible without decoding a table;
+- every priority can be copied as a complete, source-aware agent task with a baseline and success rule;
 - popular pages show sessions, engaged time and depth in human units;
 - drop-off language is honest about what the data can and cannot prove;
 - every visible metric has one stable definition;

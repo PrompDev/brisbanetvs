@@ -672,6 +672,84 @@ function searchTotals(rows) {
   };
 }
 
+function sourceForPublicPage(path) {
+  if (path === "/") {
+    return {
+      file: "astro/public/index.html",
+      label: "Homepage source",
+      confidence: "exact",
+    };
+  }
+
+  const contentPage = String(path || "").match(/^\/(locations|blog|services|products|mounts)\/([a-z0-9-]+)\/$/);
+  if (contentPage) {
+    const contentLabel = contentPage[1] === "blog"
+      ? "Blog post"
+      : `${contentPage[1].slice(0, -1)} content`;
+    return {
+      file: `astro/src/content/${contentPage[1]}/${contentPage[2]}.md`,
+      label: `${contentLabel} source`,
+      confidence: "exact",
+    };
+  }
+
+  const collectionIndex = String(path || "").match(/^\/(locations|blog|services|products|mounts)\/$/);
+  if (collectionIndex) {
+    return {
+      file: `astro/src/pages/${collectionIndex[1]}/index.astro`,
+      label: `${collectionIndex[1]} index source`,
+      confidence: "exact",
+    };
+  }
+
+  const directPage = String(path || "").match(/^\/(quote|pricing)\/$/);
+  if (directPage) {
+    return {
+      file: `astro/src/pages/${directPage[1]}.astro`,
+      label: `${directPage[1]} page source`,
+      confidence: "exact",
+    };
+  }
+
+  return {
+    file: null,
+    label: "Trace this public route before editing",
+    confidence: "trace",
+    hint: "Find the route under astro/src/pages, astro/src/content or astro/public and confirm the live page before changing it.",
+  };
+}
+
+function guidanceForOpportunity(type) {
+  if (type === "snippet_gap") {
+    return {
+      hypothesis: "The page is visible close enough to compete, but its search title or description may not answer the visible queries strongly enough to earn the click.",
+      successCheck: "Keep the change if clicks and click-through rate rise in the next complete 28-day window without a material loss of impressions.",
+    };
+  }
+  if (type === "near_page_one") {
+    return {
+      hypothesis: "Google sees the page as relevant, but the page may need more complete query coverage and stronger internal links to move into the highest-visibility results.",
+      successCheck: "Keep the change if average position improves for the top queries and clicks rise without impressions collapsing.",
+    };
+  }
+  if (type === "low_ctr") {
+    return {
+      hypothesis: "The result is being seen, but its search snippet may be less specific or useful than the results around it.",
+      successCheck: "Keep the change if click-through rate and clicks rise in the next complete 28-day window while impressions remain comparable.",
+    };
+  }
+  if (type === "growing_visibility") {
+    return {
+      hypothesis: "Demand or relevance is rising; improving the sections already aligned with visible queries may turn that momentum into stronger rankings and more visits.",
+      successCheck: "Keep the change if impressions continue rising and either clicks increase or average position improves in the next complete 28-day window.",
+    };
+  }
+  return {
+    hypothesis: "The sample is still too small or mixed to support a confident SEO change.",
+    successCheck: "Wait for more final data. Do not change this page solely because of this card.",
+  };
+}
+
 function opportunityForPage(page) {
   let type = "monitor";
   let label = "Monitor";
@@ -698,7 +776,15 @@ function opportunityForPage(page) {
   const positionWeight = page.position > 0 && page.position <= 20 ? 1 : 0.5;
   const score = page.impressions * Math.max(0.05, 1 - page.ctr) * positionWeight
     + Math.max(0, page.impressionChange);
-  return { type, label, recommendation, score };
+  return {
+    type,
+    label,
+    recommendation,
+    ...guidanceForOpportunity(type),
+    source: sourceForPublicPage(page.path),
+    reviewRule: "Publish one focused change, record the date, then compare the first complete 28 days after publication with this baseline once Search Console data is final.",
+    score,
+  };
 }
 
 function searchPageInsights(currentPayload, previousPayload, queryPayload, currentAggregatePayload = null, previousAggregatePayload = null) {

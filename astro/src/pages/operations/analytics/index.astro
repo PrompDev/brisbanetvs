@@ -34,15 +34,35 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       <p class="analytics-period-note"><strong>Why the numbers differ:</strong> Google appearances, consented GA4 sessions and saved enquiries use different collection rules. They are directional stages, not a person-by-person funnel.</p>
     </section>
 
+    <section class="improvement-loop" aria-labelledby="loop-title">
+      <div class="analytics-section-head">
+        <div>
+          <p class="operations-eyebrow">Improvement loop</p>
+          <h2 id="loop-title">One page. One change. One measured decision.</h2>
+          <p>Use the queue as a repeatable SEO workflow, not a list of interesting numbers.</p>
+        </div>
+        <span>You approve every task and release</span>
+      </div>
+      <ol class="loop-steps">
+        <li><span>01</span><strong>Detect</strong><p>Choose the highest-ranked page with enough final evidence.</p></li>
+        <li><span>02</span><strong>Task</strong><p>Copy its complete brief into Codex. The brief points to the page and likely source file.</p></li>
+        <li><span>03</span><strong>Publish</strong><p>Make one coherent SEO change, verify it, push it to main and record the release date.</p></li>
+        <li><span>04</span><strong>Measure</strong><p>Wait for 28 complete post-release days plus Search Console's reporting delay.</p></li>
+        <li><span>05</span><strong>Decide</strong><p>Keep a winner. Improve or undo a loser. Feed the result into the next task.</p></li>
+      </ol>
+      <p class="loop-control"><strong>Nothing changes automatically.</strong> “Copy agent task” prepares the handoff; you choose when to send it to an agent.</p>
+    </section>
+
     <section class="analytics-actions-section" aria-labelledby="actions-title">
       <div class="analytics-section-head is-action-head">
-        <div><p class="operations-eyebrow">Do next</p><h2 id="actions-title">Page improvement queue</h2><p>Ranked by search visibility, click rate, position and recent movement.</p></div>
+        <div><p class="operations-eyebrow">Do next</p><h2 id="actions-title">Page improvement queue</h2><p>Each card turns the evidence into a source-aware agent task, a single change and a measurable success rule.</p></div>
         <div class="analytics-filters">
           <label><span>Find a page or query</span><input type="search" data-page-search placeholder="e.g. mount or repair" /></label>
           <label><span>Problem type</span><select data-opportunity-filter><option value="all">All pages</option><option value="snippet_gap">Shown, not clicked</option><option value="near_page_one">Within reach</option><option value="low_ctr">Low click rate</option><option value="growing_visibility">Growing visibility</option><option value="monitor">Monitor</option></select></label>
         </div>
       </div>
       <ol class="opportunity-list" data-opportunity-list aria-live="polite"><li class="analytics-empty">Loading page and query details...</li></ol>
+      <p class="copy-status" data-copy-status role="status" aria-live="polite"></p>
       <p class="analytics-footnote" data-search-note>Search Console data is finalised with a short delay.</p>
     </section>
 
@@ -286,6 +306,84 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       return new Map((landingPages || []).map((page) => [page.path, page]));
     }
 
+    function buildAgentBrief(page, gaPage, savedEnquiries, search) {
+      const source = page.opportunity?.source || {};
+      const sourceInstruction = source.file
+        ? `Start with the likely source file: ${source.file}`
+        : `Source needs tracing: ${source.hint || "Find the route under astro/src/pages, astro/src/content or astro/public before editing."}`;
+      const queryLines = (page.topQueries || []).slice(0, 3).map((query) =>
+        `- ${query.query}: ${numberFormat.format(numeric(query.impressions))} appearances, ${numberFormat.format(numeric(query.clicks))} clicks, ${percentFormat.format(numeric(query.ctr))} CTR, average position ${decimalFormat.format(numeric(query.position))}`
+      );
+      const gaEvidence = gaPage
+        ? `${numberFormat.format(numeric(gaPage.sessions))} consented landings; ${percentFormat.format(numeric(gaPage.engagementRate))} engaged; ${formatDuration(gaPage.averageEngagementSeconds)} average engaged time; ${decimalFormat.format(numeric(gaPage.viewsPerSession))} views per session.`
+        : "No consented GA4 landing-page match was available. Treat this as missing consented evidence, not zero traffic.";
+      const enquiryEvidence = savedEnquiries == null
+        ? "No saved-enquiry landing-page match was available for the last 7 days. Treat this as no match, not zero enquiries."
+        : `${numberFormat.format(savedEnquiries)} saved website enquiries matched this landing page in the last 7 days.`;
+      const searchWindow = search?.window
+        ? `${search.window.startDate} to ${search.window.endDate} (final Search Console data)`
+        : "the current final Search Console window";
+
+      return [
+        "Brisbane TVs SEO improvement task",
+        "",
+        "OUTCOME",
+        `Improve ${pageLabel(page.path)} at https://brisbanetvs.com${page.path} using one focused, evidence-led change. Do not make broad site-wide edits unless the evidence proves they are required.`,
+        "",
+        "WHERE TO START",
+        sourceInstruction,
+        "Inspect both the live page and its actual source before editing. If the source hint is wrong, trace the route and report the correct file.",
+        "",
+        `BASELINE — ${searchWindow}`,
+        `- Search appearances: ${numberFormat.format(numeric(page.impressions))} (${signed(page.impressionChange)} vs previous window)`,
+        `- Search clicks: ${numberFormat.format(numeric(page.clicks))} (${signed(page.clickChange)} vs previous window)`,
+        `- Click-through rate: ${percentFormat.format(numeric(page.ctr))}`,
+        `- Average position: ${decimalFormat.format(numeric(page.position))} (${positionMovement(page.positionChange)})`,
+        `- Consented behaviour: ${gaEvidence}`,
+        `- Enquiry evidence: ${enquiryEvidence}`,
+        "",
+        "TOP VISIBLE QUERIES",
+        ...(queryLines.length ? queryLines : ["- No privacy-safe query rows were returned. Do not invent target queries."]),
+        "",
+        "HYPOTHESIS TO VERIFY",
+        page.opportunity?.hypothesis || "The current evidence needs to be checked against the live page before choosing a change.",
+        "",
+        "FOCUSED CHANGE",
+        page.opportunity?.recommendation || "Review the page against its visible search demand and choose one defensible improvement.",
+        "",
+        "WORKING RULES",
+        "1. Verify the search intent and current page before accepting the hypothesis.",
+        "2. Change one coherent SEO variable or closely related set: search snippet, query coverage, internal linking, page clarity or next action.",
+        "3. Keep every claim truthful and specific to Brisbane TVs. Do not keyword-stuff or invent prices, credentials, reviews, service areas or customer facts.",
+        "4. Preserve the Analytics Design Certificate and the exclusion of /operations/* from public analytics.",
+        "5. Run the relevant tests, production build and SEO/link checks. Commit and push the finished work to main only after they pass.",
+        "6. In the handoff, record the files changed, exact change, release date and this baseline so the result can be measured.",
+        "7. If the evidence is too weak or the proposed change would be misleading, make no change and explain what data is needed.",
+        "",
+        "SUCCESS DECISION",
+        page.opportunity?.successCheck || "Compare the next complete 28-day window with this baseline.",
+        page.opportunity?.reviewRule || "Review after 28 complete post-release days once Search Console data is final.",
+        "Keep a clear winner. Iterate or undo a loser, and record what was learned for the next dashboard cycle.",
+      ].join("\n");
+    }
+
+    async function copyText(value) {
+      if (navigator.clipboard?.writeText && window.isSecureContext) {
+        await navigator.clipboard.writeText(value);
+        return;
+      }
+      const textarea = document.createElement("textarea");
+      textarea.value = value;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.append(textarea);
+      textarea.select();
+      const copied = document.execCommand("copy");
+      textarea.remove();
+      if (!copied) throw new Error("copy unavailable");
+    }
+
     function renderOpportunities() {
       const target = document.querySelector("[data-opportunity-list]");
       const search = currentAnalytics?.searchConsole;
@@ -330,7 +428,29 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
         badge.textContent = page.opportunity?.label || "Monitor";
         heading.append(pageHeading, badge);
         const recommendation = document.createElement("p");
-        recommendation.textContent = page.opportunity?.recommendation || "Keep watching this page as more data arrives.";
+        recommendation.className = "opportunity-summary";
+        recommendation.textContent = `Why it is ranked: ${page.opportunity?.label || "Monitor"}. The figures on the right are the measurement baseline.`;
+
+        const plan = document.createElement("dl");
+        plan.className = "opportunity-plan";
+        [
+          ["Hypothesis to verify", page.opportunity?.hypothesis || "Review the live page before deciding why this signal exists."],
+          ["Focused change", page.opportunity?.recommendation || "Keep watching this page as more search data arrives."],
+          ["Winning result", page.opportunity?.successCheck || "Compare the next complete 28-day window with this baseline."],
+        ].forEach(([labelText, valueText]) => {
+          const wrapper = document.createElement("div");
+          const label = document.createElement("dt");
+          const value = document.createElement("dd");
+          label.textContent = labelText;
+          value.textContent = valueText;
+          wrapper.append(label, value);
+          plan.append(wrapper);
+        });
+
+        const evidence = document.createElement("div");
+        evidence.className = "opportunity-evidence";
+        const evidenceLabel = document.createElement("span");
+        evidenceLabel.textContent = "Evidence · top visible queries";
         const queries = document.createElement("ul");
         queries.className = "query-list";
         if (page.topQueries?.length) {
@@ -348,10 +468,50 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
           unavailable.textContent = "No privacy-safe query rows were returned for this page.";
           queries.append(unavailable);
         }
-        body.append(heading, recommendation, queries);
+        evidence.append(evidenceLabel, queries);
 
         const gaPage = gaPages.get(page.path);
         const savedEnquiries = savedLeadPages.get(page.path);
+        const source = document.createElement("p");
+        source.className = "opportunity-source";
+        const sourceLabel = document.createElement("strong");
+        const sourceValue = document.createElement(page.opportunity?.source?.file ? "code" : "span");
+        sourceLabel.textContent = "Likely source: ";
+        sourceValue.textContent = page.opportunity?.source?.file || page.opportunity?.source?.hint || "Trace the public route before editing.";
+        source.append(sourceLabel, sourceValue);
+
+        const controls = document.createElement("div");
+        controls.className = "opportunity-controls";
+        const openPage = document.createElement("a");
+        openPage.className = "opportunity-open";
+        openPage.href = `https://brisbanetvs.com${page.path}`;
+        openPage.target = "_blank";
+        openPage.rel = "noreferrer";
+        openPage.textContent = "Open live page";
+        const copyTask = document.createElement("button");
+        copyTask.className = "opportunity-copy";
+        copyTask.type = "button";
+        copyTask.textContent = "Copy agent task";
+        copyTask.addEventListener("click", async () => {
+          const originalLabel = copyTask.textContent;
+          copyTask.disabled = true;
+          try {
+            await copyText(buildAgentBrief(page, gaPage, savedEnquiries, search));
+            copyTask.textContent = "Task copied";
+            setText("[data-copy-status]", `Agent task for ${pageLabel(page.path)} copied. Paste it into Codex when you are ready.`);
+          } catch {
+            copyTask.textContent = "Copy failed";
+            setText("[data-copy-status]", "The browser blocked clipboard access. Open the page in a secure browser session and try again.");
+          } finally {
+            window.setTimeout(() => {
+              copyTask.disabled = false;
+              copyTask.textContent = originalLabel;
+            }, 2400);
+          }
+        });
+        controls.append(openPage, copyTask);
+        body.append(heading, recommendation, plan, evidence, source, controls);
+
         const metrics = document.createElement("dl");
         metrics.className = "opportunity-metrics";
         const values = [
@@ -622,6 +782,17 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
     .analytics-page .analytics-period-note { margin: .75rem 0 0; border-left: 3px solid var(--analytics-border-strong); padding: .75rem 1rem; color: var(--analytics-muted); background: var(--analytics-surface-soft); font-size: .82rem; line-height: 1.5; }
     .analytics-page .analytics-period-note strong { color: var(--analytics-text); }
 
+    .analytics-page .improvement-loop { overflow: hidden; border: 1px solid var(--analytics-border); border-radius: 1rem; background: var(--analytics-surface); }
+    .analytics-page .improvement-loop .analytics-section-head { margin: 0; padding: 1.5rem; }
+    .analytics-page .loop-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; }
+    .analytics-page .loop-steps li { display: flex; min-height: 10.5rem; flex-direction: column; border-top: 1px solid var(--analytics-border); border-right: 1px solid var(--analytics-border); padding: 1.15rem; }
+    .analytics-page .loop-steps li:last-child { border-right: 0; background: var(--analytics-surface-tint); }
+    .analytics-page .loop-steps span { color: var(--analytics-accent); font-size: .7rem; font-weight: 820; letter-spacing: .08em; }
+    .analytics-page .loop-steps strong { margin: .75rem 0 .5rem; color: var(--analytics-text); font-size: .92rem; }
+    .analytics-page .loop-steps p { margin: 0; color: var(--analytics-muted); font-size: .82rem; line-height: 1.5; }
+    .analytics-page .loop-control { margin: 0; border-top: 1px solid var(--analytics-border); padding: .85rem 1.5rem; color: var(--analytics-muted); background: var(--analytics-surface-soft); font-size: .8rem; line-height: 1.5; }
+    .analytics-page .loop-control strong { color: var(--analytics-text); }
+
     .analytics-page .analytics-actions-section { overflow: hidden; border: 1px solid var(--analytics-border); border-radius: 1rem; background: var(--analytics-surface); }
     .analytics-page .analytics-actions-section .analytics-section-head { margin: 0; border-bottom: 1px solid var(--analytics-border); padding: 1.5rem; }
     .analytics-page .analytics-filters { display: grid; grid-template-columns: minmax(12rem, 1fr) minmax(10rem, .7fr); gap: .75rem; width: min(100%, 30rem); }
@@ -638,7 +809,8 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
     .analytics-page .opportunity-title h3 { min-width: 0; margin: 0; font-size: 1rem; line-height: 1.35; }
     .analytics-page .opportunity-title h3 a { color: var(--analytics-text); font-weight: 780; overflow-wrap: anywhere; white-space: normal; }
     .analytics-page .opportunity-body > p { margin: .65rem 0 1rem; color: var(--analytics-muted); font-size: .875rem; line-height: 1.55; }
-    .analytics-page .opportunity-badge { border: 1px solid transparent; border-radius: 999px; padding: .28rem .55rem; color: var(--analytics-muted); background: var(--analytics-surface-soft); font-size: .66rem; font-weight: 800; }
+    .analytics-page .opportunity-summary { padding-bottom: .75rem; border-bottom: 1px solid var(--analytics-border); }
+    .analytics-page .opportunity-badge { border: 1px solid transparent; border-radius: 999px; padding: .28rem .55rem; color: var(--analytics-muted); background: var(--analytics-surface-soft); font-size: .7rem; font-weight: 800; }
     .analytics-page .opportunity-badge.is-snippet_gap,
     .analytics-page .opportunity-badge.is-low_ctr { color: var(--analytics-danger); background: var(--analytics-danger-soft); }
     .analytics-page .opportunity-badge.is-near_page_one { color: var(--analytics-warning); background: var(--analytics-warning-soft); }
@@ -646,10 +818,27 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
     :root[data-theme="dark"] .operations-main .analytics-page .opportunity-badge:is(.is-snippet_gap, .is-low_ctr) { color: var(--analytics-danger); background: var(--analytics-danger-soft); }
     :root[data-theme="dark"] .operations-main .analytics-page .opportunity-badge.is-near_page_one { color: var(--analytics-warning); background: var(--analytics-warning-soft); }
     :root[data-theme="dark"] .operations-main .analytics-page .opportunity-badge.is-growing_visibility { color: var(--analytics-accent); background: var(--analytics-accent-soft); }
+    .analytics-page .opportunity-plan { display: grid; gap: .65rem; margin: 0 0 1rem; }
+    .analytics-page .opportunity-plan > div { border-left: 3px solid var(--analytics-border-strong); padding: .1rem 0 .15rem .75rem; }
+    .analytics-page .opportunity-plan > div:nth-child(2) { border-left-color: var(--analytics-accent); }
+    .analytics-page .opportunity-plan dt,
+    .analytics-page .opportunity-evidence > span { color: var(--analytics-subtle); font-size: .7rem; font-weight: 820; letter-spacing: .06em; text-transform: uppercase; }
+    .analytics-page .opportunity-plan dd { margin: .3rem 0 0; color: var(--analytics-text); font-size: .82rem; line-height: 1.5; }
+    .analytics-page .opportunity-evidence { display: grid; gap: .5rem; margin-top: 1rem; }
     .analytics-page .query-list { display: flex; flex-wrap: wrap; gap: .45rem; margin: 0; padding: 0; list-style: none; }
     .analytics-page .query-list > li { display: grid; gap: .18rem; border: 1px solid var(--analytics-border); border-radius: .5rem; padding: .5rem .6rem; background: var(--analytics-surface-soft); }
     .analytics-page .query-list b { color: var(--analytics-text); font-size: .75rem; line-height: 1.35; }
-    .analytics-page .query-list small { color: var(--analytics-subtle); font-size: .68rem; line-height: 1.35; }
+    .analytics-page .query-list small { color: var(--analytics-subtle); font-size: .7rem; line-height: 1.35; }
+    .analytics-page .opportunity-source { margin: 1rem 0 .75rem !important; color: var(--analytics-muted); font-size: .73rem !important; }
+    .analytics-page .opportunity-source strong { color: var(--analytics-text); }
+    .analytics-page .opportunity-source code { color: var(--analytics-accent); font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; overflow-wrap: anywhere; }
+    .analytics-page .opportunity-controls { display: flex; flex-wrap: wrap; gap: .6rem; }
+    .analytics-page .opportunity-controls :where(a, button) { display: inline-flex; min-height: 2.55rem; align-items: center; justify-content: center; border: 1px solid var(--analytics-border-strong); border-radius: .55rem; padding: .65rem .9rem; font: inherit; font-size: .82rem; font-weight: 780; line-height: 1; cursor: pointer; }
+    .analytics-page .opportunity-open { color: var(--analytics-text); background: var(--analytics-surface); text-decoration: none; }
+    .analytics-page .opportunity-copy { border-color: var(--analytics-accent) !important; color: #071b14; background: var(--analytics-accent); }
+    .analytics-page .opportunity-copy:disabled { cursor: wait; opacity: .72; }
+    .analytics-page .copy-status { margin: 0; border-top: 1px solid var(--analytics-border); padding: .75rem 1.5rem; color: var(--analytics-accent); background: var(--analytics-accent-soft); font-size: .78rem; line-height: 1.45; }
+    .analytics-page .copy-status:empty { display: none; }
     .analytics-page .opportunity-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; align-content: start; }
     .analytics-page .opportunity-metrics > div { display: flex; min-width: 0; flex-direction: column; border-left: 2px solid var(--analytics-border-strong); padding-left: .75rem; }
     .analytics-page .opportunity-metrics dt { color: var(--analytics-subtle); font-size: .68rem; font-weight: 750; letter-spacing: .04em; }
@@ -745,6 +934,9 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
 
     @media (max-width: 1080px) {
       .analytics-page .journey-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .analytics-page .loop-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .analytics-page .loop-steps li:nth-child(2n) { border-right: 0; }
+      .analytics-page .loop-steps li:last-child { grid-column: 1 / -1; }
       .analytics-page .opportunity-card { grid-template-columns: 6rem minmax(0, 1fr); }
       .analytics-page .opportunity-metrics { grid-column: 2; }
       .analytics-page .attention-layout { grid-template-columns: 1fr; }
@@ -766,8 +958,12 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
     @media (max-width: 520px) {
       .analytics-page section:not(.analytics-header) { margin-top: 2.25rem; }
       .analytics-page .journey-grid,
+      .analytics-page .loop-steps,
       .analytics-page .analytics-filters,
       .analytics-page .analytics-definitions dl { grid-template-columns: 1fr; }
+      .analytics-page .loop-steps li,
+      .analytics-page .loop-steps li:nth-child(2n) { min-height: auto; border-right: 0; }
+      .analytics-page .loop-steps li:last-child { grid-column: auto; }
       .analytics-page .journey-grid article { min-height: 12rem; }
       .analytics-page .analytics-actions-section .analytics-section-head,
       .analytics-page .opportunity-card { padding: 1.1rem; }

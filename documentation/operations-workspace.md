@@ -245,8 +245,9 @@ The Analytics page is governed by
 [`ANALYTICS-DESIGN-CERTIFICATE.md`](./ANALYTICS-DESIGN-CERTIFICATE.md). New
 content must justify which improvement decision it supports, use the stable
 definitions in that certificate, and remain readable in both themes and at a
-390 px viewport. The required order is Site pulse, Do next, Attention,
-Acquisition, collapsed reporting health, then definitions and privacy.
+390 px viewport. The required order is Site pulse, Improvement loop, Do next,
+Attention, Acquisition, collapsed reporting health, then definitions and
+privacy.
 
 GA4 and Search Console reporting are connected. Public GA4 tracking waits for
 visitor consent and records aggregate use plus successful `generate_lead`
@@ -271,6 +272,15 @@ with consented GA4 landing sessions and highlights pages that are shown but not
 clicked, close to page one, low in CTR or gaining visibility. Search impressions
 are result appearances, not visits, and therefore must not be expected to match
 consented GA4 sessions.
+
+Each queue card is a human-controlled agent handoff. It carries the live URL,
+a deterministic source-file hint where the route is known, the current
+baseline, a hypothesis to verify, one focused change and a success rule. The
+copy action produces a complete Codex task that preserves the Operations
+analytics exclusion, requires validation and records the release date. It does
+not edit or publish anything by itself. Results are reviewed after 28 complete
+post-release days have finalised in Search Console, then kept, iterated or
+undone.
 
 Property-wide Search Console totals come from separate reports with no page
 dimension, so the Site pulse is not limited to the first page rows returned for

@@ -9,7 +9,12 @@ const source = fs.readFileSync(
 )
   .replace(/^import .*;\r?\n/gm, "")
   .replace("export async function onRequestGet", "async function onRequestGet")
-  + "\nglobalThis.__analyticsTest = { trafficReport, generateLeadReport, topChannelsReport, landingPagesReport, dailySessionsReport, sessionStartReport, searchConsoleReport, safeTraffic, safeLandingPages, safeDailySessions, safeSearchQuery, safeSearchPage, safeOperationalPage, sessionDiagnostics, searchPageInsights, operationalLeadSignals, optionalReport, runRealtimeReport, realtimeSummary };\n";
+  + "\nglobalThis.__analyticsTest = { trafficReport, generateLeadReport, topChannelsReport, landingPagesReport, dailySessionsReport, sessionStartReport, searchConsoleReport, safeTraffic, safeLandingPages, safeDailySessions, safeSearchQuery, safeSearchPage, safeOperationalPage, sessionDiagnostics, searchPageInsights, sourceForPublicPage, guidanceForOpportunity, operationalLeadSignals, optionalReport, runRealtimeReport, realtimeSummary };\n";
+
+const analyticsPageSource = fs.readFileSync(
+  new URL("../astro/src/pages/operations/analytics/index.astro", import.meta.url),
+  "utf8",
+);
 
 function loadAnalyticsApi(fetchImpl) {
   const context = vm.createContext({
@@ -210,8 +215,34 @@ test("Search Console rows become page-level opportunities with their safe querie
   assert.equal(result.changes.impressions, 27);
   assert.equal(wallMounting.impressionChange, 15);
   assert.equal(wallMounting.opportunity.type, "snippet_gap");
+  assert.match(wallMounting.opportunity.hypothesis, /title or description/i);
+  assert.match(wallMounting.opportunity.successCheck, /28-day window/i);
+  assert.match(wallMounting.opportunity.reviewRule, /one focused change/i);
   assert.equal(wallMounting.topQueries.length, 1);
   assert.equal(wallMounting.topQueries[0].query, "tv wall mounting brisbane");
+});
+
+test("SEO tasks point agents to known page sources and fall back to route tracing", () => {
+  const api = loadAnalyticsApi(async () => new Response("{}"));
+  assert.deepEqual(JSON.parse(JSON.stringify(api.sourceForPublicPage("/"))), {
+    file: "astro/public/index.html",
+    label: "Homepage source",
+    confidence: "exact",
+  });
+  assert.equal(api.sourceForPublicPage("/locations/sinnamon-park/").file, "astro/src/content/locations/sinnamon-park.md");
+  assert.equal(api.sourceForPublicPage("/blog/mounting-big-tv-on-brick/").file, "astro/src/content/blog/mounting-big-tv-on-brick.md");
+  assert.equal(api.sourceForPublicPage("/quote/").file, "astro/src/pages/quote.astro");
+  assert.equal(api.sourceForPublicPage("/older-public-route/").file, null);
+  assert.match(api.sourceForPublicPage("/older-public-route/").hint, /confirm the live page/i);
+});
+
+test("the dashboard exposes the complete human-controlled improvement loop", () => {
+  assert.match(analyticsPageSource, /One page\. One change\. One measured decision\./);
+  assert.match(analyticsPageSource, /Copy agent task/);
+  assert.match(analyticsPageSource, /HYPOTHESIS TO VERIFY/);
+  assert.match(analyticsPageSource, /SUCCESS DECISION/);
+  assert.match(analyticsPageSource, /Nothing changes automatically/);
+  assert.match(analyticsPageSource, /Preserve the Analytics Design Certificate and the exclusion of \/operations\/\*/);
 });
 
 test("Search Console property totals do not depend on truncated page rows", () => {
