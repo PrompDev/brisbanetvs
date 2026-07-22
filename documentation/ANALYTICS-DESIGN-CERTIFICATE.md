@@ -62,6 +62,8 @@ Health checks never outrank customer or improvement information when reporting i
 
 The interface must never claim to know *why* a person left. It may show observable drop-off signals — short engaged time, low engagement, or shallow browsing — and label them as signals requiring a page review.
 
+The private `/operations/*` workspace is never customer evidence. Its layouts must not load the public analytics client; the client must refuse to run there if included accidentally; reporting requests and output sanitizers must exclude Operations paths. The public homepage is displayed as **Homepage (/)** rather than an unexplained slash.
+
 ## Visual law
 
 - Use one UI sans-serif stack throughout the analytics page. Data is not editorial content and does not use a decorative serif.
@@ -95,6 +97,7 @@ The page is ready only when:
 - popular pages show sessions, engaged time and depth in human units;
 - drop-off language is honest about what the data can and cannot prove;
 - every visible metric has one stable definition;
+- private Operations activity is excluded at collection and reporting boundaries;
 - runtime-created opportunity cards are fully styled;
 - keyboard controls, focus states and semantic headings work;
 - there are no console errors or horizontal overflow at desktop, tablet or 390 px;

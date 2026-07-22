@@ -9,7 +9,7 @@ const source = fs.readFileSync(
 )
   .replace(/^import .*;\r?\n/gm, "")
   .replace("export async function onRequestGet", "async function onRequestGet")
-  + "\nglobalThis.__analyticsTest = { trafficReport, landingPagesReport, searchConsoleReport, safeTraffic, safeLandingPages, safeDailySessions, safeSearchQuery, sessionDiagnostics, searchPageInsights, operationalLeadSignals, optionalReport, runRealtimeReport, realtimeSummary };\n";
+  + "\nglobalThis.__analyticsTest = { trafficReport, generateLeadReport, topChannelsReport, landingPagesReport, dailySessionsReport, sessionStartReport, searchConsoleReport, safeTraffic, safeLandingPages, safeDailySessions, safeSearchQuery, safeSearchPage, safeOperationalPage, sessionDiagnostics, searchPageInsights, operationalLeadSignals, optionalReport, runRealtimeReport, realtimeSummary };\n";
 
 function loadAnalyticsApi(fetchImpl) {
   const context = vm.createContext({
@@ -113,6 +113,26 @@ test("the stable traffic report requests the session metrics needed for diagnosi
   );
 });
 
+test("every standard GA4 report excludes sessions that land in Operations", () => {
+  const api = loadAnalyticsApi(async () => new Response("{}"));
+  const dateRange = { startDate: "27daysAgo", endDate: "yesterday" };
+  const reports = [
+    api.trafficReport(dateRange),
+    api.generateLeadReport(dateRange),
+    api.topChannelsReport(dateRange),
+    api.landingPagesReport(dateRange),
+    api.dailySessionsReport(dateRange),
+    api.sessionStartReport(dateRange),
+  ];
+  for (const report of reports) {
+    const encoded = JSON.stringify(report.dimensionFilter);
+    assert.match(encoded, /"fieldName":"landingPage"/);
+    assert.match(encoded, /"matchType":"BEGINS_WITH"/);
+    assert.match(encoded, /"value":"\/operations\/"/);
+    assert.match(encoded, /"notExpression"/);
+  }
+});
+
 test("landing pages and daily sessions are parsed into privacy-safe paths", () => {
   const api = loadAnalyticsApi(async () => new Response("{}"));
   const landingPages = api.safeLandingPages({
@@ -131,6 +151,10 @@ test("landing pages and daily sessions are parsed into privacy-safe paths", () =
       {
         dimensionValues: [{ value: "https://malicious.example/" }],
         metricValues: [{ value: "50" }],
+      },
+      {
+        dimensionValues: [{ value: "/operations/analytics/" }],
+        metricValues: [{ value: "99" }],
       },
     ],
   });
@@ -157,6 +181,8 @@ test("landing pages and daily sessions are parsed into privacy-safe paths", () =
     pageViews: 5,
   }]);
   assert.equal(api.sessionDiagnostics({ sessions: 3 }, 3, days).status, "aligned");
+  assert.equal(api.safeSearchPage("https://brisbanetvs.com/operations/"), null);
+  assert.equal(api.safeOperationalPage("/operations/analytics/"), null);
 });
 
 test("Search Console rows become page-level opportunities with their safe queries", () => {

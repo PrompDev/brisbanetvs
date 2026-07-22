@@ -17,6 +17,7 @@ const MAX_SEARCH_CONSOLE_RESPONSE_BYTES = 256 * 1024;
 const MAX_COUNT = Number.MAX_SAFE_INTEGER;
 const SEARCH_CONSOLE_LAG_DAYS = 3;
 const STABLE_WINDOW_DAYS = 28;
+const OPERATIONS_PATH = "/operations/";
 
 // Session default channel groups are a controlled GA4 taxonomy. Deliberately
 // avoid free-form campaign, referrer and UTM dimensions: those can contain
@@ -343,6 +344,34 @@ function trafficReport(dateRange) {
       { name: "engagementRate" },
       { name: "screenPageViewsPerSession" },
     ],
+    dimensionFilter: publicLandingPageFilter(),
+  };
+}
+
+function publicLandingPageFilter() {
+  return {
+    notExpression: {
+      filter: {
+        fieldName: "landingPage",
+        stringFilter: { matchType: "BEGINS_WITH", value: OPERATIONS_PATH, caseSensitive: false },
+      },
+    },
+  };
+}
+
+function publicEventFilter(eventName) {
+  return {
+    andGroup: {
+      expressions: [
+        {
+          filter: {
+            fieldName: "eventName",
+            stringFilter: { matchType: "EXACT", value: eventName, caseSensitive: true },
+          },
+        },
+        publicLandingPageFilter(),
+      ],
+    },
   };
 }
 
@@ -350,12 +379,7 @@ function generateLeadReport(dateRange) {
   return {
     dateRanges: [dateRange],
     metrics: [{ name: "eventCount" }],
-    dimensionFilter: {
-      filter: {
-        fieldName: "eventName",
-        stringFilter: { matchType: "EXACT", value: "generate_lead", caseSensitive: true },
-      },
-    },
+    dimensionFilter: publicEventFilter("generate_lead"),
   };
 }
 
@@ -366,6 +390,7 @@ function topChannelsReport(dateRange) {
     metrics: [{ name: "sessions" }],
     orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
     limit: "10",
+    dimensionFilter: publicLandingPageFilter(),
   };
 }
 
@@ -383,6 +408,7 @@ function landingPagesReport(dateRange) {
     ],
     orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
     limit: "50",
+    dimensionFilter: publicLandingPageFilter(),
   };
 }
 
@@ -397,6 +423,7 @@ function dailySessionsReport(dateRange) {
     ],
     orderBys: [{ dimension: { dimensionName: "date" }, desc: false }],
     limit: "60",
+    dimensionFilter: publicLandingPageFilter(),
   };
 }
 
@@ -404,12 +431,7 @@ function sessionStartReport(dateRange) {
   return {
     dateRanges: [dateRange],
     metrics: [{ name: "eventCount" }],
-    dimensionFilter: {
-      filter: {
-        fieldName: "eventName",
-        stringFilter: { matchType: "EXACT", value: "session_start", caseSensitive: true },
-      },
-    },
+    dimensionFilter: publicEventFilter("session_start"),
   };
 }
 
@@ -455,10 +477,15 @@ function safePagePath(value) {
   return path === "/" ? "/" : `${path.replace(/\/+$/, "")}/`;
 }
 
+function safePublicPagePath(value) {
+  const path = safePagePath(value);
+  return path && path !== OPERATIONS_PATH && !path.startsWith(OPERATIONS_PATH) ? path : null;
+}
+
 function safeLandingPages(payload) {
   const rows = isRecord(payload) && Array.isArray(payload.rows) ? payload.rows : [];
   return rows.slice(0, 50).flatMap((row) => {
-    const path = isRecord(row?.dimensionValues?.[0]) ? safePagePath(row.dimensionValues[0].value) : null;
+    const path = isRecord(row?.dimensionValues?.[0]) ? safePublicPagePath(row.dimensionValues[0].value) : null;
     const sessions = metricFromRow(row, 0);
     if (!path || sessions < 1) return [];
 
@@ -528,7 +555,7 @@ function safeSearchPage(value) {
   try {
     const url = new URL(pageUrl);
     const allowedHost = url.hostname === "brisbanetvs.com" || url.hostname === "www.brisbanetvs.com";
-    return url.protocol === "https:" && allowedHost && !url.search && !url.hash ? safePagePath(url.pathname) : null;
+    return url.protocol === "https:" && allowedHost && !url.search && !url.hash ? safePublicPagePath(url.pathname) : null;
   } catch {
     return null;
   }
@@ -847,9 +874,9 @@ function safeOperationalPage(value) {
   try {
     const url = new URL(pageUrl);
     const allowedHost = url.hostname === "brisbanetvs.com" || url.hostname === "www.brisbanetvs.com";
-    return url.protocol === "https:" && allowedHost ? safePagePath(url.pathname) : null;
+    return url.protocol === "https:" && allowedHost ? safePublicPagePath(url.pathname) : null;
   } catch {
-    return safePagePath(pageUrl);
+    return safePublicPagePath(pageUrl);
   }
 }
 

@@ -130,6 +130,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
         <div><dt>Engagement rate</dt><dd>Engaged sessions divided by consented sessions.</dd></div>
         <div><dt>Average engaged time</dt><dd>Active engagement seconds per landing session, not total time a tab stayed open.</dd></div>
         <div><dt>Views per session</dt><dd>Page views divided by consented sessions; a browsing-depth signal.</dd></div>
+        <div><dt>Page path</dt><dd>The location inside the public website. <strong>Homepage (/)</strong> means brisbanetvs.com itself.</dd></div>
         <div><dt>Saved enquiry</dt><dd>An accepted enquiry in Operations, whether or not analytics was allowed.</dd></div>
         <div><dt>GA lead event</dt><dd>A consented generate_lead event used as a collection check, not the authoritative enquiry total.</dd></div>
         <div><dt>Average position</dt><dd>The average Google result position across appearances. A smaller number is better.</dd></div>
@@ -138,7 +139,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
 
     <section class="operations-privacy-note">
       <span aria-hidden="true">✓</span>
-      <p>This page requests fixed, aggregate reports only. Search queries and Brisbane TVs page paths are privacy-filtered; visitor identities, contact details and free-text form answers are not requested from Google or displayed here.</p>
+      <p>This page requests fixed, aggregate reports only. The private <strong>/operations/*</strong> workspace is excluded from analytics collection and these reports. Search queries and public page paths are privacy-filtered; visitor identities, contact details and free-text form answers are not requested from Google or displayed here.</p>
     </section>
   </div>
 
@@ -155,6 +156,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
     const numeric = (value) => Math.max(0, Number(value) || 0);
     const setText = (selector, value) => { const element = document.querySelector(selector); if (element) element.textContent = value; };
     const setNumber = (selector, value) => setText(selector, numberFormat.format(numeric(value)));
+    const pageLabel = (path) => path === "/" ? "Homepage (/)" : path;
 
     function signed(value, suffix = "") {
       const amount = Number(value) || 0;
@@ -296,7 +298,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       const gaPages = landingPageMap(currentAnalytics?.landingPages);
       const savedLeadPages = new Map((currentAnalytics?.leadSignals?.topLandingPages || []).map((page) => [page.label, numeric(page.leads)]));
       const pages = (search.opportunities || []).filter((page) => {
-        const matchesTerm = !term || String(page.path).toLowerCase().includes(term) || (page.topQueries || []).some((query) => String(query.query).toLowerCase().includes(term));
+        const matchesTerm = !term || pageLabel(page.path).toLowerCase().includes(term) || (page.topQueries || []).some((query) => String(query.query).toLowerCase().includes(term));
         const matchesFilter = filter === "all" || page.opportunity?.type === filter;
         return matchesTerm && matchesFilter;
       }).slice(0, 5);
@@ -320,7 +322,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
         path.href = `https://brisbanetvs.com${page.path}`;
         path.target = "_blank";
         path.rel = "noreferrer";
-        path.textContent = page.path;
+        path.textContent = pageLabel(page.path);
         const pageHeading = document.createElement("h3");
         pageHeading.append(path);
         const badge = document.createElement("span");
@@ -392,7 +394,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
         link.href = `https://brisbanetvs.com${page.path}`;
         link.target = "_blank";
         link.rel = "noreferrer";
-        link.textContent = page.path;
+        link.textContent = pageLabel(page.path);
         const sessionCount = document.createElement("small");
         sessionCount.textContent = `${numberFormat.format(numeric(page.sessions))} consented session${numeric(page.sessions) === 1 ? "" : "s"}`;
         pageCell.append(link, sessionCount);
@@ -420,7 +422,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
         .sort((left, right) => numeric(left.engagementRate) - numeric(right.engagementRate) || numeric(left.averageEngagementSeconds) - numeric(right.averageEngagementSeconds));
       const candidate = reviewCandidates[0];
       setText("[data-attention-insight]", candidate
-        ? `${candidate.path} is the clearest review candidate among pages with at least three consented sessions: ${percentFormat.format(numeric(candidate.engagementRate))} engaged, ${formatDuration(candidate.averageEngagementSeconds)} average engaged time and ${decimalFormat.format(numeric(candidate.viewsPerSession))} views per session.`
+        ? `${pageLabel(candidate.path)} is the clearest review candidate among pages with at least three consented sessions: ${percentFormat.format(numeric(candidate.engagementRate))} engaged, ${formatDuration(candidate.averageEngagementSeconds)} average engaged time and ${decimalFormat.format(numeric(candidate.viewsPerSession))} views per session.`
         : "There is not enough consented volume on any one landing page to identify a reliable review candidate yet.");
     }
 

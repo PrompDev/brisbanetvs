@@ -74,6 +74,13 @@ The public website, private portal, lead register, inbox and analytics are
 separate on purpose. The overview is quick to scan, while customer data stays
 in the pages where it is actually needed.
 
+The private `/operations/*` routes are also excluded from the customer
+analytics feedback loop. `OperationsLayout` does not load the public analytics
+client, the client refuses to start on an Operations path if it is included by
+mistake, GA4 report requests exclude Operations landing sessions, and returned
+page-path data is filtered again before display. In analytics tables, `/` is
+labelled `Homepage (/)`; it means the public `brisbanetvs.com/` homepage.
+
 ## Already connected
 
 - Public website and lead-sheet submissions are stored in the protected

@@ -1,6 +1,14 @@
 (function () {
   "use strict";
 
+  // The staff portal is a separate product surface. Keep this guard here as
+  // defence in depth even though OperationsLayout does not include this file.
+  // A future layout mistake must not turn staff activity into customer data.
+  var currentPath = window.location && typeof window.location.pathname === "string"
+    ? window.location.pathname
+    : "";
+  if (currentPath === "/operations" || currentPath.indexOf("/operations/") === 0) return;
+
   var CONSENT_KEY = "brisbane_tvs_analytics_consent_v1";
   var ATTRIBUTION_KEY = "brisbane_tvs_session_attribution_v1";
   var CONFIG_ENDPOINT = "/analytics-config";

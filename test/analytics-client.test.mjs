@@ -7,6 +7,10 @@ const analyticsSource = fs.readFileSync(
   new URL("../astro/public/scripts/brisbane-analytics.js", import.meta.url),
   "utf8",
 );
+const operationsLayoutSource = fs.readFileSync(
+  new URL("../astro/src/components/operations/OperationsLayout.astro", import.meta.url),
+  "utf8",
+);
 
 function browserHarness({ consent = "granted", url = "https://brisbanetvs.com/" } = {}) {
   const storage = new Map(consent ? [["brisbane_tvs_analytics_consent_v1", consent]] : []);
@@ -104,6 +108,15 @@ test("Google Analytics is not requested before explicit consent", async () => {
   await browser.settle();
   assert.equal(browser.fetchCount, 0);
   assert.deepEqual(browser.scripts, []);
+});
+
+test("Operations pages cannot start public analytics even if the loader is included accidentally", async () => {
+  const browser = browserHarness({ url: "https://brisbanetvs.com/operations/analytics/" });
+  await browser.settle();
+  assert.equal(browser.fetchCount, 0);
+  assert.deepEqual(browser.scripts, []);
+  assert.equal(browser.window.brisbaneTrack, undefined);
+  assert.doesNotMatch(operationsLayoutSource, /AnalyticsConsent|brisbane-analytics\.js/);
 });
 
 test("the Google tag initializes before config and forwards only allowlisted campaign fields", async () => {
