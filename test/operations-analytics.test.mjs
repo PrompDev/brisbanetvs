@@ -9,7 +9,7 @@ const source = fs.readFileSync(
 )
   .replace(/^import .*;\r?\n/gm, "")
   .replace("export async function onRequestGet", "async function onRequestGet")
-  + "\nglobalThis.__analyticsTest = { trafficReport, generateLeadReport, topChannelsReport, landingPagesReport, dailySessionsReport, sessionStartReport, searchConsoleReport, safeTraffic, safeLandingPages, safeDailySessions, safeSearchQuery, safeSearchPage, safeOperationalPage, sessionDiagnostics, searchPageInsights, sourceForPublicPage, guidanceForOpportunity, operationalLeadSignals, optionalReport, runRealtimeReport, realtimeSummary };\n";
+  + "\nglobalThis.__analyticsTest = { trafficReport, generateLeadReport, publicActionsReport, topChannelsReport, landingPagesReport, dailySessionsReport, sessionStartReport, searchConsoleReport, safeTraffic, safeLandingPages, safePublicActions, safeDailySessions, safeSearchQuery, safeSearchPage, safeOperationalPage, safeSearchDeviceRows, safeSearchCountryRows, safeBusinessOutcomes, safePageOutcomes, sessionDiagnostics, searchPageInsights, sourceForPublicPage, guidanceForOpportunity, operationalLeadSignals, optionalReport, runRealtimeReport, realtimeSummary };\n";
 
 const analyticsPageSource = fs.readFileSync(
   new URL("../astro/src/pages/operations/analytics/index.astro", import.meta.url),
@@ -124,6 +124,7 @@ test("every standard GA4 report excludes sessions that land in Operations", () =
   const reports = [
     api.trafficReport(dateRange),
     api.generateLeadReport(dateRange),
+    api.publicActionsReport(dateRange),
     api.topChannelsReport(dateRange),
     api.landingPagesReport(dateRange),
     api.dailySessionsReport(dateRange),
@@ -136,6 +137,49 @@ test("every standard GA4 report excludes sessions that land in Operations", () =
     assert.match(encoded, /"value":"\/operations\/"/);
     assert.match(encoded, /"notExpression"/);
   }
+});
+
+test("public action reporting exposes measured events by safe public landing page", () => {
+  const api = loadAnalyticsApi(async () => new Response("{}"));
+  const report = api.publicActionsReport({ startDate: "27daysAgo", endDate: "yesterday" });
+  assert.deepEqual(Array.from(report.dimensions, (dimension) => dimension.name), ["eventName", "landingPage"]);
+  assert.match(JSON.stringify(report.dimensionFilter), /quote_cta_click/);
+  assert.match(JSON.stringify(report.dimensionFilter), /form_error/);
+
+  const result = api.safePublicActions({
+    rows: [
+      { dimensionValues: [{ value: "quote_cta_click" }, { value: "/" }], metricValues: [{ value: "4" }] },
+      { dimensionValues: [{ value: "form_start" }, { value: "/quote/" }], metricValues: [{ value: "3" }] },
+      { dimensionValues: [{ value: "form_error" }, { value: "/quote/" }], metricValues: [{ value: "1" }] },
+      { dimensionValues: [{ value: "click_to_call" }, { value: "/operations/analytics/" }], metricValues: [{ value: "99" }] },
+      { dimensionValues: [{ value: "unknown_event" }, { value: "/" }], metricValues: [{ value: "50" }] },
+    ],
+  });
+  assert.equal(result.totals.quoteCtaClicks, 4);
+  assert.equal(result.totals.formStarts, 3);
+  assert.equal(result.totals.formErrors, 1);
+  assert.equal(result.totals.callClicks, 0);
+  assert.equal(result.pages.length, 2);
+  assert.equal(result.pages.find((page) => page.path === "/quote/").formStarts, 3);
+  assert.equal(result.pages.some((page) => page.path.startsWith("/operations/")), false);
+});
+
+test("Search Console device and country rows stay aggregate and controlled", () => {
+  const api = loadAnalyticsApi(async () => new Response("{}"));
+  const devices = api.safeSearchDeviceRows({ rows: [
+    { keys: ["MOBILE"], clicks: 3, impressions: 30, ctr: 0.1, position: 8 },
+    { keys: ["WATCH"], clicks: 9, impressions: 90, ctr: 0.1, position: 2 },
+  ] });
+  assert.deepEqual(JSON.parse(JSON.stringify(devices)), [{ label: "Mobile", clicks: 3, impressions: 30, ctr: 0.1, position: 8 }]);
+
+  const countries = api.safeSearchCountryRows({ rows: [
+    { keys: ["aus"], clicks: 4, impressions: 40, ctr: 0.1, position: 7 },
+    { keys: ["usa"], clicks: 1, impressions: 10, ctr: 0.1, position: 12 },
+    { keys: ["gbr"], clicks: 0, impressions: 5, ctr: 0, position: 20 },
+  ] });
+  assert.equal(countries[0].label, "Australia");
+  assert.equal(countries[1].label, "Outside Australia");
+  assert.equal(countries[1].impressions, 15);
 });
 
 test("landing pages and daily sessions are parsed into privacy-safe paths", () => {
@@ -237,6 +281,11 @@ test("SEO tasks point agents to known page sources and fall back to route tracin
 });
 
 test("the dashboard exposes the complete human-controlled improvement loop", () => {
+  assert.match(analyticsPageSource, /Recorded facts/);
+  assert.match(analyticsPageSource, /What customers actually did/);
+  assert.match(analyticsPageSource, /Observed facts/);
+  assert.match(analyticsPageSource, /Still unknown/);
+  assert.match(analyticsPageSource, /A dash means the source is unavailable/);
   assert.match(analyticsPageSource, /One page\. One change\. One measured decision\./);
   assert.match(analyticsPageSource, /Copy agent task/);
   assert.match(analyticsPageSource, /HYPOTHESIS TO VERIFY/);

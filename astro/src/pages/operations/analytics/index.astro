@@ -12,7 +12,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       <div>
         <p class="operations-eyebrow">Website feedback loop</p>
         <h1 id="analytics-title" class="operations-title">What should we improve next?</h1>
-        <p class="operations-copy">Follow the path from being found in Google to a saved website enquiry, then use the ranked page queue to choose the next change.</p>
+        <p class="operations-copy">Read the recorded facts first. The page then separates what is unknown from the hypotheses you may choose to test.</p>
       </div>
       <div class="analytics-actions">
         <p class="operations-status" data-analytics-status role="status">Connecting to secure reporting...</p>
@@ -32,6 +32,40 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
         <article class="is-outcome"><span class="journey-step">04 · Enquire</span><strong data-saved-web-28>—</strong><h3>Saved website enquiries</h3><p data-enquiry-detail>Accepted website forms, independent of analytics consent.</p></article>
       </div>
       <p class="analytics-period-note"><strong>Why the numbers differ:</strong> Google appearances, consented GA4 sessions and saved enquiries use different collection rules. They are directional stages, not a person-by-person funnel.</p>
+    </section>
+
+    <section class="measured-evidence" aria-labelledby="measured-title">
+      <div class="analytics-section-head">
+        <div><p class="operations-eyebrow">Recorded facts</p><h2 id="measured-title">What customers actually did</h2><p>These are direct aggregate counts from the website and Operations. No reason or intent is inferred here.</p></div>
+        <span>Last 28 days · public website only</span>
+      </div>
+      <div class="measured-grid">
+        <article class="operations-panel analytics-panel measured-panel">
+          <div class="analytics-panel-head"><div><h3>Consented website actions</h3><p>Recorded GA4 events · actions, not unique people</p></div><span class="operations-pill is-muted" data-actions-pill>Checking</span></div>
+          <dl class="measured-list">
+            <div><dt>Quote CTA clicks</dt><dd data-action-quote>—</dd></div>
+            <div><dt>Phone-link clicks</dt><dd data-action-call>—</dd></div>
+            <div><dt>Pricing calculator uses</dt><dd data-action-pricing>—</dd></div>
+            <div><dt>Form starts</dt><dd data-action-form-start>—</dd></div>
+            <div><dt>Forms with a validation error</dt><dd data-action-form-error>—</dd></div>
+            <div><dt>GA lead events</dt><dd data-action-lead>—</dd></div>
+          </dl>
+          <p class="measured-note" data-actions-note>Loading recorded action events...</p>
+        </article>
+        <article class="operations-panel analytics-panel measured-panel is-outcome">
+          <div class="analytics-panel-head"><div><h3>Saved business outcomes</h3><p>Direct Operations records for website leads</p></div><span class="operations-pill is-muted" data-outcomes-pill>Checking</span></div>
+          <dl class="measured-list">
+            <div><dt>Saved website enquiries</dt><dd data-outcome-leads>—</dd></div>
+            <div><dt>Quotes created</dt><dd data-outcome-quotes>—</dd></div>
+            <div><dt>Quotes accepted</dt><dd data-outcome-accepted>—</dd></div>
+            <div><dt>Jobs completed</dt><dd data-outcome-jobs>—</dd></div>
+            <div><dt>Job revenue recorded</dt><dd data-outcome-revenue>—</dd></div>
+            <div><dt>Invoice payments recorded</dt><dd data-outcome-paid>—</dd></div>
+          </dl>
+          <p class="measured-note" data-outcomes-note>Loading saved business outcomes...</p>
+        </article>
+      </div>
+      <p class="fact-boundary"><strong>Evidence boundary:</strong> a zero means the connected source recorded zero. A dash means the source is unavailable. Motivation remains unknown unless a customer tells us.</p>
     </section>
 
     <section class="improvement-loop" aria-labelledby="loop-title">
@@ -108,6 +142,14 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
           <div class="enquiry-summary"><div><span>All sources</span><strong data-saved-week>—</strong></div><div><span>Website forms</span><strong data-saved-web>—</strong></div></div>
           <ul class="analytics-list" data-lead-sources><li>Loading saved lead sources...</li></ul>
         </article>
+        <article class="operations-panel analytics-panel">
+          <div class="analytics-panel-head"><div><h3>Google search by device</h3><p>Direct Search Console clicks and appearances</p></div></div>
+          <ul class="analytics-list search-breakdown" data-search-devices><li>Loading device evidence...</li></ul>
+        </article>
+        <article class="operations-panel analytics-panel">
+          <div class="analytics-panel-head"><div><h3>Local search audience</h3><p>Australia compared with all other countries</p></div></div>
+          <ul class="analytics-list search-breakdown" data-search-geography><li>Loading location evidence...</li></ul>
+        </article>
       </div>
     </section>
 
@@ -153,6 +195,9 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
         <div><dt>Page path</dt><dd>The location inside the public website. <strong>Homepage (/)</strong> means brisbanetvs.com itself.</dd></div>
         <div><dt>Saved enquiry</dt><dd>An accepted enquiry in Operations, whether or not analytics was allowed.</dd></div>
         <div><dt>GA lead event</dt><dd>A consented generate_lead event used as a collection check, not the authoritative enquiry total.</dd></div>
+        <div><dt>Website action</dt><dd>A recorded consented event such as a quote click or form start. One person can create more than one action.</dd></div>
+        <div><dt>Business outcome</dt><dd>A quote, job, revenue or payment explicitly saved in Operations. Missing records are never estimated.</dd></div>
+        <div><dt>Hypothesis</dt><dd>A possible explanation to verify against the page. It is not a measured fact or proof of why somebody left.</dd></div>
         <div><dt>Average position</dt><dd>The average Google result position across appearances. A smaller number is better.</dd></div>
       </dl>
     </section>
@@ -167,6 +212,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
     const numberFormat = new Intl.NumberFormat("en-AU");
     const decimalFormat = new Intl.NumberFormat("en-AU", { maximumFractionDigits: 1 });
     const percentFormat = new Intl.NumberFormat("en-AU", { style: "percent", maximumFractionDigits: 1 });
+    const currencyFormat = new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD", maximumFractionDigits: 0 });
     const statusElement = document.querySelector("[data-analytics-status]");
     const refreshButton = document.querySelector("[data-analytics-refresh]");
     const pageSearch = document.querySelector("[data-page-search]");
@@ -306,7 +352,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       return new Map((landingPages || []).map((page) => [page.path, page]));
     }
 
-    function buildAgentBrief(page, gaPage, savedEnquiries, search) {
+    function buildAgentBrief(page, gaPage, actionPage, outcomePage, search) {
       const source = page.opportunity?.source || {};
       const sourceInstruction = source.file
         ? `Start with the likely source file: ${source.file}`
@@ -317,9 +363,12 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       const gaEvidence = gaPage
         ? `${numberFormat.format(numeric(gaPage.sessions))} consented landings; ${percentFormat.format(numeric(gaPage.engagementRate))} engaged; ${formatDuration(gaPage.averageEngagementSeconds)} average engaged time; ${decimalFormat.format(numeric(gaPage.viewsPerSession))} views per session.`
         : "No consented GA4 landing-page match was available. Treat this as missing consented evidence, not zero traffic.";
-      const enquiryEvidence = savedEnquiries == null
-        ? "No saved-enquiry landing-page match was available for the last 7 days. Treat this as no match, not zero enquiries."
-        : `${numberFormat.format(savedEnquiries)} saved website enquiries matched this landing page in the last 7 days.`;
+      const actionEvidence = actionPage
+        ? `${numberFormat.format(numeric(actionPage.quoteCtaClicks))} quote CTA clicks; ${numberFormat.format(numeric(actionPage.callClicks))} phone-link clicks; ${numberFormat.format(numeric(actionPage.formStarts))} form starts; ${numberFormat.format(numeric(actionPage.formErrors))} forms with a validation error; ${numberFormat.format(numeric(actionPage.generateLeads))} GA lead events.`
+        : "No consented action-event row matched this landing page. Treat this as missing consented evidence, not proof that nobody acted.";
+      const outcomeEvidence = outcomePage
+        ? `${numberFormat.format(numeric(outcomePage.leads))} saved website enquiries; ${numberFormat.format(numeric(outcomePage.quotes))} quotes; ${numberFormat.format(numeric(outcomePage.acceptedQuotes))} accepted quotes; ${numberFormat.format(numeric(outcomePage.completedJobs))} completed jobs; ${currencyFormat.format(numeric(outcomePage.revenueCents) / 100)} recorded job revenue.`
+        : "No saved business-outcome row matched this landing page in the 28-day window. Treat this as no attribution match, not zero outcomes.";
       const searchWindow = search?.window
         ? `${search.window.startDate} to ${search.window.endDate} (final Search Console data)`
         : "the current final Search Console window";
@@ -340,13 +389,15 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
         `- Click-through rate: ${percentFormat.format(numeric(page.ctr))}`,
         `- Average position: ${decimalFormat.format(numeric(page.position))} (${positionMovement(page.positionChange)})`,
         `- Consented behaviour: ${gaEvidence}`,
-        `- Enquiry evidence: ${enquiryEvidence}`,
+        `- Recorded website actions: ${actionEvidence}`,
+        `- Saved business outcomes: ${outcomeEvidence}`,
         "",
         "TOP VISIBLE QUERIES",
         ...(queryLines.length ? queryLines : ["- No privacy-safe query rows were returned. Do not invent target queries."]),
         "",
         "HYPOTHESIS TO VERIFY",
         page.opportunity?.hypothesis || "The current evidence needs to be checked against the live page before choosing a change.",
+        "This is an inference, not a measured reason for visitor behaviour. Keep the cause marked unknown unless direct customer feedback proves it.",
         "",
         "FOCUSED CHANGE",
         page.opportunity?.recommendation || "Review the page against its visible search demand and choose one defensible improvement.",
@@ -394,7 +445,8 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       const term = String(pageSearch.value || "").trim().toLowerCase();
       const filter = opportunityFilter.value;
       const gaPages = landingPageMap(currentAnalytics?.landingPages);
-      const savedLeadPages = new Map((currentAnalytics?.leadSignals?.topLandingPages || []).map((page) => [page.label, numeric(page.leads)]));
+      const actionPages = landingPageMap(currentAnalytics?.publicActions?.pages);
+      const outcomePages = landingPageMap(currentAnalytics?.leadSignals?.pageOutcomes);
       const pages = (search.opportunities || []).filter((page) => {
         const matchesTerm = !term || pageLabel(page.path).toLowerCase().includes(term) || (page.topQueries || []).some((query) => String(query.query).toLowerCase().includes(term));
         const matchesFilter = filter === "all" || page.opportunity?.type === filter;
@@ -433,7 +485,13 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
 
         const plan = document.createElement("dl");
         plan.className = "opportunity-plan";
+        const gaPage = gaPages.get(page.path);
+        const actionPage = actionPages.get(page.path);
+        const outcomePage = outcomePages.get(page.path);
+        const observedFact = `${numberFormat.format(numeric(page.impressions))} Google appearances produced ${numberFormat.format(numeric(page.clicks))} search clicks in the final window.${gaPage ? ` GA4 recorded ${numberFormat.format(numeric(gaPage.sessions))} consented landings.` : " No matching consented landing row was available."}${outcomePage ? ` Operations matched ${numberFormat.format(numeric(outcomePage.leads))} saved website enquiries.` : " No matching saved-enquiry row was available."}`;
         [
+          ["Observed facts", observedFact],
+          ["Still unknown", "The reports do not reveal why a visitor clicked, continued or left. Verify the live page and preserve that uncertainty."],
           ["Hypothesis to verify", page.opportunity?.hypothesis || "Review the live page before deciding why this signal exists."],
           ["Focused change", page.opportunity?.recommendation || "Keep watching this page as more search data arrives."],
           ["Winning result", page.opportunity?.successCheck || "Compare the next complete 28-day window with this baseline."],
@@ -470,8 +528,6 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
         }
         evidence.append(evidenceLabel, queries);
 
-        const gaPage = gaPages.get(page.path);
-        const savedEnquiries = savedLeadPages.get(page.path);
         const source = document.createElement("p");
         source.className = "opportunity-source";
         const sourceLabel = document.createElement("strong");
@@ -496,7 +552,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
           const originalLabel = copyTask.textContent;
           copyTask.disabled = true;
           try {
-            await copyText(buildAgentBrief(page, gaPage, savedEnquiries, search));
+            await copyText(buildAgentBrief(page, gaPage, actionPage, outcomePage, search));
             copyTask.textContent = "Task copied";
             setText("[data-copy-status]", `Agent task for ${pageLabel(page.path)} copied. Paste it into Codex when you are ready.`);
           } catch {
@@ -519,7 +575,10 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
           ["Search clicks / CTR", `${numberFormat.format(numeric(page.clicks))} / ${percentFormat.format(numeric(page.ctr))}`, `${signed(page.clickChange)} clicks vs previous`],
           ["Average position", decimalFormat.format(numeric(page.position)), positionMovement(page.positionChange)],
           ["Consented landings", gaPage ? numberFormat.format(numeric(gaPage.sessions)) : "—", gaPage ? `${percentFormat.format(numeric(gaPage.engagementRate))} engaged` : "No consented GA4 match"],
-          ["Saved website enquiries", savedEnquiries == null ? "—" : numberFormat.format(savedEnquiries), savedEnquiries == null ? "No 7-day landing-page match" : "Last 7 days · Operations"],
+          ["Quote CTA / phone clicks", actionPage ? `${numberFormat.format(numeric(actionPage.quoteCtaClicks))} / ${numberFormat.format(numeric(actionPage.callClicks))}` : "—", actionPage ? "Consented actions · 28 complete days" : "No consented action match"],
+          ["Form starts / errors", actionPage ? `${numberFormat.format(numeric(actionPage.formStarts))} / ${numberFormat.format(numeric(actionPage.formErrors))}` : "—", actionPage ? "Recorded events, not unique people" : "No consented action match"],
+          ["Saved website enquiries", outcomePage ? numberFormat.format(numeric(outcomePage.leads)) : "—", outcomePage ? "Matched landing page · 28 days" : "No 28-day attribution match"],
+          ["Completed jobs / revenue", outcomePage ? `${numberFormat.format(numeric(outcomePage.completedJobs))} / ${currencyFormat.format(numeric(outcomePage.revenueCents) / 100)}` : "—", outcomePage ? "Explicit Operations records" : "No attributed outcome record"],
         ];
         values.forEach(([labelText, valueText, detailText]) => {
           const wrapper = document.createElement("div");
@@ -604,6 +663,82 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       });
     }
 
+    function renderSearchBreakdown(selector, entries, emptyMessage) {
+      const target = document.querySelector(selector);
+      target.replaceChildren();
+      if (!entries?.length) {
+        replaceWithMessage(target, emptyMessage);
+        return;
+      }
+      entries.forEach((entry) => {
+        const item = document.createElement("li");
+        const label = document.createElement("span");
+        const values = document.createElement("span");
+        const primary = document.createElement("strong");
+        const detail = document.createElement("small");
+        label.textContent = entry.label || "Other";
+        primary.textContent = `${numberFormat.format(numeric(entry.clicks))} clicks`;
+        detail.textContent = `${numberFormat.format(numeric(entry.impressions))} appearances · ${percentFormat.format(numeric(entry.ctr))} CTR`;
+        values.className = "search-breakdown-values";
+        values.append(primary, detail);
+        item.append(label, values);
+        target.append(item);
+      });
+    }
+
+    function renderPublicActions(actions) {
+      const ready = actions?.status === "ready";
+      const pill = document.querySelector("[data-actions-pill]");
+      const selectors = ["[data-action-quote]", "[data-action-call]", "[data-action-pricing]", "[data-action-form-start]", "[data-action-form-error]", "[data-action-lead]"];
+      if (!ready) {
+        selectors.forEach((selector) => setText(selector, "—"));
+        pill.textContent = "Unavailable";
+        pill.classList.add("is-muted");
+        setText("[data-actions-note]", "The action-event report is unavailable. Dashes are not zeroes.");
+        return;
+      }
+      const totals = actions.totals || {};
+      setNumber("[data-action-quote]", totals.quoteCtaClicks);
+      setNumber("[data-action-call]", totals.callClicks);
+      setNumber("[data-action-pricing]", totals.pricingCalculatorUses);
+      setNumber("[data-action-form-start]", totals.formStarts);
+      setNumber("[data-action-form-error]", totals.formErrors);
+      setNumber("[data-action-lead]", totals.generateLeads);
+      pill.textContent = "Connected";
+      pill.classList.remove("is-muted", "is-warning");
+      const recorded = numeric(totals.quoteCtaClicks) + numeric(totals.callClicks) + numeric(totals.emailClicks)
+        + numeric(totals.pricingCalculatorUses) + numeric(totals.chatOpens) + numeric(totals.chatMessages)
+        + numeric(totals.formStarts) + numeric(totals.formErrors) + numeric(totals.generateLeads);
+      setText("[data-actions-note]", recorded
+        ? `${numberFormat.format(recorded)} tracked actions were recorded across consenting visits. Repeated actions by one visitor are counted separately.`
+        : "Connected, with zero tracked public actions in this completed 28-day window.");
+    }
+
+    function renderBusinessOutcomes(outcomes) {
+      const ready = outcomes?.status === "ready";
+      const pill = document.querySelector("[data-outcomes-pill]");
+      const selectors = ["[data-outcome-leads]", "[data-outcome-quotes]", "[data-outcome-accepted]", "[data-outcome-jobs]", "[data-outcome-revenue]", "[data-outcome-paid]"];
+      if (!ready) {
+        selectors.forEach((selector) => setText(selector, "—"));
+        pill.textContent = "Unavailable";
+        pill.classList.add("is-muted");
+        setText("[data-outcomes-note]", "Operations outcome reporting is unavailable. Dashes are not zeroes.");
+        return;
+      }
+      setNumber("[data-outcome-leads]", outcomes.websiteLeads);
+      setNumber("[data-outcome-quotes]", outcomes.quotes);
+      setNumber("[data-outcome-accepted]", outcomes.acceptedQuotes);
+      setNumber("[data-outcome-jobs]", outcomes.completedJobs);
+      setText("[data-outcome-revenue]", currencyFormat.format(numeric(outcomes.revenueCents) / 100));
+      setText("[data-outcome-paid]", currencyFormat.format(numeric(outcomes.paidCents) / 100));
+      pill.textContent = "Connected";
+      pill.classList.remove("is-muted", "is-warning");
+      const downstream = numeric(outcomes.quotes) + numeric(outcomes.jobs) + numeric(outcomes.invoices);
+      setText("[data-outcomes-note]", downstream
+        ? "These outcomes are linked to website leads received during the same 28-day cohort."
+        : "No quotes, jobs or invoices are recorded for this website-lead cohort yet. Those stages remain zero rather than being estimated.");
+    }
+
     function renderLeadSignals(signals) {
       const pill = document.querySelector("[data-leads-pill]");
       const delivery = signals?.sheetDelivery || {};
@@ -658,13 +793,25 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
         setText("[data-session-chart-summary]", "Daily session reporting is unavailable.");
       }
       renderSearchMetrics(analytics.searchConsole);
+      renderSearchBreakdown(
+        "[data-search-devices]",
+        analytics.searchConsole?.devices,
+        analytics.searchConsole?.breakdownHealth?.devices === "ready" ? "No device rows were returned for this final Search Console window." : "The device breakdown is unavailable; the main Search Console totals are still valid.",
+      );
+      renderSearchBreakdown(
+        "[data-search-geography]",
+        analytics.searchConsole?.geography,
+        analytics.searchConsole?.breakdownHealth?.geography === "ready" ? "No country rows were returned for this final Search Console window." : "The country breakdown is unavailable; the main Search Console totals are still valid.",
+      );
       if (analytics.reportHealth?.landingPages === "ready") renderLandingPages(analytics.landingPages);
       else {
         replaceWithMessage(document.querySelector("[data-landing-pages]"), "Landing-page reporting is unavailable; this is not a zero.");
         setText("[data-attention-insight]", "Landing-page attention signals are unavailable until the GA4 report reconnects.");
       }
       renderSimpleList("[data-traffic-sources]", analytics.topSources, "sessions", "sessions", "No consented traffic channels were reported.");
+      renderPublicActions(analytics.publicActions);
       renderLeadSignals(analytics.leadSignals);
+      renderBusinessOutcomes(analytics.leadSignals?.businessOutcomes);
       renderOpportunities();
 
       const gaPill = document.querySelector("[data-ga-pill]");
@@ -672,9 +819,10 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       gaPill.classList.toggle("is-muted", !gaReady);
       const leadDelivery = analytics.leadSignals?.sheetDelivery || {};
       const deliveryWaiting = numeric(leadDelivery.pending) + numeric(leadDelivery.failed) + numeric(leadDelivery.missing);
-      const allReady = gaReady && searchReady && leadsReady && deliveryWaiting === 0;
+      const actionsReady = analytics.publicActions?.status === "ready";
+      const allReady = gaReady && actionsReady && searchReady && leadsReady && deliveryWaiting === 0;
       const statusParts = [
-        gaReady ? "GA4 connected" : analytics.gaStatus === "not_configured" ? "GA4 setup needed" : "GA4 unavailable",
+        gaReady && actionsReady ? "GA4 connected" : analytics.gaStatus === "not_configured" ? "GA4 setup needed" : "GA4 partly unavailable",
         searchReady ? "Search Console connected" : analytics.searchConsole?.status === "not_configured" ? "Search Console setup needed" : "Search Console unavailable",
         leadsReady ? "saved enquiries connected" : "saved enquiries unavailable",
       ];
@@ -699,11 +847,13 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
         statusElement.classList.add("is-warning");
         const healthDetails = document.querySelector(".analytics-health");
         if (healthDetails instanceof HTMLDetailsElement) healthDetails.open = true;
-        ["[data-search-impressions]", "[data-search-clicks]", "[data-stable-sessions]", "[data-stable-rate]", "[data-saved-web-28]", "[data-stable-leads]", "[data-today-sessions]", "[data-today-views]"].forEach((selector) => setText(selector, "—"));
+        ["[data-search-impressions]", "[data-search-clicks]", "[data-stable-sessions]", "[data-stable-rate]", "[data-saved-web-28]", "[data-stable-leads]", "[data-today-sessions]", "[data-today-views]", "[data-action-quote]", "[data-action-call]", "[data-action-pricing]", "[data-action-form-start]", "[data-action-form-error]", "[data-action-lead]", "[data-outcome-leads]", "[data-outcome-quotes]", "[data-outcome-accepted]", "[data-outcome-jobs]", "[data-outcome-revenue]", "[data-outcome-paid]"].forEach((selector) => setText(selector, "—"));
         replaceWithMessage(document.querySelector("[data-opportunity-list]"), "The improvement queue is unavailable until reporting reconnects.");
         replaceWithMessage(document.querySelector("[data-landing-pages]"), "Landing-page attention is unavailable until reporting reconnects.");
         replaceWithMessage(document.querySelector("[data-traffic-sources]"), "Traffic channels are unavailable until reporting reconnects.");
         replaceWithMessage(document.querySelector("[data-lead-sources]"), "Saved enquiry sources are unavailable until reporting reconnects.");
+        replaceWithMessage(document.querySelector("[data-search-devices]"), "Device evidence is unavailable until reporting reconnects.");
+        replaceWithMessage(document.querySelector("[data-search-geography]"), "Location evidence is unavailable until reporting reconnects.");
       } finally {
         refreshButton.disabled = false;
       }
@@ -782,6 +932,18 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
     .analytics-page .analytics-period-note { margin: .75rem 0 0; border-left: 3px solid var(--analytics-border-strong); padding: .75rem 1rem; color: var(--analytics-muted); background: var(--analytics-surface-soft); font-size: .82rem; line-height: 1.5; }
     .analytics-page .analytics-period-note strong { color: var(--analytics-text); }
 
+    .analytics-page .measured-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+    .analytics-page .measured-panel.is-outcome { border-color: var(--analytics-accent); }
+    .analytics-page .measured-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; }
+    .analytics-page .measured-list > div { display: flex; min-height: 6.5rem; flex-direction: column; justify-content: space-between; border-right: 1px solid var(--analytics-border); border-bottom: 1px solid var(--analytics-border); padding: 1rem 1.25rem; }
+    .analytics-page .measured-list > div:nth-child(2n) { border-right: 0; }
+    .analytics-page .measured-list > div:nth-last-child(-n + 2) { border-bottom: 0; }
+    .analytics-page .measured-list dt { color: var(--analytics-subtle); font-size: .7rem; font-weight: 800; line-height: 1.35; letter-spacing: .04em; text-transform: uppercase; }
+    .analytics-page .measured-list dd { margin: .75rem 0 0; color: var(--analytics-text); font-size: 1.5rem; font-weight: 760; line-height: 1; }
+    .analytics-page .measured-note { min-height: 4rem; margin: 0; border-top: 1px solid var(--analytics-border); padding: .9rem 1.25rem; color: var(--analytics-muted); background: var(--analytics-surface-soft); font-size: .76rem; line-height: 1.5; }
+    .analytics-page .fact-boundary { margin: .75rem 0 0; border: 1px solid var(--analytics-border); border-radius: .7rem; padding: .85rem 1rem; color: var(--analytics-muted); background: var(--analytics-surface-soft); font-size: .8rem; line-height: 1.5; }
+    .analytics-page .fact-boundary strong { color: var(--analytics-text); }
+
     .analytics-page .improvement-loop { overflow: hidden; border: 1px solid var(--analytics-border); border-radius: 1rem; background: var(--analytics-surface); }
     .analytics-page .improvement-loop .analytics-section-head { margin: 0; padding: 1.5rem; }
     .analytics-page .loop-steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; }
@@ -820,7 +982,9 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
     :root[data-theme="dark"] .operations-main .analytics-page .opportunity-badge.is-growing_visibility { color: var(--analytics-accent); background: var(--analytics-accent-soft); }
     .analytics-page .opportunity-plan { display: grid; gap: .65rem; margin: 0 0 1rem; }
     .analytics-page .opportunity-plan > div { border-left: 3px solid var(--analytics-border-strong); padding: .1rem 0 .15rem .75rem; }
-    .analytics-page .opportunity-plan > div:nth-child(2) { border-left-color: var(--analytics-accent); }
+    .analytics-page .opportunity-plan > div:first-child,
+    .analytics-page .opportunity-plan > div:nth-child(4) { border-left-color: var(--analytics-accent); }
+    .analytics-page .opportunity-plan > div:nth-child(2) { border-left-color: var(--analytics-warning); }
     .analytics-page .opportunity-plan dt,
     .analytics-page .opportunity-evidence > span { color: var(--analytics-subtle); font-size: .7rem; font-weight: 820; letter-spacing: .06em; text-transform: uppercase; }
     .analytics-page .opportunity-plan dd { margin: .3rem 0 0; color: var(--analytics-text); font-size: .82rem; line-height: 1.5; }
@@ -884,6 +1048,9 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
     .analytics-page .analytics-list li:last-child { border: 0; }
     .analytics-page .analytics-list li strong { color: var(--analytics-text); font-size: .8rem; }
     .analytics-page .analytics-list li span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .analytics-page .search-breakdown li { align-items: flex-start; }
+    .analytics-page .search-breakdown-values { display: grid; flex: 0 0 auto; gap: .18rem; overflow: visible !important; text-align: right; text-overflow: clip !important; white-space: normal !important; }
+    .analytics-page .search-breakdown-values small { color: var(--analytics-muted); font-size: .68rem; line-height: 1.35; }
 
     .analytics-page .enquiry-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-bottom: 1px solid var(--analytics-border); }
     .analytics-page .enquiry-summary > div { display: flex; flex-direction: column; border-right: 1px solid var(--analytics-border); padding: .85rem 1.25rem; }
@@ -934,6 +1101,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
 
     @media (max-width: 1080px) {
       .analytics-page .journey-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .analytics-page .measured-grid { grid-template-columns: 1fr; }
       .analytics-page .loop-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .analytics-page .loop-steps li:nth-child(2n) { border-right: 0; }
       .analytics-page .loop-steps li:last-child { grid-column: 1 / -1; }
@@ -958,6 +1126,7 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
     @media (max-width: 520px) {
       .analytics-page section:not(.analytics-header) { margin-top: 2.25rem; }
       .analytics-page .journey-grid,
+      .analytics-page .measured-list,
       .analytics-page .loop-steps,
       .analytics-page .analytics-filters,
       .analytics-page .analytics-definitions dl { grid-template-columns: 1fr; }
@@ -965,6 +1134,10 @@ import OperationsLayout from "../../../components/operations/OperationsLayout.as
       .analytics-page .loop-steps li:nth-child(2n) { min-height: auto; border-right: 0; }
       .analytics-page .loop-steps li:last-child { grid-column: auto; }
       .analytics-page .journey-grid article { min-height: 12rem; }
+      .analytics-page .measured-list > div,
+      .analytics-page .measured-list > div:nth-child(2n),
+      .analytics-page .measured-list > div:nth-last-child(-n + 2) { min-height: 5.5rem; border-right: 0; border-bottom: 1px solid var(--analytics-border); }
+      .analytics-page .measured-list > div:last-child { border-bottom: 0; }
       .analytics-page .analytics-actions-section .analytics-section-head,
       .analytics-page .opportunity-card { padding: 1.1rem; }
       .analytics-page .opportunity-card { grid-template-columns: 1fr; gap: 1rem; }

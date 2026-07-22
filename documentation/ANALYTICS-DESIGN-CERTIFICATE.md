@@ -8,7 +8,7 @@ This page joins three kinds of evidence into one improvement loop:
 
 1. **Google Search Console** — whether Brisbane customers can find a Brisbane TVs page.
 2. **Consented GA4** — what people who allow analytics do after opening the site.
-3. **Saved enquiries** — whether visits become real enquiries, independent of analytics consent.
+3. **Operations records** — whether visits become saved enquiries, quotes, jobs and revenue, independent of analytics consent.
 
 The page exists to help one person answer: **What should I improve next, and what evidence says it matters?**
 
@@ -26,12 +26,13 @@ If a piece of content does not help answer one of the questions below, it does n
 Every viewport must preserve this order:
 
 1. **Site pulse** — Find → Visit → Engage → Enquire.
-2. **Improvement loop** — Detect → Task → Publish → Measure → Decide.
-3. **Do next** — a short, ranked page-improvement queue whose cards are ready to hand to an agent.
-4. **Attention** — popular landing pages, time engaged and browsing depth.
-5. **Acquisition** — search and channel evidence that explains how people arrived.
-6. **Collection health** — enough diagnostics to trust the report, visually secondary.
-7. **Definitions and privacy** — plain-language meaning and limitations.
+2. **Recorded facts** — consented website actions followed by explicit Operations outcomes. A zero and an unavailable source must look different.
+3. **Improvement loop** — Detect → Task → Publish → Measure → Decide.
+4. **Do next** — a short, ranked page-improvement queue whose cards are ready to hand to an agent.
+5. **Attention** — popular landing pages, time engaged and browsing depth.
+6. **Acquisition** — search, device, location and channel evidence that explains how people arrived.
+7. **Collection health** — enough diagnostics to trust the report, visually secondary.
+8. **Definitions and privacy** — plain-language meaning and limitations.
 
 Health checks never outrank customer or improvement information when reporting is healthy.
 
@@ -40,7 +41,8 @@ Health checks never outrank customer or improvement information when reporting i
 - One page title and one short purpose sentence.
 - One reporting-state line and one refresh action.
 - Four primary outcome cards at most: Find, Visit, Engage and Enquire.
-- A ranked action card must contain: public page, likely source file or a route-tracing instruction, reason, evidence baseline, hypothesis, one focused change, success rule, and no more than three top queries by default.
+- A recorded-facts region must show the fixed public action-event allowlist and the saved lead-to-revenue cohort before any hypothesis.
+- A ranked action card must contain: public page, likely source file or a route-tracing instruction, observed facts, explicit unknowns, hypothesis, one focused change, success rule, and no more than three top queries by default.
 - Every ranked action card has an **Open live page** action and a **Copy agent task** action. Copying prepares a task; it never starts an autonomous edit or release.
 - Supporting lists use a shared row pattern: label on the left; one primary value and one optional explanation on the right.
 - Definitions live beside their first use or in the final glossary. The same definition is not repeated in several panels.
@@ -62,6 +64,10 @@ Health checks never outrank customer or improvement information when reporting i
 | Views per session | Page views divided by consented sessions; a browsing-depth signal. |
 | Saved enquiry | An accepted enquiry stored in Operations, regardless of analytics consent. |
 | GA lead event | A consented `generate_lead` event. It is a collection check, not the authoritative lead total. |
+| Website action | A consented allowlisted event such as a quote click or form start. It counts actions, not unique people. |
+| Business outcome | A quote, job, revenue or payment explicitly saved in Operations. It is never extrapolated from website behaviour. |
+| Unknown | A question the connected evidence cannot answer. It remains unknown rather than being converted into a zero or a claim. |
+| Hypothesis | A possible explanation to verify against the live page. It is not a recorded fact. |
 
 The interface must never claim to know *why* a person left. It may show observable drop-off signals — short engaged time, low engagement, or shallow browsing — and label them as signals requiring a page review.
 
@@ -73,7 +79,7 @@ Every copied SEO task must carry enough context for a fresh agent to act without
 
 1. the public URL and likely repo source, with an instruction to verify both before editing;
 2. the exact final Search Console reporting window and its baseline impressions, clicks, click-through rate and position;
-3. any matching consented landing-page behaviour and saved-enquiry evidence, with missing matches described as missing rather than zero;
+3. any matching consented landing-page behaviour, website actions and saved business outcomes, with missing matches described as missing rather than zero;
 4. no more than three privacy-safe visible queries;
 5. a clearly labelled hypothesis that the agent must verify against the live page;
 6. one focused change, truthful-content constraints, the Operations analytics exclusion and required validation;
@@ -112,6 +118,7 @@ If any answer is missing, revise the content or remove it.
 The page is ready only when:
 
 - the first screen communicates Find → Visit → Engage → Enquire;
+- recorded action and business-outcome facts appear before explanatory hypotheses, with zero and unavailable states kept distinct;
 - the five-step improvement loop explains how a recommendation becomes a measured decision;
 - the highest-priority improvement and its evidence are visible without decoding a table;
 - every priority can be copied as a complete, source-aware agent task with a baseline and success rule;

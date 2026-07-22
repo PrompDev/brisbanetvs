@@ -18,6 +18,25 @@ const MAX_COUNT = Number.MAX_SAFE_INTEGER;
 const SEARCH_CONSOLE_LAG_DAYS = 3;
 const STABLE_WINDOW_DAYS = 28;
 const OPERATIONS_PATH = "/operations/";
+const PUBLIC_ACTION_EVENTS = new Map([
+  ["quote_cta_click", "quoteCtaClicks"],
+  ["click_to_call", "callClicks"],
+  ["click_email", "emailClicks"],
+  ["pricing_calculator_use", "pricingCalculatorUses"],
+  ["chat_open", "chatOpens"],
+  ["chat_message", "chatMessages"],
+  ["form_start", "formStarts"],
+  ["form_error", "formErrors"],
+  ["generate_lead", "generateLeads"],
+]);
+const EMPTY_ACTION_COUNTS = Object.freeze(Object.fromEntries(
+  Array.from(PUBLIC_ACTION_EVENTS.values(), (key) => [key, 0]),
+));
+const SAFE_SEARCH_DEVICES = new Map([
+  ["MOBILE", "Mobile"],
+  ["DESKTOP", "Desktop"],
+  ["TABLET", "Tablet"],
+]);
 
 // Session default channel groups are a controlled GA4 taxonomy. Deliberately
 // avoid free-form campaign, referrer and UTM dimensions: those can contain
@@ -394,6 +413,29 @@ function topChannelsReport(dateRange) {
   };
 }
 
+function publicActionsReport(dateRange) {
+  return {
+    dateRanges: [dateRange],
+    dimensions: [{ name: "eventName" }, { name: "landingPage" }],
+    metrics: [{ name: "eventCount" }],
+    orderBys: [{ metric: { metricName: "eventCount" }, desc: true }],
+    limit: "500",
+    dimensionFilter: {
+      andGroup: {
+        expressions: [
+          {
+            filter: {
+              fieldName: "eventName",
+              inListFilter: { values: Array.from(PUBLIC_ACTION_EVENTS.keys()), caseSensitive: true },
+            },
+          },
+          publicLandingPageFilter(),
+        ],
+      },
+    },
+  };
+}
+
 function landingPagesReport(dateRange) {
   return {
     dateRanges: [dateRange],
@@ -502,6 +544,44 @@ function safeLandingPages(payload) {
   }).slice(0, 20);
 }
 
+function safePublicActions(payload) {
+  const rows = isRecord(payload) && Array.isArray(payload.rows) ? payload.rows : [];
+  const totals = { ...EMPTY_ACTION_COUNTS };
+  const pages = new Map();
+
+  for (const row of rows.slice(0, 500)) {
+    const eventName = isRecord(row?.dimensionValues?.[0])
+      ? nonEmptyString(row.dimensionValues[0].value, 64)
+      : null;
+    const key = PUBLIC_ACTION_EVENTS.get(eventName);
+    if (!key) continue;
+
+    const rawLandingPage = isRecord(row?.dimensionValues?.[1]) ? row.dimensionValues[1].value : null;
+    const normalizedLandingPage = safePagePath(rawLandingPage);
+    if (normalizedLandingPage === OPERATIONS_PATH || normalizedLandingPage?.startsWith(OPERATIONS_PATH)) continue;
+
+    const count = metricFromRow(row, 0);
+    totals[key] += count;
+
+    const path = safePublicPagePath(rawLandingPage);
+    if (!path) continue;
+    const current = pages.get(path) || { path, ...EMPTY_ACTION_COUNTS };
+    current[key] += count;
+    pages.set(path, current);
+  }
+
+  return {
+    totals,
+    pages: Array.from(pages.values())
+      .sort((left, right) => {
+        const leftTotal = Object.values(left).reduce((sum, value) => sum + (typeof value === "number" ? value : 0), 0);
+        const rightTotal = Object.values(right).reduce((sum, value) => sum + (typeof value === "number" ? value : 0), 0);
+        return rightTotal - leftTotal || left.path.localeCompare(right.path);
+      })
+      .slice(0, 50),
+  };
+}
+
 function safeDailySessions(payload) {
   const rows = isRecord(payload) && Array.isArray(payload.rows) ? payload.rows : [];
   return rows.slice(0, 60).flatMap((row) => {
@@ -567,6 +647,20 @@ async function optionalReport(config, accessToken, reportRequest, reportName) {
   } catch (error) {
     console.error(JSON.stringify({
       event: "operations_analytics_optional_report_unavailable",
+      report: reportName,
+      stage: error instanceof AnalyticsUpstreamError ? error.stage : "request_failed",
+      upstreamStatus: error instanceof AnalyticsUpstreamError ? error.status : null,
+    }));
+    return { status: "unavailable", payload: { rows: [] } };
+  }
+}
+
+async function optionalSearchConsoleReport(config, accessToken, reportRequest, reportName) {
+  try {
+    return { status: "ready", payload: await runSearchConsoleReport(config, accessToken, reportRequest) };
+  } catch (error) {
+    console.error(JSON.stringify({
+      event: "operations_search_console_optional_report_unavailable",
       report: reportName,
       stage: error instanceof AnalyticsUpstreamError ? error.stage : "request_failed",
       upstreamStatus: error instanceof AnalyticsUpstreamError ? error.status : null,
@@ -654,6 +748,44 @@ function safeSearchAggregate(payload) {
     ctr: safeRate(row.ctr),
     position: safeDecimal(row.position),
   };
+}
+
+function safeSearchBreakdown(payload, labelFor) {
+  if (!isRecord(payload) || !Array.isArray(payload.rows)) return [];
+  const combined = new Map();
+
+  for (const row of payload.rows.slice(0, 50)) {
+    const rawLabel = Array.isArray(row?.keys) ? nonEmptyString(row.keys[0], 64) : null;
+    const label = rawLabel ? labelFor(rawLabel) : null;
+    const clicks = safeCount(row?.clicks);
+    const impressions = safeCount(row?.impressions);
+    if (!label || (clicks < 1 && impressions < 1)) continue;
+    const current = combined.get(label) || { label, clicks: 0, impressions: 0, weightedPosition: 0 };
+    current.clicks += clicks;
+    current.impressions += impressions;
+    current.weightedPosition += safeDecimal(row?.position) * impressions;
+    combined.set(label, current);
+  }
+
+  return Array.from(combined.values(), (row) => ({
+    label: row.label,
+    clicks: row.clicks,
+    impressions: row.impressions,
+    ctr: row.impressions > 0 ? row.clicks / row.impressions : 0,
+    position: row.impressions > 0 ? row.weightedPosition / row.impressions : 0,
+  })).sort((left, right) => right.impressions - left.impressions || right.clicks - left.clicks);
+}
+
+function safeSearchDeviceRows(payload) {
+  return safeSearchBreakdown(payload, (value) => SAFE_SEARCH_DEVICES.get(value.toUpperCase()) || null);
+}
+
+function safeSearchCountryRows(payload) {
+  return safeSearchBreakdown(payload, (value) => {
+    const country = value.toLowerCase();
+    if (!/^[a-z]{3}$/.test(country)) return null;
+    return country === "aus" ? "Australia" : "Outside Australia";
+  });
 }
 
 function searchTotals(rows) {
@@ -862,6 +994,9 @@ function emptySearchConsole(status) {
     pages: [],
     opportunities: [],
     queries: [],
+    devices: [],
+    geography: [],
+    breakdownHealth: { devices: "unavailable", geography: "unavailable" },
   };
 }
 
@@ -874,12 +1009,16 @@ async function searchConsoleSummary(config, accessToken) {
     const queryPageRequest = searchConsoleReport(["query", "page"], 30, SEARCH_CONSOLE_LAG_DAYS, 250);
     const currentTotalRequest = searchConsoleReport([], 30, SEARCH_CONSOLE_LAG_DAYS, 1);
     const previousTotalRequest = searchConsoleReport([], 58, 31, 1);
-    const [currentPages, previousPages, queryPages, currentTotal, previousTotal] = await Promise.all([
+    const deviceRequest = searchConsoleReport(["device"], 30, SEARCH_CONSOLE_LAG_DAYS, 10);
+    const countryRequest = searchConsoleReport(["country"], 30, SEARCH_CONSOLE_LAG_DAYS, 50);
+    const [currentPages, previousPages, queryPages, currentTotal, previousTotal, devices, countries] = await Promise.all([
       runSearchConsoleReport(config, accessToken, currentPageRequest),
       runSearchConsoleReport(config, accessToken, previousPageRequest),
       runSearchConsoleReport(config, accessToken, queryPageRequest),
       runSearchConsoleReport(config, accessToken, currentTotalRequest),
       runSearchConsoleReport(config, accessToken, previousTotalRequest),
+      optionalSearchConsoleReport(config, accessToken, deviceRequest, "devices"),
+      optionalSearchConsoleReport(config, accessToken, countryRequest, "countries"),
     ]);
     return {
       status: "ready",
@@ -893,6 +1032,9 @@ async function searchConsoleSummary(config, accessToken) {
         endDate: previousPageRequest.endDate,
       },
       ...searchPageInsights(currentPages, previousPages, queryPages, currentTotal, previousTotal),
+      devices: safeSearchDeviceRows(devices.payload),
+      geography: safeSearchCountryRows(countries.payload),
+      breakdownHealth: { devices: devices.status, geography: countries.status },
     };
   } catch (error) {
     const stage = error instanceof AnalyticsUpstreamError ? error.stage : "request_failed";
@@ -978,6 +1120,67 @@ function aggregateSafeLabels(rows, labelFor, countKey) {
     .slice(0, 5);
 }
 
+function emptyBusinessOutcomes(status = "unavailable") {
+  return {
+    status,
+    windowDays: STABLE_WINDOW_DAYS,
+    websiteLeads: 0,
+    quotes: 0,
+    acceptedQuotes: 0,
+    jobs: 0,
+    completedJobs: 0,
+    revenueCents: 0,
+    invoices: 0,
+    paidCents: 0,
+  };
+}
+
+function safeBusinessOutcomes(row) {
+  return {
+    status: "ready",
+    windowDays: STABLE_WINDOW_DAYS,
+    websiteLeads: safeCount(row?.website_leads),
+    quotes: safeCount(row?.quotes),
+    acceptedQuotes: safeCount(row?.accepted_quotes),
+    jobs: safeCount(row?.jobs),
+    completedJobs: safeCount(row?.completed_jobs),
+    revenueCents: safeCount(row?.revenue_cents),
+    invoices: safeCount(row?.invoices),
+    paidCents: safeCount(row?.paid_cents),
+  };
+}
+
+function safePageOutcomes(rows) {
+  const byPath = new Map();
+  for (const row of rows || []) {
+    const path = safeOperationalPage(row.value);
+    if (!path) continue;
+    const current = byPath.get(path) || {
+      path,
+      leads: 0,
+      quotes: 0,
+      acceptedQuotes: 0,
+      jobs: 0,
+      completedJobs: 0,
+      revenueCents: 0,
+      invoices: 0,
+      paidCents: 0,
+    };
+    current.leads += safeCount(row.leads);
+    current.quotes += safeCount(row.quotes);
+    current.acceptedQuotes += safeCount(row.accepted_quotes);
+    current.jobs += safeCount(row.jobs);
+    current.completedJobs += safeCount(row.completed_jobs);
+    current.revenueCents += safeCount(row.revenue_cents);
+    current.invoices += safeCount(row.invoices);
+    current.paidCents += safeCount(row.paid_cents);
+    byPath.set(path, current);
+  }
+  return Array.from(byPath.values())
+    .sort((left, right) => right.leads - left.leads || right.revenueCents - left.revenueCents)
+    .slice(0, 20);
+}
+
 async function operationalLeadSignals(env) {
   if (!hasOperationsDatabase(env)) {
     return {
@@ -990,6 +1193,8 @@ async function operationalLeadSignals(env) {
       bySource: [],
       topCampaigns: [],
       topLandingPages: [],
+      pageOutcomes: [],
+      businessOutcomes: emptyBusinessOutcomes("not_configured"),
       sheetDelivery: { delivered: 0, pending: 0, failed: 0, missing: 0 },
     };
   }
@@ -1000,7 +1205,7 @@ async function operationalLeadSignals(env) {
   const periodStart = brisbaneDayDaysAgo(27, now);
 
   try {
-    const [todayRow, weekRow, periodRow, websiteRow, websitePeriodRow, sourceResult, campaignResult, pageResult, deliveryResult, missingDeliveryRow] = await Promise.all([
+    const [todayRow, weekRow, periodRow, websiteRow, websitePeriodRow, sourceResult, campaignResult, outcomeRow, pageOutcomeResult, deliveryResult, missingDeliveryRow] = await Promise.all([
       env.OPERATIONS_DB.prepare("SELECT COUNT(*) AS count FROM leads WHERE received_day = ?")
         .bind(today)
         .first(),
@@ -1026,13 +1231,45 @@ async function operationalLeadSignals(env) {
         "GROUP BY campaign ORDER BY count DESC LIMIT 20",
       ).bind(weekStart, today).all(),
       env.OPERATIONS_DB.prepare(
-        "SELECT value, COUNT(*) AS count FROM (" +
-          "SELECT CASE WHEN json_valid(tracking_json) " +
+        "WITH website_leads AS (" +
+          "SELECT id FROM leads WHERE source = 'website' AND received_day >= ? AND received_day <= ?" +
+        "), quote_rollup AS (" +
+          "SELECT lead_id, COUNT(*) AS quotes, SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) AS accepted_quotes " +
+          "FROM ops_quotes GROUP BY lead_id" +
+        "), job_rollup AS (" +
+          "SELECT lead_id, COUNT(*) AS jobs, SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed_jobs, " +
+          "SUM(CASE WHEN status <> 'cancelled' THEN revenue_cents ELSE 0 END) AS revenue_cents FROM ops_jobs GROUP BY lead_id" +
+        "), invoice_rollup AS (" +
+          "SELECT lead_id, COUNT(*) AS invoices, SUM(paid_cents) AS paid_cents FROM ops_invoices GROUP BY lead_id" +
+        ") SELECT COUNT(*) AS website_leads, COALESCE(SUM(q.quotes), 0) AS quotes, " +
+          "COALESCE(SUM(q.accepted_quotes), 0) AS accepted_quotes, COALESCE(SUM(j.jobs), 0) AS jobs, " +
+          "COALESCE(SUM(j.completed_jobs), 0) AS completed_jobs, COALESCE(SUM(j.revenue_cents), 0) AS revenue_cents, " +
+          "COALESCE(SUM(i.invoices), 0) AS invoices, COALESCE(SUM(i.paid_cents), 0) AS paid_cents " +
+        "FROM website_leads l LEFT JOIN quote_rollup q ON q.lead_id = l.id " +
+        "LEFT JOIN job_rollup j ON j.lead_id = l.id LEFT JOIN invoice_rollup i ON i.lead_id = l.id",
+      ).bind(periodStart, today).first(),
+      env.OPERATIONS_DB.prepare(
+        "WITH website_leads AS (" +
+          "SELECT id, CASE WHEN json_valid(tracking_json) " +
             "THEN COALESCE(NULLIF(CAST(json_extract(tracking_json, '$.landing_page') AS TEXT), ''), page_url) " +
             "ELSE page_url END AS value FROM leads " +
           "WHERE source = 'website' AND received_day >= ? AND received_day <= ?" +
-        ") WHERE value <> '' GROUP BY value ORDER BY count DESC LIMIT 20",
-      ).bind(weekStart, today).all(),
+        "), quote_rollup AS (" +
+          "SELECT lead_id, COUNT(*) AS quotes, SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) AS accepted_quotes " +
+          "FROM ops_quotes GROUP BY lead_id" +
+        "), job_rollup AS (" +
+          "SELECT lead_id, COUNT(*) AS jobs, SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed_jobs, " +
+          "SUM(CASE WHEN status <> 'cancelled' THEN revenue_cents ELSE 0 END) AS revenue_cents FROM ops_jobs GROUP BY lead_id" +
+        "), invoice_rollup AS (" +
+          "SELECT lead_id, COUNT(*) AS invoices, SUM(paid_cents) AS paid_cents FROM ops_invoices GROUP BY lead_id" +
+        ") SELECT l.value, COUNT(*) AS leads, COALESCE(SUM(q.quotes), 0) AS quotes, " +
+          "COALESCE(SUM(q.accepted_quotes), 0) AS accepted_quotes, COALESCE(SUM(j.jobs), 0) AS jobs, " +
+          "COALESCE(SUM(j.completed_jobs), 0) AS completed_jobs, COALESCE(SUM(j.revenue_cents), 0) AS revenue_cents, " +
+          "COALESCE(SUM(i.invoices), 0) AS invoices, COALESCE(SUM(i.paid_cents), 0) AS paid_cents " +
+        "FROM website_leads l LEFT JOIN quote_rollup q ON q.lead_id = l.id " +
+        "LEFT JOIN job_rollup j ON j.lead_id = l.id LEFT JOIN invoice_rollup i ON i.lead_id = l.id " +
+        "WHERE l.value <> '' GROUP BY l.value ORDER BY leads DESC LIMIT 50",
+      ).bind(periodStart, today).all(),
       env.OPERATIONS_DB.prepare(
         "SELECT status AS value, COUNT(*) AS count FROM lead_deliveries " +
         "WHERE destination = 'google_sheet' GROUP BY status LIMIT 10",
@@ -1054,6 +1291,7 @@ async function operationalLeadSignals(env) {
       else if (status === "pending" || status === "processing") delivery.pending += count;
     }
 
+    const pageOutcomes = safePageOutcomes(pageOutcomeResult.results);
     return {
       status: "ready",
       today: safeCount(todayRow?.count),
@@ -1063,7 +1301,9 @@ async function operationalLeadSignals(env) {
       websiteLast28Days: safeCount(websitePeriodRow?.count),
       bySource: aggregateOperationalSources(sourceResult.results),
       topCampaigns: aggregateSafeLabels(campaignResult.results, safeCampaignLabel, "leads"),
-      topLandingPages: aggregateSafeLabels(pageResult.results, safeOperationalPage, "leads"),
+      topLandingPages: pageOutcomes.slice(0, 5).map((page) => ({ label: page.path, leads: page.leads })),
+      pageOutcomes,
+      businessOutcomes: safeBusinessOutcomes(outcomeRow),
       sheetDelivery: delivery,
     };
   } catch (error) {
@@ -1081,6 +1321,8 @@ async function operationalLeadSignals(env) {
       bySource: [],
       topCampaigns: [],
       topLandingPages: [],
+      pageOutcomes: [],
+      businessOutcomes: emptyBusinessOutcomes(),
       sheetDelivery: { delivered: 0, pending: 0, failed: 0, missing: 0 },
     };
   }
@@ -1103,6 +1345,7 @@ function analyticsWithoutGa(gaStatus, searchStatus, leadSignals) {
     last28Days: null,
     topSources: [],
     landingPages: [],
+    publicActions: { status: "unavailable", totals: { ...EMPTY_ACTION_COUNTS }, pages: [] },
     dailySessions: [],
     sessionDiagnostics: null,
     reportHealth: {
@@ -1110,6 +1353,7 @@ function analyticsWithoutGa(gaStatus, searchStatus, leadSignals) {
       stableLeadEvents: "unavailable",
       trafficChannels: "unavailable",
       landingPages: "unavailable",
+      publicActions: "unavailable",
       dailySessions: "unavailable",
       sessionStartEvents: "unavailable",
     },
@@ -1142,13 +1386,14 @@ export async function onRequestGet({ request, env }) {
 
   try {
     const accessToken = await getAccessToken(config);
-    const [todayTraffic, stableTraffic, todayLeads, stableLeads, topChannels, landingPages, dailySessions, sessionStarts, searchConsole, realtime] = await Promise.all([
+    const [todayTraffic, stableTraffic, todayLeads, stableLeads, topChannels, landingPages, publicActions, dailySessions, sessionStarts, searchConsole, realtime] = await Promise.all([
       runReport(config, accessToken, trafficReport(today)),
       runReport(config, accessToken, trafficReport(stableWindow)),
       optionalReport(config, accessToken, generateLeadReport(today), "today_lead_events"),
       optionalReport(config, accessToken, generateLeadReport(stableWindow), "stable_lead_events"),
       optionalReport(config, accessToken, topChannelsReport(stableWindow), "traffic_channels"),
       optionalReport(config, accessToken, landingPagesReport(stableWindow), "landing_pages"),
+      optionalReport(config, accessToken, publicActionsReport(stableWindow), "public_action_events"),
       optionalReport(config, accessToken, dailySessionsReport(stableWindow), "daily_sessions"),
       optionalReport(config, accessToken, sessionStartReport(stableWindow), "session_start_events"),
       searchConsoleSummary(config, accessToken),
@@ -1172,6 +1417,10 @@ export async function onRequestGet({ request, env }) {
         last28Days: stableTrafficSummary,
         topSources: safeTopSources(topChannels.payload),
         landingPages: safeLandingPages(landingPages.payload),
+        publicActions: {
+          status: publicActions.status,
+          ...safePublicActions(publicActions.payload),
+        },
         dailySessions: safeDaily,
         sessionDiagnostics: sessionStarts.status === "ready"
           ? sessionDiagnostics(
@@ -1185,6 +1434,7 @@ export async function onRequestGet({ request, env }) {
           stableLeadEvents: stableLeads.status,
           trafficChannels: topChannels.status,
           landingPages: landingPages.status,
+          publicActions: publicActions.status,
           dailySessions: dailySessions.status,
           sessionStartEvents: sessionStarts.status,
         },
