@@ -1,0 +1,354 @@
+---
+import OperationsLayout from "../../../components/operations/OperationsLayout.astro";
+import "../../../styles/operations-invoices.css";
+---
+
+<OperationsLayout
+  active="invoices"
+  title="Create invoice"
+  description="A browser-only Brisbane TVs invoice builder for preparing and printing customer invoices."
+>
+  <section class="invoice-page" data-invoice-builder aria-labelledby="invoice-page-title">
+    <header class="invoice-page-header">
+      <div>
+        <p class="invoice-eyebrow">Invoices</p>
+        <h1 id="invoice-page-title">Create a clean customer invoice.</h1>
+        <p class="invoice-page-copy">
+          Add the customer, build the line items and review the finished document before printing or saving it as a PDF.
+        </p>
+      </div>
+      <div class="invoice-local-status" role="status" data-draft-status>
+        <span aria-hidden="true"></span>
+        <div>
+          <strong>Local draft</strong>
+          <small>Nothing is uploaded or sent</small>
+        </div>
+      </div>
+    </header>
+
+    <div class="invoice-safety-note">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 3 4.5 6.2v5.1c0 4.7 3.2 8 7.5 9.7 4.3-1.7 7.5-5 7.5-9.7V6.2z"></path>
+        <path d="m8.8 12.1 2 2 4.5-4.7"></path>
+      </svg>
+      <p>
+        This page is intentionally static. The draft is kept only in this browser tab, and the final action opens the browser print dialog.
+      </p>
+    </div>
+
+    <nav class="invoice-steps" aria-label="Invoice creation steps">
+      <button class="invoice-step is-active" type="button" data-step-target="details" aria-current="step">
+        <span>1</span>
+        <strong>Customer &amp; dates</strong>
+        <small>Who the invoice is for</small>
+      </button>
+      <button class="invoice-step" type="button" data-step-target="items">
+        <span>2</span>
+        <strong>Line items</strong>
+        <small>Work, quantities and prices</small>
+      </button>
+      <button class="invoice-step" type="button" data-step-target="review">
+        <span>3</span>
+        <strong>Review &amp; print</strong>
+        <small>Check the finished document</small>
+      </button>
+    </nav>
+
+    <div class="invoice-editor-grid">
+      <section class="invoice-form-panel" aria-label="Invoice editor">
+        <form data-invoice-form novalidate>
+          <div class="invoice-form-message" data-form-message role="alert" hidden></div>
+
+          <fieldset class="invoice-step-panel" data-step-panel="details">
+            <legend>
+              <span>Step 1</span>
+              Customer and invoice details
+            </legend>
+            <p class="invoice-fieldset-copy">
+              Start with the recipient and the dates that will appear on the document.
+            </p>
+
+            <div class="invoice-field-grid is-two">
+              <label class="invoice-field">
+                <span>Customer name <b aria-hidden="true">*</b></span>
+                <input name="customerName" type="text" maxlength="120" autocomplete="name" placeholder="Customer name" required />
+              </label>
+              <label class="invoice-field">
+                <span>Business name <small>optional</small></span>
+                <input name="customerBusiness" type="text" maxlength="120" autocomplete="organization" placeholder="Customer business" />
+              </label>
+            </div>
+
+            <div class="invoice-field-grid is-two">
+              <label class="invoice-field">
+                <span>Email <small>optional</small></span>
+                <input name="customerEmail" type="email" maxlength="320" autocomplete="email" placeholder="customer@example.com" />
+              </label>
+              <label class="invoice-field">
+                <span>Phone <small>optional</small></span>
+                <input name="customerPhone" type="tel" maxlength="40" autocomplete="tel" placeholder="04xx xxx xxx" />
+              </label>
+            </div>
+
+            <label class="invoice-field">
+              <span>Billing address <small>optional</small></span>
+              <textarea name="customerAddress" rows="3" maxlength="400" autocomplete="street-address" placeholder="Street, suburb, state and postcode"></textarea>
+            </label>
+
+            <div class="invoice-field-grid is-three">
+              <label class="invoice-field">
+                <span>Invoice number <small>optional</small></span>
+                <input name="invoiceNumber" type="text" maxlength="40" placeholder="Draft" />
+              </label>
+              <label class="invoice-field">
+                <span>Issue date <b aria-hidden="true">*</b></span>
+                <input name="issueDate" type="date" required />
+              </label>
+              <label class="invoice-field">
+                <span>Due date <b aria-hidden="true">*</b></span>
+                <input name="dueDate" type="date" required />
+              </label>
+            </div>
+
+            <div class="invoice-tax-box">
+              <label class="invoice-check">
+                <input name="gstRegistered" type="checkbox" />
+                <span>
+                  <strong>Brisbane TVs is registered for GST</strong>
+                  <small>Line prices will be treated as GST-inclusive and the document will be headed “Tax invoice”.</small>
+                </span>
+              </label>
+              <label class="invoice-field invoice-abn-field" data-abn-field hidden>
+                <span>Supplier ABN <b aria-hidden="true">*</b></span>
+                <input name="supplierAbn" type="text" inputmode="numeric" maxlength="14" placeholder="11 digit ABN" />
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset class="invoice-step-panel" data-step-panel="items" hidden>
+            <legend>
+              <span>Step 2</span>
+              Line items
+            </legend>
+            <p class="invoice-fieldset-copy">
+              Describe the work clearly. Quantity multiplied by the unit price becomes the line total.
+            </p>
+
+            <div class="invoice-line-head" aria-hidden="true">
+              <span>Description</span>
+              <span>Qty</span>
+              <span>Unit price</span>
+              <span></span>
+            </div>
+            <div class="invoice-line-items" data-line-items></div>
+            <button class="invoice-add-line" type="button" data-add-line>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>
+              Add line item
+            </button>
+
+            <div class="invoice-running-total" aria-live="polite">
+              <span>Current total</span>
+              <strong data-editor-total>A$0.00</strong>
+            </div>
+
+            <div class="invoice-field-grid is-two invoice-notes-grid">
+              <label class="invoice-field">
+                <span>Customer note <small>optional</small></span>
+                <textarea name="customerNote" rows="4" maxlength="800" placeholder="Thank you for choosing Brisbane TVs."></textarea>
+              </label>
+              <label class="invoice-field">
+                <span>Payment instructions <small>optional</small></span>
+                <textarea name="paymentInstructions" rows="4" maxlength="800" placeholder="Add approved bank or payment instructions."></textarea>
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset class="invoice-step-panel" data-step-panel="review" hidden>
+            <legend>
+              <span>Step 3</span>
+              Review and print
+            </legend>
+            <p class="invoice-fieldset-copy">
+              Check the customer, line items and totals in the preview. Printing can also save the invoice as a PDF.
+            </p>
+
+            <div class="invoice-review-list">
+              <div>
+                <span>Customer</span>
+                <strong data-review-customer>Not added</strong>
+              </div>
+              <div>
+                <span>Invoice date</span>
+                <strong data-review-date>Not added</strong>
+              </div>
+              <div>
+                <span>Line items</span>
+                <strong data-review-items>No complete line items</strong>
+              </div>
+              <div>
+                <span>Total</span>
+                <strong data-review-total>A$0.00</strong>
+              </div>
+            </div>
+
+            <div class="invoice-print-callout">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 8V3h10v5M7 17H4V9h16v8h-3M7 14h10v7H7z"></path>
+                <path d="M16.5 11h.01"></path>
+              </svg>
+              <div>
+                <strong>Ready when the preview looks right</strong>
+                <p>The browser print dialog lets you choose a printer or “Save as PDF”. Nothing is emailed from this page.</p>
+              </div>
+            </div>
+          </fieldset>
+
+          <footer class="invoice-form-actions">
+            <button class="invoice-secondary-button" type="button" data-reset-draft>Reset draft</button>
+            <div>
+              <button class="invoice-secondary-button" type="button" data-previous-step hidden>Back</button>
+              <button class="invoice-primary-button" type="button" data-next-step>Continue to line items</button>
+              <button class="invoice-primary-button" type="button" data-print-invoice hidden>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M7 8V3h10v5M7 17H4V9h16v8h-3M7 14h10v7H7z"></path>
+                  <path d="M16.5 11h.01"></path>
+                </svg>
+                Print or save PDF
+              </button>
+            </div>
+          </footer>
+        </form>
+      </section>
+
+      <aside class="invoice-preview-panel" aria-label="Live invoice preview">
+        <div class="invoice-preview-heading">
+          <div>
+            <p>Live preview</p>
+            <h2>Customer document</h2>
+          </div>
+          <span data-preview-state>Draft</span>
+        </div>
+
+        <article class="invoice-sheet" data-invoice-preview>
+          <header class="invoice-sheet-header">
+            <div class="invoice-sheet-brand">
+              <span class="invoice-sheet-mark" aria-hidden="true"><i></i><i></i></span>
+              <div>
+                <strong>BRISBANE</strong>
+                <small>TVS</small>
+              </div>
+            </div>
+            <div class="invoice-sheet-title">
+              <h2 data-preview-title>Invoice</h2>
+              <p data-preview-number>Draft</p>
+            </div>
+          </header>
+
+          <div class="invoice-sheet-parties">
+            <div>
+              <span>From</span>
+              <strong>Brisbane TVs</strong>
+              <p>Brisbane, Queensland</p>
+              <p data-preview-abn hidden></p>
+            </div>
+            <div>
+              <span>Bill to</span>
+              <strong data-preview-customer>Customer name</strong>
+              <p data-preview-business hidden></p>
+              <p data-preview-contact></p>
+              <p data-preview-address></p>
+            </div>
+          </div>
+
+          <dl class="invoice-sheet-meta">
+            <div>
+              <dt>Issue date</dt>
+              <dd data-preview-issue>—</dd>
+            </div>
+            <div>
+              <dt>Due date</dt>
+              <dd data-preview-due>—</dd>
+            </div>
+          </dl>
+
+          <div class="invoice-sheet-table-wrap">
+            <table class="invoice-sheet-table">
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th>Qty</th>
+                  <th>Unit price</th>
+                  <th>Amount</th>
+                </tr>
+              </thead>
+              <tbody data-preview-items>
+                <tr class="invoice-preview-empty">
+                  <td colspan="4">Line items will appear here.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="invoice-sheet-summary">
+            <dl>
+              <div>
+                <dt>Subtotal</dt>
+                <dd data-preview-subtotal>A$0.00</dd>
+              </div>
+              <div data-preview-gst-row hidden>
+                <dt>GST included</dt>
+                <dd data-preview-gst>A$0.00</dd>
+              </div>
+              <div class="is-total">
+                <dt>Total</dt>
+                <dd data-preview-total>A$0.00</dd>
+              </div>
+            </dl>
+          </div>
+
+          <div class="invoice-sheet-notes" data-preview-notes-wrap hidden>
+            <span>Note</span>
+            <p data-preview-notes></p>
+          </div>
+
+          <div class="invoice-sheet-payment" data-preview-payment-wrap hidden>
+            <span>Payment instructions</span>
+            <p data-preview-payment></p>
+          </div>
+
+          <footer class="invoice-sheet-footer">
+            <span>Brisbane TVs</span>
+            <span>Amounts are in Australian dollars</span>
+          </footer>
+        </article>
+      </aside>
+    </div>
+
+    <template data-line-item-template>
+      <div class="invoice-line-item">
+        <label>
+          <span>Description</span>
+          <input data-line-description type="text" maxlength="180" placeholder="TV wall mounting service" />
+        </label>
+        <label>
+          <span>Quantity</span>
+          <input data-line-quantity type="number" min="0.01" max="9999" step="0.01" value="1" inputmode="decimal" />
+        </label>
+        <label>
+          <span>Unit price</span>
+          <span class="invoice-currency-input">
+            <b>A$</b>
+            <input data-line-price type="number" min="0" max="9999999" step="0.01" placeholder="0.00" inputmode="decimal" />
+          </span>
+        </label>
+        <button type="button" data-remove-line aria-label="Remove line item">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+        </button>
+      </div>
+    </template>
+  </section>
+
+  <script>
+    import "../../../scripts/operations-invoices.js";
+  </script>
+</OperationsLayout>

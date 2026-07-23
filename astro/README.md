@@ -130,6 +130,20 @@ together.
 
 ---
 
+## Operations invoice builder
+
+The staff-only `/operations/invoices/` route is a static, browser-only invoice
+creation flow. It collects the customer and invoice dates, supports editable
+line items, shows GST-inclusive totals when selected, and renders a live
+Brisbane TVs document preview for printing or saving as PDF.
+
+Draft state is kept in `sessionStorage` for the current browser tab only. The
+page does not call an invoice API, upload customer information, persist records
+to D1, or send email. GST-registered tax invoices require the supplier ABN
+before the review step.
+
+---
+
 ## Operations customer mailbox
 
 The staff-only `/operations/inbox/` page reads the three approved mailboxes:
