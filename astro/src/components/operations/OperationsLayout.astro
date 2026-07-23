@@ -1,5 +1,5 @@
 ---
-export type OperationsSection = "overview" | "workspace" | "leads" | "inbox" | "analytics";
+export type OperationsSection = "overview" | "workspace" | "leads" | "invoices" | "inbox" | "analytics";
 
 interface Props {
   active: OperationsSection;
@@ -12,6 +12,7 @@ const { active, title, description } = Astro.props;
 const navigation: Array<{ key: OperationsSection; href: string; label: string; icon: string }> = [
   { key: "overview", href: "/operations/", label: "Overview", icon: "⌂" },
   { key: "leads", href: "/operations/leads/", label: "Leads", icon: "◎" },
+  { key: "invoices", href: "/operations/invoices/", label: "Invoices", icon: "▤" },
   { key: "inbox", href: "/operations/inbox/", label: "Customer mailbox", icon: "✉" },
   { key: "analytics", href: "/operations/analytics/", label: "Website growth", icon: "↗" },
 ];
