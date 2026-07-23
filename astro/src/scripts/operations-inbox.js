@@ -227,7 +227,7 @@ if (inboxRoot) {
             ? "Archived conversations will be kept here."
             : state.capabilities.receive
               ? "New customer mail will appear here."
-              : "The mailbox is ready for the planned Cloudflare routing connection.",
+              : "The dashboard is ready. Customer mail will appear after inbound routing is connected.",
       ));
       return;
     }
@@ -367,13 +367,13 @@ if (inboxRoot) {
       setConnection(
         enabled
           ? "Cloudflare is receiving mail for the Operations inbox."
-          : "Inbox prepared. Existing business mail remains unchanged.",
+          : "Mailbox dashboard ready. Inbound routing is not connected yet.",
         enabled ? "ready" : "staged",
       );
-      routingState.textContent = enabled ? "Routing active" : "Routing staged";
+      routingState.textContent = enabled ? "Routing active" : "Inbound not connected";
       routingDetail.textContent = enabled
         ? "Three explicit staff address rules are enabled."
-        : "Current MX records remain untouched.";
+        : "Existing business mail remains unchanged.";
       replyNote.textContent = payload.capabilities?.send
         ? "Review your reply before sending."
         : "Replies save as drafts while Cloudflare sending is being enabled.";
