@@ -1041,26 +1041,11 @@
   margin-top: .75rem;
 }
 
-.invoice-sheet-bank > span {
-  display: block;
-  margin-bottom: .35rem;
-  color: #1a1a1a;
-  font-size: .61rem;
-  font-weight: 700;
-}
-
 .invoice-sheet-bank p {
-  display: grid;
-  grid-template-columns: 4.8rem minmax(0, 1fr);
-  gap: .5rem;
-  margin: .16rem 0;
+  margin: .12rem 0;
   color: #333;
-  font-size: .58rem;
+  font-size: .63rem;
   line-height: 1.45;
-}
-
-.invoice-sheet-bank p b {
-  font-weight: 500;
 }
 
 .invoice-sheet-bank p > span {
@@ -1131,22 +1116,6 @@
   font-size: .63rem;
   line-height: 1.55;
   white-space: pre-line;
-}
-
-.invoice-sheet-footer {
-  display: flex;
-  justify-content: center;
-  gap: .45rem;
-  margin-top: 2.5rem;
-  color: #b9b6aa;
-  font-size: .5rem;
-  letter-spacing: .13em;
-  text-transform: uppercase;
-}
-
-.invoice-sheet-footer span + span::before {
-  content: "·";
-  margin-right: .45rem;
 }
 
 :root[data-theme="dark"] .invoice-page {
@@ -1272,6 +1241,7 @@
 :root[data-theme="dark"] .invoice-sheet .invoice-sheet-header > h2,
 :root[data-theme="dark"] .invoice-sheet .invoice-sheet-parties strong,
 :root[data-theme="dark"] .invoice-sheet .invoice-sheet-hero strong,
+:root[data-theme="dark"] .invoice-sheet .invoice-sheet-summary dt,
 :root[data-theme="dark"] .invoice-sheet .invoice-sheet-summary dd {
   color: #1a1a1a;
 }

@@ -182,16 +182,10 @@ import "../../../styles/operations-invoices.css";
                 </label>
               </div>
 
-              <div class="invoice-field-grid is-two">
-                <label class="invoice-field">
-                  <span>Account number</span>
-                  <input name="bankAccountNumber" type="text" maxlength="24" inputmode="numeric" placeholder="00000000" />
-                </label>
-                <label class="invoice-field">
-                  <span>Payment reference <small>optional</small></span>
-                  <input name="paymentReference" type="text" maxlength="80" placeholder="Uses the invoice number when blank" />
-                </label>
-              </div>
+              <label class="invoice-field">
+                <span>Account number</span>
+                <input name="bankAccountNumber" type="text" maxlength="24" inputmode="numeric" placeholder="00000000" />
+              </label>
 
               <div class="invoice-payment-placeholder-note">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -378,12 +372,10 @@ import "../../../styles/operations-invoices.css";
                 </div>
 
                 <div class="invoice-sheet-bank">
-                  <span>Bank transfer</span>
-                  <p data-preview-bank-name-wrap><b>Bank</b><span data-preview-bank-name></span></p>
-                  <p><b>Account name</b><span data-preview-bank-account-name></span></p>
-                  <p><b>BSB</b><span data-preview-bank-bsb></span></p>
-                  <p><b>Account number</b><span data-preview-bank-account-number></span></p>
-                  <p><b>Reference</b><span data-preview-payment-reference></span></p>
+                  <p data-preview-bank-name-wrap>Bank: <span data-preview-bank-name></span></p>
+                  <p>Account name: <span data-preview-bank-account-name></span></p>
+                  <p>BSB: <span data-preview-bank-bsb></span></p>
+                  <p>Account number: <span data-preview-bank-account-number></span></p>
                 </div>
               </div>
 
@@ -420,10 +412,6 @@ import "../../../styles/operations-invoices.css";
             </div>
           </div>
 
-          <footer class="invoice-sheet-footer">
-            <span>Brisbane TVs</span>
-            <span>Amounts are in Australian dollars</span>
-          </footer>
         </article>
       </aside>
     </div>
