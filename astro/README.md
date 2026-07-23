@@ -135,7 +135,10 @@ together.
 The staff-only `/operations/invoices/` route is a static, browser-only invoice
 creation flow. It collects the customer and invoice dates, supports editable
 line items, shows GST-inclusive totals when selected, and renders a live
-Brisbane TVs document preview for printing or saving as PDF.
+Brisbane TVs document preview for printing or saving as PDF. The customer
+document deliberately follows the Freyr v2 quote/invoice face: title and brand
+header, opposing customer and supplier blocks, prominent amount/due-date band,
+tax-aware line table, and payment/totals footer.
 
 Draft state is kept in `sessionStorage` for the current browser tab only. The
 page does not call an invoice API, upload customer information, persist records
