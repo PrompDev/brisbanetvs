@@ -7,6 +7,7 @@ import {
   TEAM_MAILBOXES,
 } from "./_mailboxes.js";
 import { mailboxRoutingReadiness } from "./_readiness.js";
+import { sendingCapability } from "./_sending.js";
 
 const MAX_LIMIT = 100;
 const MAX_OFFSET = 1_000;
@@ -98,6 +99,7 @@ export async function onRequestGet({ request, env }) {
     ]);
 
     const routing = mailboxRoutingReadiness(env);
+    const sendCapability = sendingCapability(env, access.identity?.email);
     const inboundEnabled = routing.rootDeliveryActive;
     return json({
       ok: true,
@@ -108,13 +110,13 @@ export async function onRequestGet({ request, env }) {
       inboundEnabled,
       delivery: routing.status,
       routing,
-      outboundEnabled: false,
+      outboundEnabled: sendCapability.send,
       capabilities: {
         receive: inboundEnabled || routing.testReceiverActive,
         receiveRoot: inboundEnabled,
         receiveTest: routing.testReceiverActive,
         createDrafts: true,
-        send: false,
+        ...sendCapability,
       },
       status,
       query: search,

@@ -16,6 +16,15 @@ import {
 } from "../astro/functions/operations/api/inbox/_drafts.js";
 import { mailboxRoutingReadiness } from "../astro/functions/operations/api/inbox/_readiness.js";
 import {
+  plainTextToHtml,
+  safeProviderErrorCode,
+  senderForIdentity,
+  sendingCapability,
+  sendingReadiness,
+  threadHeaders,
+  toOutboxSummary,
+} from "../astro/functions/operations/api/inbox/_sending.js";
+import {
   canonicalOperationsMailbox,
   OPERATIONS_TEST_MAILBOXES,
 } from "../workers/mailboxes.js";
@@ -108,6 +117,70 @@ test("mail composer warns on unsaved work and supports keyboard save", () => {
   assert.match(script, /event\.ctrlKey \|\| event\.metaKey/);
   assert.match(script, /requestSubmit\(saveDraftButton\)/);
   assert.match(script, /closeComposer\(\{ force: true \}\)/);
+  assert.match(script, /Send this email now\?/);
+  assert.match(script, /send_already_attempted/);
+  assert.match(script, /Review delivery/);
+  assert.match(script, /data-send-message/);
+});
+
+test("sending stays locked until both the feature flag and binding are present", () => {
+  assert.deepEqual(sendingReadiness({}), {
+    enabled: false,
+    status: "onboarding_pending",
+    detail: "Cloudflare Email Sending onboarding and a controlled live test are still required.",
+  });
+  assert.equal(sendingReadiness({ MAIL_SEND_ENABLED: "true" }).status, "binding_missing");
+  assert.equal(sendingReadiness({
+    MAIL_SEND_ENABLED: "true",
+    OPERATIONS_EMAIL: { send() {} },
+  }).enabled, true);
+});
+
+test("each permanent staff login maps to exactly one sender address", () => {
+  assert.equal(senderForIdentity("DRDEANDREHYDE@GMAIL.COM")?.address, "deandre@brisbanetvs.com");
+  assert.equal(senderForIdentity("kodycameron2000@gmail.com")?.address, "kody@brisbanetvs.com");
+  assert.equal(senderForIdentity("tomdavie016@gmail.com")?.address, "tom@brisbanetvs.com");
+  assert.equal(senderForIdentity("other@example.com"), null);
+
+  const capability = sendingCapability({
+    MAIL_SEND_ENABLED: "true",
+    OPERATIONS_EMAIL: { send() {} },
+  }, "tomdavie016@gmail.com");
+  assert.equal(capability.send, true);
+  assert.equal(capability.senderAddress, "tom@brisbanetvs.com");
+});
+
+test("outbound content escapes HTML and accepts only a bounded message-id header", () => {
+  assert.equal(
+    plainTextToHtml("<strong>Customer & TV</strong>"),
+    '<div style="font-family:Arial,sans-serif;line-height:1.55;white-space:pre-wrap">&lt;strong&gt;Customer &amp; TV&lt;/strong&gt;</div>',
+  );
+  assert.deepEqual(threadHeaders("<message@example.com>"), {
+    "In-Reply-To": "<message@example.com>",
+    References: "<message@example.com>",
+  });
+  assert.equal(threadHeaders("message@example.com\r\nBcc: bad@example.com"), undefined);
+  assert.equal(safeProviderErrorCode({ code: "E_SENDER_NOT_VERIFIED" }), "E_SENDER_NOT_VERIFIED");
+  assert.equal(safeProviderErrorCode({ code: "private provider detail" }), "E_DELIVERY_FAILED");
+});
+
+test("outbox summaries expose safe delivery state without a full message body", () => {
+  const summary = toOutboxSummary({
+    id: "outbox-1",
+    draft_id: "draft-1",
+    from_address: "tom@brisbanetvs.com",
+    to_address: "customer@example.com",
+    subject: "Installation",
+    plain_text: "A".repeat(400),
+    status: "sent",
+    requested_by: "tomdavie016@gmail.com",
+    requested_at: "2026-07-24T01:00:00.000Z",
+    updated_at: "2026-07-24T01:00:01.000Z",
+    provider_message_id: "message-1",
+  });
+  assert.equal(summary.status, "sent");
+  assert.equal(summary.preview.length, 220);
+  assert.equal("plainText" in summary, false);
 });
 
 test("drafts accept exact Brisbane TVs sender aliases and reply metadata", () => {
@@ -187,4 +260,91 @@ test("mailbox migration adds deduplication, draft sender and inert outbox state"
   assert.ok(draftColumns.includes("reply_to_message_id"));
   assert.equal(outboxTable.name, "mail_outbox");
   assert.ok(indexes.includes("idx_mail_messages_ingest_key"));
+});
+
+test("outbox unique draft claim prevents duplicate delivery attempts", () => {
+  const database = new DatabaseSync(":memory:");
+  database.exec(readFileSync(migrationPath("0001_operations_intake.sql"), "utf8"));
+  database.exec(readFileSync(migrationPath("0002_mail_inbox_ingest.sql"), "utf8"));
+  database.exec(readFileSync(migrationPath("0009_mailbox_threads_outbox.sql"), "utf8"));
+  database.prepare(
+    `INSERT INTO mail_drafts (
+      id, to_address, subject, plain_text, status, created_at, updated_at,
+      created_by, from_address, thread_id, reply_to_message_id, updated_by
+    ) VALUES (?, ?, ?, ?, 'draft', ?, ?, ?, ?, '', '', ?)`,
+  ).run(
+    "draft-1",
+    "customer@example.com",
+    "Installation",
+    "Thanks",
+    "2026-07-24T01:00:00.000Z",
+    "2026-07-24T01:00:00.000Z",
+    "tomdavie016@gmail.com",
+    "tom@brisbanetvs.com",
+    "tomdavie016@gmail.com",
+  );
+
+  const claim = database.prepare(
+    `INSERT INTO mail_outbox (
+      id, draft_id, from_address, to_address, subject, plain_text, status,
+      requested_by, requested_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, 'sending', ?, ?, ?)
+    ON CONFLICT(draft_id) DO NOTHING
+    RETURNING id`,
+  );
+  assert.equal(claim.get(
+    "outbox-1",
+    "draft-1",
+    "tom@brisbanetvs.com",
+    "customer@example.com",
+    "Installation",
+    "Thanks",
+    "tomdavie016@gmail.com",
+    "2026-07-24T01:00:01.000Z",
+    "2026-07-24T01:00:01.000Z",
+  ).id, "outbox-1");
+  assert.equal(claim.get(
+    "outbox-2",
+    "draft-1",
+    "tom@brisbanetvs.com",
+    "customer@example.com",
+    "Installation",
+    "Thanks",
+    "tomdavie016@gmail.com",
+    "2026-07-24T01:00:02.000Z",
+    "2026-07-24T01:00:02.000Z",
+  ), undefined);
+  assert.equal(database.prepare("SELECT COUNT(*) AS count FROM mail_outbox").get().count, 1);
+});
+
+test("production config keeps sending off until onboarding and restricted binding review", () => {
+  for (const relativePath of ["../wrangler.toml", "../astro/wrangler.toml"]) {
+    const config = readFileSync(
+      fileURLToPath(new URL(relativePath, import.meta.url)),
+      "utf8",
+    );
+    assert.match(config, /MAIL_SEND_ENABLED = "false"/);
+    assert.doesNotMatch(config, /send_email/);
+  }
+
+  const sendRoute = readFileSync(
+    fileURLToPath(new URL(
+      "../astro/functions/operations/api/inbox/drafts/[id]/send.js",
+      import.meta.url,
+    )),
+    "utf8",
+  );
+  assert.match(sendRoute, /ON CONFLICT\(draft_id\) DO NOTHING/);
+  assert.match(sendRoute, /senderForIdentity/);
+  assert.match(sendRoute, /OPERATIONS_EMAIL\.send/);
+  assert.match(sendRoute, /email_sending_unavailable/);
+
+  const draftRoute = readFileSync(
+    fileURLToPath(new URL(
+      "../astro/functions/operations/api/inbox/drafts/[id].js",
+      import.meta.url,
+    )),
+    "utf8",
+  );
+  assert.match(draftRoute, /draft_send_attempted/);
 });

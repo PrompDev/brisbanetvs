@@ -593,6 +593,14 @@
   background: var(--mail-surface-soft);
 }
 
+.mail-row.is-static {
+  cursor: default;
+}
+
+.mail-row.is-static:hover {
+  background: transparent;
+}
+
 .mail-row.is-selected {
   background: var(--mail-blue-soft);
   box-shadow: inset 3px 0 0 #4d7d99;
