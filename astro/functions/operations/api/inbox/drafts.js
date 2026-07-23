@@ -4,6 +4,7 @@ import {
   normaliseDraft,
   readDraftJson,
   requestedListStatus,
+  sameOriginMutation,
   toDraftSummary,
 } from "./_drafts.js";
 
@@ -36,7 +37,7 @@ export async function onRequestGet({ request, env }) {
   const offset = boundedInteger(url.searchParams.get("offset"), 0, MAX_OFFSET);
   const where = status === "all" ? "" : " WHERE status = ?";
   const values = status === "all" ? [] : [status];
-  const listSql = `SELECT id, to_address, subject, plain_text, status, created_at, updated_at
+  const listSql = `SELECT id, from_address, to_address, subject, plain_text, status, thread_id, reply_to_message_id, created_at, updated_at
     FROM mail_drafts${where} ORDER BY updated_at DESC, id DESC LIMIT ? OFFSET ?`;
   const countSql = `SELECT COUNT(*) AS count FROM mail_drafts${where}`;
 
@@ -66,6 +67,7 @@ export async function onRequestGet({ request, env }) {
 export async function onRequestPost({ request, env }) {
   const mailbox = await requireMailbox(request, env, "operations_draft_database_not_configured");
   if (mailbox.response) return mailbox.response;
+  if (!sameOriginMutation(request)) return json({ ok: false, error: "invalid_origin" }, 403);
 
   const parsed = await readDraftJson(request);
   if (parsed.error) return json({ ok: false, error: parsed.error }, parsed.status);
@@ -78,9 +80,22 @@ export async function onRequestPost({ request, env }) {
   const now = new Date().toISOString();
   try {
     await env.OPERATIONS_DB.prepare(
-      "INSERT INTO mail_drafts (id, to_address, subject, plain_text, status, created_at, updated_at, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO mail_drafts (id, from_address, to_address, subject, plain_text, status, thread_id, reply_to_message_id, created_at, updated_at, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
-      .bind(id, draft.toAddress, draft.subject, draft.plainText, draft.status, now, now, mailbox.access.identity?.email || "staff")
+      .bind(
+        id,
+        draft.fromAddress,
+        draft.toAddress,
+        draft.subject,
+        draft.plainText,
+        draft.status,
+        draft.threadId,
+        draft.inReplyTo,
+        now,
+        now,
+        mailbox.access.identity?.email || "staff",
+        mailbox.access.identity?.email || "staff",
+      )
       .run();
 
     // No email is sent here. Drafts are retained only for a future approval
@@ -90,8 +105,11 @@ export async function onRequestPost({ request, env }) {
       draft: {
         id,
         to: draft.toAddress,
+        from: draft.fromAddress,
         subject: draft.subject,
         status: draft.status,
+        threadId: draft.threadId,
+        inReplyTo: draft.inReplyTo,
         createdAt: now,
         updatedAt: now,
       },

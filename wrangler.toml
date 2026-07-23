@@ -9,6 +9,7 @@ PORTAL_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-3UnBWEg2cYk
 GA_MEASUREMENT_ID = "G-L23FNBTTBX"
 GA4_PROPERTY_ID = "545397141"
 GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-3UnBWEg2cYkx-QjM29GNE7A48eMYQ5Dm9fOBnb2AxW1Wgesrt9fKs_YjEdVAMDC0YA/exec"
+TEAM_INBOX_ENABLED = "false"
 
 [[r2_buckets]]
 binding = "LEAD_UPLOADS"

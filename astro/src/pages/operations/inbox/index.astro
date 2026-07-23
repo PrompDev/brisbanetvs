@@ -1,329 +1,280 @@
 ---
 import OperationsLayout from "../../../components/operations/OperationsLayout.astro";
+import "../../../styles/operations-mailbox.css";
 ---
 
 <OperationsLayout
   active="inbox"
-  title="Team inbox"
-  description="Protected Brisbane TVs team email inbox and draft workspace."
+  title="Customer mailbox"
+  description="The protected Brisbane TVs customer mailbox for DeAndre, Kody and Tom."
 >
-  <section class="operations-page-header" aria-labelledby="team-inbox-title">
-    <div>
-      <p class="operations-eyebrow">Team inbox</p>
-      <h1 id="team-inbox-title" class="operations-title">Customer mail.</h1>
-      <p class="operations-copy">A staff-only place for incoming messages and prepared replies. It is deliberately separate from the lead register, and no email can be sent from this workspace.</p>
-    </div>
-    <p class="operations-status" data-inbox-status role="status">Checking the protected inbox connection...</p>
-  </section>
-
-  <section class="operations-grid operations-inbox-grid" aria-label="Team inbox workspace">
-    <article class="operations-panel" aria-labelledby="inbound-messages-heading">
-      <div class="operations-panel-heading">
-        <div>
-          <p class="operations-eyebrow">Incoming mail</p>
-          <h2 id="inbound-messages-heading" class="operations-section-title">team@brisbanetvs.com</h2>
-          <p class="operations-panel-copy" data-inbox-copy>Checking inbound delivery...</p>
-        </div>
-        <div style="display: grid; justify-items: end; gap: .65rem;">
-          <span class="operations-pill is-muted" data-inbox-state>Checking</span>
-          <button class="operations-button" type="button" data-refresh-inbox>Refresh</button>
-        </div>
+  <section class="mail-page" data-inbox-root aria-labelledby="operations-mail-title">
+    <header class="mail-hero">
+      <div>
+        <p class="mail-eyebrow">Customer mailbox</p>
+        <h1 id="operations-mail-title">One customer inbox. Three Brisbane TVs addresses.</h1>
+        <p class="mail-hero-copy">
+          Read customer mail, move between staff addresses and prepare replies without leaving the protected dashboard.
+        </p>
       </div>
+      <div class="mail-connection is-checking" data-connection-status role="status">
+        <span class="mail-connection-dot" aria-hidden="true"></span>
+        <span data-connection-copy>Checking the protected mailbox...</span>
+      </div>
+    </header>
 
-      <ul class="operations-message-list" data-inbox-list aria-live="polite">
-        <li class="operations-message"><strong>Loading protected messages...</strong></li>
-      </ul>
-
-      <section class="operations-message-reader" data-message-reader hidden aria-labelledby="message-reader-subject">
-        <div class="operations-panel-heading">
-          <div>
-            <p class="operations-eyebrow">Selected message</p>
-            <h3 id="message-reader-subject" class="operations-section-title" data-reader-subject>Loading message...</h3>
-          </div>
-          <button class="operations-button" type="button" data-close-reader>Close</button>
+    <div class="mail-client" data-mail-client>
+      <aside class="mail-rail" aria-label="Mailbox navigation">
+        <div class="mail-rail-brand">
+          <span class="mail-rail-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" role="img">
+              <path d="M4 6.75h16v10.5H4z"></path>
+              <path d="m4.75 7.5 7.25 5 7.25-5"></path>
+            </svg>
+          </span>
+          <span>
+            <strong>Brisbane TVs</strong>
+            <small>Customer mail</small>
+          </span>
         </div>
-        <p class="operations-message-reader-meta" data-reader-meta></p>
-        <pre class="operations-message-body" data-reader-body></pre>
-        <p class="operations-no-send-note" data-reader-attachments></p>
+
+        <button class="mail-compose-button" type="button" data-compose-new>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"></path>
+          </svg>
+          Compose
+        </button>
+
+        <nav class="mail-nav" aria-label="Mail folders">
+          <p class="mail-nav-label">Mail</p>
+          <button class="mail-nav-button is-active" type="button" data-folder="inbox" aria-current="page">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 5h16v14H4z"></path>
+              <path d="m5 6 7 6 7-6"></path>
+            </svg>
+            <span>Inbox</span>
+            <strong data-inbox-total>0</strong>
+          </button>
+          <button class="mail-nav-button" type="button" data-folder="drafts">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 19h4l10-10-4-4L5 15z"></path>
+              <path d="m13.5 6.5 4 4"></path>
+            </svg>
+            <span>Drafts</span>
+            <strong data-draft-total>0</strong>
+          </button>
+          <button class="mail-nav-button" type="button" data-folder="archived">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16v13H4zM3 4h18v3H3z"></path>
+              <path d="M9 11h6"></path>
+            </svg>
+            <span>Archived</span>
+          </button>
+        </nav>
+
+        <nav class="mail-nav mail-address-nav" aria-label="Staff addresses">
+          <p class="mail-nav-label">Addresses</p>
+          <button class="mail-address-button is-active" type="button" data-mailbox="all" aria-pressed="true">
+            <span class="mail-address-avatar is-all">A</span>
+            <span>
+              <strong>All mail</strong>
+              <small>3 addresses</small>
+            </span>
+            <b data-mailbox-count="all">0</b>
+          </button>
+          <button class="mail-address-button" type="button" data-mailbox="deandre" aria-pressed="false">
+            <span class="mail-address-avatar is-deandre">D</span>
+            <span>
+              <strong>DeAndre</strong>
+              <small>deandre@</small>
+            </span>
+            <b data-mailbox-count="deandre">0</b>
+          </button>
+          <button class="mail-address-button" type="button" data-mailbox="kody" aria-pressed="false">
+            <span class="mail-address-avatar is-kody">K</span>
+            <span>
+              <strong>Kody</strong>
+              <small>kody@</small>
+            </span>
+            <b data-mailbox-count="kody">0</b>
+          </button>
+          <button class="mail-address-button" type="button" data-mailbox="tom" aria-pressed="false">
+            <span class="mail-address-avatar is-tom">T</span>
+            <span>
+              <strong>Tom</strong>
+              <small>tom@</small>
+            </span>
+            <b data-mailbox-count="tom">0</b>
+          </button>
+        </nav>
+
+        <div class="mail-routing-card">
+          <span data-routing-state>Dashboard ready</span>
+          <small data-routing-detail>Inbound routing is not connected yet.</small>
+        </div>
+      </aside>
+
+      <section class="mail-list-pane" aria-labelledby="mail-list-title">
+        <header class="mail-list-header">
+          <div>
+            <p class="mail-list-kicker" data-list-kicker>All addresses</p>
+            <h2 id="mail-list-title" data-list-title>Inbox</h2>
+          </div>
+          <button class="mail-icon-button" type="button" data-refresh-mail aria-label="Refresh mail">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M20 11a8 8 0 1 0-2.35 5.65"></path>
+              <path d="M20 5v6h-6"></path>
+            </svg>
+          </button>
+        </header>
+
+        <form class="mail-search" data-mail-search role="search">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="6.5"></circle>
+            <path d="m16 16 4 4"></path>
+          </svg>
+          <label class="mail-visually-hidden" for="mail-search-input">Search mail</label>
+          <input id="mail-search-input" name="query" type="search" maxlength="120" placeholder="Search sender, subject or message" autocomplete="off" data-search-input />
+          <button type="button" data-clear-search hidden>Clear</button>
+        </form>
+
+        <div class="mail-list-summary">
+          <span data-list-count>Loading messages...</span>
+          <span data-list-filter>Newest first</span>
+        </div>
+
+        <ul class="mail-message-list" data-message-list aria-live="polite">
+          <li class="mail-loading-row">
+            <span></span><span></span><span></span>
+          </li>
+          <li class="mail-loading-row">
+            <span></span><span></span><span></span>
+          </li>
+          <li class="mail-loading-row">
+            <span></span><span></span><span></span>
+          </li>
+        </ul>
       </section>
 
-      <p class="operations-no-send-note"><strong>Outbound mail is disabled.</strong> This page cannot send automatic replies, invoices or promotions. It is a safe inbox and draft foundation only.</p>
-    </article>
-
-    <aside class="operations-panel" aria-labelledby="draft-heading">
-      <p class="operations-eyebrow">Saved drafts</p>
-      <h2 id="draft-heading" class="operations-section-title">Prepare a reply.</h2>
-      <p class="operations-panel-copy">Draft a thank-you, response or invoice note now. Saving keeps it inside the restricted operations store; it does not send anything.</p>
-
-      <form class="operations-draft-form" data-draft-form>
-        <label class="operations-field">
-          <span>To</span>
-          <input class="operations-input" name="to" type="email" maxlength="320" autocomplete="email" placeholder="customer@example.com" required />
-        </label>
-        <label class="operations-field">
-          <span>Subject</span>
-          <input class="operations-input" name="subject" type="text" maxlength="180" placeholder="Thanks for contacting Brisbane TVs" required />
-        </label>
-        <label class="operations-field">
-          <span>Message</span>
-          <textarea class="operations-input" name="plainText" maxlength="10000" rows="7" placeholder="Write a reply, invoice note or future approved campaign draft..." required></textarea>
-        </label>
-        <div class="operations-draft-actions">
-          <button class="operations-button operations-primary-button" type="submit">Save draft</button>
-          <span class="operations-draft-status" data-draft-status role="status"></span>
+      <section class="mail-reader-pane" aria-label="Selected conversation">
+        <div class="mail-reader-toolbar" data-reader-toolbar hidden>
+          <button class="mail-toolbar-button mail-mobile-back" type="button" data-close-reader>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg>
+            Back
+          </button>
+          <span></span>
+          <button class="mail-toolbar-button" type="button" data-mark-unread>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 6h16v12H4z"></path>
+              <path d="m5 7 7 6 7-6"></path>
+            </svg>
+            Mark unread
+          </button>
+          <button class="mail-toolbar-button" type="button" data-archive-thread>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16v13H4zM3 4h18v3H3z"></path>
+              <path d="M9 11h6"></path>
+            </svg>
+            <span data-archive-label>Archive</span>
+          </button>
         </div>
-      </form>
 
-      <div style="margin-top: 1.35rem; border-top: 1px solid #e7e3dc; padding-top: 1.1rem;">
-        <p class="operations-eyebrow">Recent saved drafts</p>
-        <ul class="operations-message-list" data-drafts-list aria-live="polite" style="margin-top: .7rem;">
-          <li class="operations-message"><strong>Loading saved drafts...</strong></li>
-        </ul>
+        <div class="mail-reader-empty" data-reader-empty>
+          <span class="mail-empty-illustration" aria-hidden="true">
+            <svg viewBox="0 0 64 64">
+              <path d="M10 18h44v30H10z"></path>
+              <path d="m12 20 20 16 20-16"></path>
+              <path d="M21 13h22"></path>
+            </svg>
+          </span>
+          <h2>Select a conversation</h2>
+          <p>Messages stay private inside Operations. Choose one from the list to read the full thread.</p>
+        </div>
+
+        <article class="mail-conversation" data-reader-content hidden>
+          <header class="mail-conversation-header">
+            <div>
+              <span class="mail-mailbox-pill" data-reader-mailbox>Mailbox</span>
+              <h2 data-reader-subject>Conversation</h2>
+              <p data-reader-summary></p>
+            </div>
+          </header>
+          <div class="mail-thread" data-reader-thread></div>
+          <footer class="mail-reply-bar">
+            <button class="mail-reply-button" type="button" data-reply-message>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m10 7-6 5 6 5v-3c5 0 8 1 10 4-1-6-4-8-10-8z"></path>
+              </svg>
+              Reply
+            </button>
+            <p data-reply-note>Replies save as drafts while Cloudflare sending is being enabled.</p>
+          </footer>
+        </article>
+      </section>
+    </div>
+
+    <p class="mail-safety-note">
+      Incoming HTML is never rendered here. The reader uses safe plain text; raw MIME and attachments stay in private Cloudflare storage.
+    </p>
+  </section>
+
+  <dialog class="mail-compose-dialog" data-compose-dialog aria-labelledby="mail-compose-title">
+    <form class="mail-compose-form" data-compose-form>
+      <header class="mail-compose-header">
+        <div>
+          <p>Customer mailbox</p>
+          <h2 id="mail-compose-title" data-compose-title>New message</h2>
+        </div>
+        <button class="mail-icon-button" type="button" data-close-compose aria-label="Close composer">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+        </button>
+      </header>
+
+      <div class="mail-compose-fields">
+        <label class="mail-compose-row">
+          <span>From</span>
+          <select name="from" required>
+            <option value="deandre@brisbanetvs.com">DeAndre &lt;deandre@brisbanetvs.com&gt;</option>
+            <option value="kody@brisbanetvs.com">Kody &lt;kody@brisbanetvs.com&gt;</option>
+            <option value="tom@brisbanetvs.com">Tom &lt;tom@brisbanetvs.com&gt;</option>
+          </select>
+        </label>
+        <label class="mail-compose-row">
+          <span>To</span>
+          <input name="to" type="email" maxlength="320" autocomplete="email" placeholder="customer@example.com" required />
+        </label>
+        <label class="mail-compose-row">
+          <span>Subject</span>
+          <input name="subject" type="text" maxlength="180" placeholder="Email subject" required />
+        </label>
+        <label class="mail-compose-body">
+          <span class="mail-visually-hidden">Message</span>
+          <textarea name="plainText" maxlength="10000" placeholder="Write your message..." required></textarea>
+        </label>
       </div>
-    </aside>
-  </section>
 
-  <section class="operations-grid operations-breakdown-grid" aria-label="Email safeguards">
-    <article class="operations-panel">
-      <p class="operations-eyebrow">Receiving</p>
-      <h2 class="operations-section-title">A deliberate mail migration.</h2>
-      <p class="operations-panel-copy">The existing business mail service is left untouched until the inbound route is explicitly reviewed. This prevents a new inbox from interrupting current customer email.</p>
-    </article>
-    <article class="operations-panel">
-      <p class="operations-eyebrow">Sending</p>
-      <h2 class="operations-section-title">A future approval flow.</h2>
-      <p class="operations-panel-copy">Saved drafts are not authority to deliver transactional or promotional email. Sending, consent controls and unsubscribe handling will be enabled only as a separate, reviewed stage.</p>
-    </article>
-  </section>
-
-  <section class="operations-privacy-note">
-    <span aria-hidden="true">✓</span>
-    <p>Message sender details and plain-text content are requested only after the secure staff check, then displayed safely as text. No external email provider is called when a draft is saved.</p>
-  </section>
+      <footer class="mail-compose-footer">
+        <div>
+          <button class="mail-text-button" type="button" data-discard-compose>Discard</button>
+          <span class="mail-compose-status" data-compose-status role="status"></span>
+        </div>
+        <div class="mail-compose-actions">
+          <button class="mail-secondary-button" type="submit" data-save-draft>
+            Save draft
+          </button>
+          <button class="mail-send-button" type="button" data-send-message disabled title="Cloudflare Email Sending is not enabled yet">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m3 11 18-8-7 18-3-7z"></path>
+              <path d="m11 14 4-4"></path>
+            </svg>
+            Send locked
+          </button>
+        </div>
+      </footer>
+    </form>
+  </dialog>
 
   <script>
-    const dateFormat = new Intl.DateTimeFormat("en-AU", {
-      timeZone: "Australia/Brisbane",
-      day: "numeric",
-      month: "short",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-    const inboxStatus = document.querySelector("[data-inbox-status]");
-    const inboxState = document.querySelector("[data-inbox-state]");
-    const inboxCopy = document.querySelector("[data-inbox-copy]");
-    const inboxList = document.querySelector("[data-inbox-list]");
-    const refreshButton = document.querySelector("[data-refresh-inbox]");
-    const draftForm = document.querySelector("[data-draft-form]");
-    const draftStatus = document.querySelector("[data-draft-status]");
-    const draftsList = document.querySelector("[data-drafts-list]");
-    const messageReader = document.querySelector("[data-message-reader]");
-    const readerSubject = document.querySelector("[data-reader-subject]");
-    const readerMeta = document.querySelector("[data-reader-meta]");
-    const readerBody = document.querySelector("[data-reader-body]");
-    const readerAttachments = document.querySelector("[data-reader-attachments]");
-    const closeReader = document.querySelector("[data-close-reader]");
-
-    async function requestJson(path, options = {}) {
-      const response = await fetch(path, {
-        cache: "no-store",
-        credentials: "same-origin",
-        ...options,
-        headers: { accept: "application/json", ...(options.headers || {}) },
-      });
-      const payload = await response.json().catch(() => null);
-      return { response, payload };
-    }
-
-    function emptyMessage(message) {
-      const item = document.createElement("li");
-      item.className = "operations-message";
-      const title = document.createElement("strong");
-      title.textContent = message;
-      item.append(title);
-      return item;
-    }
-
-    function renderMessages(messages) {
-      inboxList.replaceChildren();
-      if (!messages?.length) {
-        inboxList.append(emptyMessage("No messages received here yet."));
-        return;
-      }
-
-      messages.forEach((message) => {
-        const item = document.createElement("li");
-        item.className = "operations-message is-clickable";
-        item.tabIndex = 0;
-        item.setAttribute("role", "button");
-        item.setAttribute("aria-label", `Open message: ${message.subject || "No subject"}`);
-        const subject = document.createElement("strong");
-        const from = document.createElement("span");
-        const meta = document.createElement("span");
-        subject.textContent = message.subject || "(No subject)";
-        from.textContent = message.from || "Unknown sender";
-        meta.className = "operations-message-meta";
-        const received = message.receivedAt ? dateFormat.format(new Date(message.receivedAt)) : "Time unavailable";
-        meta.textContent = `${received} · ${message.status || "received"}`;
-        item.append(subject, from, meta);
-        item.addEventListener("click", () => loadMessage(message.id));
-        item.addEventListener("keydown", (event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            loadMessage(message.id);
-          }
-        });
-        inboxList.append(item);
-      });
-    }
-
-    function closeMessageReader() {
-      messageReader.hidden = true;
-      readerSubject.textContent = "";
-      readerMeta.textContent = "";
-      readerBody.textContent = "";
-      readerAttachments.textContent = "";
-    }
-
-    async function loadMessage(id) {
-      if (!id) return;
-      messageReader.hidden = false;
-      readerSubject.textContent = "Loading message...";
-      readerMeta.textContent = "";
-      readerBody.textContent = "";
-      readerAttachments.textContent = "";
-
-      try {
-        const { response, payload } = await requestJson(`/operations/api/inbox/${encodeURIComponent(id)}`);
-        if (!response.ok || !payload?.ok || !payload.message) {
-          readerSubject.textContent = response.status === 403 ? "Secure session expired" : "Message unavailable";
-          readerBody.textContent = response.status === 403
-            ? "Sign in again to open this customer message."
-            : "This message could not be opened. Please refresh and try again.";
-          return;
-        }
-
-        const message = payload.message;
-        const received = message.receivedAt ? dateFormat.format(new Date(message.receivedAt)) : "Time unavailable";
-        readerSubject.textContent = message.subject || "(No subject)";
-        readerMeta.textContent = `From ${message.from || "Unknown sender"} to ${message.to || "team@brisbanetvs.com"} | ${received}`;
-        readerBody.textContent = message.plainText || "No safe plain-text preview is available for this message.";
-        const attachmentCount = Number(message.attachmentCount) || 0;
-        readerAttachments.textContent = attachmentCount
-          ? `${attachmentCount} attachment${attachmentCount === 1 ? "" : "s"} retained privately. Attachment downloads are not enabled.`
-          : "No attachments. Raw email remains private and is not exposed by this workspace.";
-      } catch {
-        readerSubject.textContent = "Message unavailable";
-        readerBody.textContent = "This message could not be opened. Please refresh and try again.";
-      }
-    }
-
-    function renderDrafts(drafts) {
-      draftsList.replaceChildren();
-      if (!drafts?.length) {
-        draftsList.append(emptyMessage("No drafts saved yet."));
-        return;
-      }
-
-      drafts.forEach((draft) => {
-        const item = document.createElement("li");
-        item.className = "operations-message";
-        const subject = document.createElement("strong");
-        const to = document.createElement("span");
-        const meta = document.createElement("span");
-        subject.textContent = draft.subject || "(No subject)";
-        to.textContent = draft.to || "Recipient unavailable";
-        meta.className = "operations-message-meta";
-        const saved = draft.updatedAt ? dateFormat.format(new Date(draft.updatedAt)) : "Time unavailable";
-        meta.textContent = `${saved} · ${draft.status || "draft"} · not sent`;
-        item.append(subject, to, meta);
-        draftsList.append(item);
-      });
-    }
-
-    async function loadInbox() {
-      inboxList.replaceChildren(emptyMessage("Loading protected messages..."));
-      try {
-        const { response, payload } = await requestJson("/operations/api/inbox");
-        if (!response.ok || !payload?.ok) {
-          inboxStatus.textContent = response.status === 403
-            ? "Your secure session has expired. Sign in again to view the team inbox."
-            : "The team inbox is temporarily unavailable. Please refresh shortly.";
-          inboxState.textContent = "Unavailable";
-          inboxCopy.textContent = "The inbox status could not be checked.";
-          inboxList.replaceChildren(emptyMessage("Protected inbox messages are temporarily unavailable."));
-          return;
-        }
-
-        const inboundEnabled = payload.inboundEnabled === true;
-        inboxStatus.textContent = inboundEnabled
-          ? "Incoming mail is being stored in the protected Operations inbox."
-          : "Inbound delivery is staged. Your current business mail service remains unchanged.";
-        inboxStatus.classList.toggle("is-ready", inboundEnabled);
-        inboxStatus.classList.toggle("is-warning", !inboundEnabled);
-        inboxState.textContent = inboundEnabled ? "Receiving" : "Staged";
-        inboxState.classList.toggle("is-muted", !inboundEnabled);
-        inboxCopy.textContent = inboundEnabled
-          ? "Incoming customer messages are available below."
-          : "No MX or mail-routing change has been made. Messages will appear only after the planned inbound connection is approved and enabled.";
-        renderMessages(payload.messages);
-      } catch {
-        inboxStatus.textContent = "The team inbox is temporarily unavailable. Please refresh shortly.";
-        inboxState.textContent = "Unavailable";
-        inboxCopy.textContent = "The inbox status could not be checked.";
-        inboxList.replaceChildren(emptyMessage("Protected inbox messages are temporarily unavailable."));
-      }
-    }
-
-    async function loadDrafts() {
-      draftsList.replaceChildren(emptyMessage("Loading saved drafts..."));
-      try {
-        const { response, payload } = await requestJson("/operations/api/inbox/drafts?limit=8");
-        if (!response.ok || !payload?.ok) {
-          draftsList.replaceChildren(emptyMessage(response.status === 403
-            ? "Your secure session has expired. Sign in again to view saved drafts."
-            : "Saved drafts are temporarily unavailable."));
-          return;
-        }
-        renderDrafts(payload.drafts);
-      } catch {
-        draftsList.replaceChildren(emptyMessage("Saved drafts are temporarily unavailable."));
-      }
-    }
-
-    draftForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      draftStatus.textContent = "Saving...";
-      const formData = new FormData(draftForm);
-      const payload = Object.fromEntries(formData.entries());
-
-      try {
-        const { response, payload: result } = await requestJson("/operations/api/inbox/drafts", {
-          method: "POST",
-          headers: { "content-type": "application/json", accept: "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!response.ok || !result?.ok) {
-          draftStatus.textContent = response.status === 403
-            ? "Your secure session has expired. Sign in again before saving a draft."
-            : "Could not save the draft.";
-          return;
-        }
-        draftForm.reset();
-        draftStatus.textContent = "Draft saved. Nothing was sent.";
-        loadDrafts();
-      } catch {
-        draftStatus.textContent = "Could not save the draft.";
-      }
-    });
-
-    refreshButton.addEventListener("click", () => {
-      closeMessageReader();
-      loadInbox();
-      loadDrafts();
-    });
-    closeReader.addEventListener("click", closeMessageReader);
-    loadInbox();
-    loadDrafts();
+    import "../../../scripts/operations-inbox.js";
   </script>
 </OperationsLayout>

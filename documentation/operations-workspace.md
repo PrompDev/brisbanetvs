@@ -18,6 +18,13 @@ statuses. It also does not copy its root `/api/*` routes, unsigned PBX and
 Stripe webhooks, or direct Android gateway send handler. Those parts do not
 fit the existing Cloudflare architecture or its customer-data controls.
 
+The Operations mailbox follows the split-view interaction pattern from
+[Cloudflare Agentic Inbox](https://github.com/cloudflare/agentic-inbox) at
+commit `48039bb6785af34e592c2966f87cde2b255c4c80` (Apache-2.0). Only the
+mailbox layout and workflow ideas were ported. Its React, Durable Object,
+Workers AI, MCP and shared-all-mailboxes backend were not copied or deployed.
+The existing Access/D1/private-R2 boundary remains authoritative.
+
 Only the existing Brisbane TVs Google reporting is added to that dashboard.
 No telephony, payment, SMS, social, AI or other connector from the standalone
 repository becomes live merely because its design appears in Operations.
@@ -98,8 +105,9 @@ labelled `Homepage (/)`; it means the public `brisbanetvs.com/` homepage.
   public download route.
 - Pages Functions are set to **fail closed**. If the Functions allowance is
   exhausted, an error is shown instead of falling through to a static asset.
-- Drafts are saved in D1 only. There is no send endpoint, email binding or
-  automatic reply.
+- Drafts are saved in D1 only and retain the selected DeAndre, Kody or Tom
+  sender plus reply-thread metadata. There is no send endpoint, email binding
+  or automatic reply.
 
 The safe port adds nine empty D1 tables and one Access-verified read API for
 the new workspace views. It does not change the existing connections or add a
@@ -119,7 +127,7 @@ tested. A screen or database table does not make a connector live.
 | Quotes, jobs, stock and finance | Empty D1 tables and read views | Access-verified write APIs, audit events and field-level validation |
 | SMS outbox | Empty approval-state table and read view; sending disabled | SMS transport, authenticated dispatch, staff approval, idempotency and delivery callbacks |
 | Stripe reconciliation | Not connected | Stripe account integration, signed raw-body webhook verification and invoice/payment mapping |
-| Inbox | Storage and draft interface are ready; live routing is off | Approved Email Routing migration; outbound delivery remains a separate change |
+| Inbox | Three-address storage, threaded reader and draft interface are ready; live routing is off | Apply migration `0009`, deploy, then complete the approved Email Routing migration; outbound delivery remains a separate change |
 | Social publishing | Not connected | Provider accounts, scoped credentials and an explicit approval/send workflow |
 | Dave automation | No AI or calling provider connected | Defined actions, service credentials, audit logging and enforced approval gates |
 
@@ -302,32 +310,80 @@ Analytics page combines consent-aware traffic with aggregate actual-lead counts
 from D1, including source, privacy-filtered campaign labels, lead pages and
 website-to-Sheet delivery health.
 
-## Team inbox: ready, but not switched over
+## Operations mailbox: ready, but not switched over
 
-The inbox backend is deployed and safe to use once inbound routing is approved:
+The mailbox code is prepared for the following exact aliases:
+
+- `deandre@brisbanetvs.com`
+- `kody@brisbanetvs.com`
+- `tom@brisbanetvs.com`
+
+They are Worker-backed mail addresses, not three external hosted inbox
+accounts. Cloudflare Email Routing can deliver each address directly to the
+existing Worker, which stores the message for the Operations page.
+
+The prepared implementation:
 
 - A Cloudflare Worker accepts routed mail, stores raw MIME privately in the
   dedicated mail bucket, and stores only safe text/metadata for staff review.
+- The Worker rejects every envelope recipient outside the three-address
+  allowlist. Do not create a catch-all routing rule.
+- A deterministic ingest key ignores repeated inbound deliveries, and reply
+  headers resolve to an internal thread ID instead of controlling it.
+- Replies prefer the parsed `Reply-To` address, then the visible `From`
+  address; the SMTP envelope sender is retained separately for audit and is
+  never mistaken for the customer by default.
 - It does not forward, reply, send, or make attachments downloadable.
 - Incoming mail is limited in size and failed storage is rejected rather than
   silently dropped.
-- Staff can already save response, thank-you or invoice drafts. Saving a draft
-  never sends it.
+- The Operations page has mailbox filters, search, read/archive state, safe
+  plain-text threads and a responsive reply composer.
+- Staff can save response, thank-you or invoice drafts from any of the three
+  approved aliases. Saving a draft never sends it.
 
 Cloudflare Email Routing remains **off**. The existing domain MX records and
-business mail provider have not been changed, so `team@brisbanetvs.com` is not
+business mail provider have not been changed, so these three aliases are not
 yet receiving through this system.
 
-Turning it on is a separate live-mail migration: Cloudflare would add root MX,
-SPF and DKIM records, and a routing rule would direct `team@` to the Worker.
-That can affect every address at the domain, so do not enable it without an
-explicit approval, a current-mail test, and a rollback plan.
+Turning it on is a separate live-mail migration: Cloudflare Email Routing
+replaces the root MX path, and three explicit routing rules would direct the
+aliases to the Worker. Email Sending has its own `cf-bounce` DNS records. This
+can interact with the domain's existing mail-authentication records, so
+inventory every address currently handled by the existing provider, preserve
+or migrate each one, record the current MX/SPF/DKIM state, and prepare a
+rollback before enabling it.
 
-When outbound mail is approved later, transactional messages (such as a
-contact acknowledgement or invoice) can use Cloudflare Email Service with a
-human review/send step. Promotions are different: only contacts with recorded
-consent may be used, and they need unsubscribe handling and a suitable
-marketing platform. The current lead data has no marketing-consent records.
+Migration `0009_mailbox_threads_outbox.sql` must be applied before deploying
+the new page or ingest code. It adds canonical mailbox, read, deduplication and
+draft-thread fields plus an inert outbox table for a later idempotent sending
+workflow.
+
+### Mail activation order
+
+1. Inventory the current provider's addresses, aliases, forwards, mailbox
+   contents, MX, SPF and DKIM records. Export anything that must be retained.
+2. Apply D1 migration `0009`, then deploy the Worker and Pages changes while
+   `TEAM_INBOX_ENABLED` remains false.
+3. Onboard `brisbanetvs.com` in Cloudflare Email Sending. Its `cf-bounce`
+   records are independent of the root inbound MX cutover.
+4. Give DeAndre, Kody and Tom permanent Cloudflare Access identities through
+   the selected Google, Microsoft or other identity provider. Do not make an
+   OTP sent into the protected mailbox the only way to open that mailbox.
+5. Enable Email Routing only after the legacy-address migration and rollback
+   plan are ready. Create three exact Worker rules; do not use catch-all.
+6. Send labelled external tests to all three aliases. Confirm one D1 message
+   and one private R2 object per test, correct mailbox filtering and no
+   duplicates.
+7. Set `TEAM_INBOX_ENABLED=true` only after those receive tests pass.
+8. Add outbound delivery separately: a reviewed draft must enter the outbox,
+   a queue consumer must call the Cloudflare `send_email` binding, and the
+   returned provider message ID must be recorded before the UI reports sent.
+
+Cloudflare Email Sending can later deliver transactional replies such as
+contact acknowledgements and invoices from the three aliases. Promotions are
+different: only contacts with recorded consent may be used, and they need
+unsubscribe handling and a suitable marketing platform. The current lead data
+has no marketing-consent records.
 
 ## Ongoing checks
 
