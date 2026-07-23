@@ -12,6 +12,7 @@ GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-3UnBWEg2cYk
 TEAM_INBOX_ENABLED = "false"
 MAIL_TEST_RECEIVER_ENABLED = "true"
 MAIL_TEST_RECEIVER_DOMAIN = "inbound.brisbanetvs.com"
+MAIL_SEND_ENABLED = "false"
 
 [[r2_buckets]]
 binding = "LEAD_UPLOADS"

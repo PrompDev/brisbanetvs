@@ -7,6 +7,7 @@ import {
   sameOriginMutation,
   toDraftSummary,
 } from "./_drafts.js";
+import { sendingCapability } from "./_sending.js";
 
 const MAX_LIMIT = 100;
 const MAX_OFFSET = 1_000;
@@ -35,17 +36,28 @@ export async function onRequestGet({ request, env }) {
   const status = requestedListStatus(url.searchParams.get("status"), DRAFT_STATUSES, "draft");
   const limit = Math.max(1, boundedInteger(url.searchParams.get("limit"), 50, MAX_LIMIT));
   const offset = boundedInteger(url.searchParams.get("offset"), 0, MAX_OFFSET);
-  const where = status === "all" ? "" : " WHERE status = ?";
+  const where = status === "all"
+    ? ""
+    : status === "draft"
+      ? " WHERE d.status = ? AND (o.status IS NULL OR o.status <> 'sent')"
+      : " WHERE d.status = ?";
   const values = status === "all" ? [] : [status];
-  const listSql = `SELECT id, from_address, to_address, subject, plain_text, status, thread_id, reply_to_message_id, created_at, updated_at
-    FROM mail_drafts${where} ORDER BY updated_at DESC, id DESC LIMIT ? OFFSET ?`;
-  const countSql = `SELECT COUNT(*) AS count FROM mail_drafts${where}`;
+  const listSql = `SELECT d.id, d.from_address, d.to_address, d.subject, d.plain_text,
+      d.status, d.thread_id, d.reply_to_message_id, d.created_at, d.updated_at,
+      o.status AS send_status, o.updated_at AS send_updated_at, o.safe_error_code
+    FROM mail_drafts d
+    LEFT JOIN mail_outbox o ON o.draft_id = d.id
+    ${where} ORDER BY d.updated_at DESC, d.id DESC LIMIT ? OFFSET ?`;
+  const countSql = `SELECT COUNT(*) AS count
+    FROM mail_drafts d
+    LEFT JOIN mail_outbox o ON o.draft_id = d.id${where}`;
 
   try {
     const [listResult, countRow] = await Promise.all([
       env.OPERATIONS_DB.prepare(listSql).bind(...values, limit, offset).all(),
       env.OPERATIONS_DB.prepare(countSql).bind(...values).first(),
     ]);
+    const capability = sendingCapability(env, mailbox.access.identity?.email);
     return json({
       ok: true,
       status,
@@ -53,7 +65,8 @@ export async function onRequestGet({ request, env }) {
       offset,
       limit,
       drafts: (listResult.results || []).map(toDraftSummary),
-      sendEnabled: false,
+      sendEnabled: capability.send,
+      capabilities: capability,
     });
   } catch (error) {
     console.error(JSON.stringify({
@@ -100,6 +113,7 @@ export async function onRequestPost({ request, env }) {
 
     // No email is sent here. Drafts are retained only for a future approval
     // workflow and must never be treated as permission to deliver marketing.
+    const capability = sendingCapability(env, mailbox.access.identity?.email);
     return json({
       ok: true,
       draft: {
@@ -113,7 +127,8 @@ export async function onRequestPost({ request, env }) {
         createdAt: now,
         updatedAt: now,
       },
-      sendEnabled: false,
+      sendEnabled: capability.send,
+      capabilities: capability,
     }, 201);
   } catch (error) {
     console.error(JSON.stringify({

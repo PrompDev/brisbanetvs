@@ -9,6 +9,9 @@ if (inboxRoot) {
   const readinessIncomingCard = inboxRoot.querySelector("[data-readiness-incoming-card]");
   const readinessIncoming = inboxRoot.querySelector("[data-readiness-incoming]");
   const readinessIncomingDetail = inboxRoot.querySelector("[data-readiness-incoming-detail]");
+  const readinessSendingCard = inboxRoot.querySelector("[data-readiness-sending-card]");
+  const readinessSending = inboxRoot.querySelector("[data-readiness-sending]");
+  const readinessSendingDetail = inboxRoot.querySelector("[data-readiness-sending-detail]");
   const listKicker = inboxRoot.querySelector("[data-list-kicker]");
   const listTitle = inboxRoot.querySelector("[data-list-title]");
   const listCount = inboxRoot.querySelector("[data-list-count]");
@@ -16,6 +19,7 @@ if (inboxRoot) {
   const messageList = inboxRoot.querySelector("[data-message-list]");
   const inboxTotal = inboxRoot.querySelector("[data-inbox-total]");
   const draftTotal = inboxRoot.querySelector("[data-draft-total]");
+  const sentTotal = inboxRoot.querySelector("[data-sent-total]");
   const searchForm = inboxRoot.querySelector("[data-mail-search]");
   const searchInput = inboxRoot.querySelector("[data-search-input]");
   const clearSearch = inboxRoot.querySelector("[data-clear-search]");
@@ -37,6 +41,7 @@ if (inboxRoot) {
   const discardCompose = composeDialog?.querySelector("[data-discard-compose]");
   const saveDraftButton = composeDialog?.querySelector("[data-save-draft]");
   const sendButton = composeDialog?.querySelector("[data-send-message]");
+  const sendLabel = composeDialog?.querySelector("[data-send-label]");
 
   const shortDate = new Intl.DateTimeFormat("en-AU", {
     timeZone: "Australia/Brisbane",
@@ -63,6 +68,7 @@ if (inboxRoot) {
     query: "",
     messages: [],
     drafts: [],
+    outbox: [],
     mailboxes: [
       { id: "deandre", name: "DeAndre", address: "deandre@brisbanetvs.com", count: 0 },
       { id: "kody", name: "Kody", address: "kody@brisbanetvs.com", count: 0 },
@@ -73,9 +79,17 @@ if (inboxRoot) {
     draftId: null,
     composerThreadId: "",
     composerInReplyTo: "",
+    composerSendStatus: null,
     composerDirty: false,
     routing: { status: "staged", rootDeliveryActive: false, testReceiverActive: false },
-    capabilities: { receive: false, createDrafts: true, send: false },
+    capabilities: {
+      receive: false,
+      createDrafts: true,
+      send: false,
+      sendStatus: "onboarding_pending",
+      sendDetail: "Cloudflare Email Sending onboarding and a controlled live test are still required.",
+      senderAddress: null,
+    },
   };
 
   function createElement(tagName, className, text) {
@@ -196,6 +210,31 @@ if (inboxRoot) {
     readinessIncomingCard.classList.add("is-staged");
   }
 
+  function applySendingState(capabilities = {}) {
+    state.capabilities = {
+      ...state.capabilities,
+      ...capabilities,
+      send: capabilities.send === true,
+      senderAddress: typeof capabilities.senderAddress === "string"
+        ? capabilities.senderAddress
+        : null,
+    };
+    readinessSendingCard?.classList.remove("is-checking", "is-ready", "is-staged", "is-locked");
+
+    if (state.capabilities.send) {
+      readinessSending.textContent = "Ready";
+      readinessSendingDetail.textContent = "Human-confirmed delivery";
+      readinessSendingCard?.classList.add("is-ready");
+    } else {
+      readinessSending.textContent = "Locked";
+      readinessSendingDetail.textContent = state.capabilities.sendStatus === "identity_not_authorized"
+        ? "No sender address for this login"
+        : "Onboarding and live test required";
+      readinessSendingCard?.classList.add("is-locked");
+    }
+    updateSendButton();
+  }
+
   function updateNavigation() {
     inboxRoot.querySelectorAll("[data-folder]").forEach((button) => {
       const active = button.dataset.folder === state.folder;
@@ -213,7 +252,9 @@ if (inboxRoot) {
     listKicker.textContent = activeMailboxName();
     listTitle.textContent = state.folder === "drafts"
       ? "Drafts"
-      : state.folder === "archived" ? "Archived" : "Inbox";
+      : state.folder === "sent"
+        ? "Delivery"
+        : state.folder === "archived" ? "Archived" : "Inbox";
     listFilter.textContent = state.query ? `Matching "${state.query}"` : "Newest first";
   }
 
@@ -365,9 +406,14 @@ if (inboxRoot) {
       const preview = createElement("span", "mail-row-preview", draft.preview || "Open to continue writing.");
       const footLine = createElement("span", "mail-row-footline");
       const mailbox = mailboxByAddress(draft.from);
+      const sendState = draft.sendStatus === "failed"
+        ? `Needs review${draft.safeErrorCode ? ` - ${draft.safeErrorCode}` : ""}`
+        : draft.sendStatus === "sending" || draft.sendStatus === "queued"
+          ? "Delivery in progress"
+          : "Not sent";
       footLine.append(
         createElement("span", "mail-row-mailbox", mailbox?.name || draft.from || "DeAndre"),
-        createElement("span", "mail-row-status", "Not sent"),
+        createElement("span", "mail-row-status", sendState),
       );
       main.append(topLine, subjectLine, preview, footLine);
       button.append(avatar, main);
@@ -376,9 +422,67 @@ if (inboxRoot) {
     });
   }
 
+  function filteredOutbox() {
+    const mailbox = mailboxById(state.mailbox);
+    const query = state.query.toLowerCase();
+    return state.outbox.filter((message) => {
+      if (mailbox && message.from !== mailbox.address) return false;
+      if (!query) return true;
+      return [message.from, message.to, message.subject, message.preview]
+        .some((value) => typeof value === "string" && value.toLowerCase().includes(query));
+    });
+  }
+
+  function renderOutboxRows() {
+    messageList.replaceChildren();
+    const messages = filteredOutbox();
+    listCount.textContent = `${messages.length} delivery record${messages.length === 1 ? "" : "s"}`;
+
+    if (!messages.length) {
+      messageList.append(emptyList(
+        state.query ? "No matching delivery records" : "No delivery records yet",
+        state.query
+          ? "Try a different recipient, sender or subject."
+          : "Human-confirmed messages will appear here after Cloudflare sending is enabled.",
+      ));
+      return;
+    }
+
+    messages.forEach((message) => {
+      const item = createElement("li");
+      const row = createElement("div", "mail-row is-static");
+      const avatar = createElement("span", "mail-sender-avatar", "B");
+      const main = createElement("span", "mail-row-main");
+      const topLine = createElement("span", "mail-row-topline");
+      topLine.append(
+        createElement("span", "mail-row-sender", message.to || "Unknown recipient"),
+        createElement("time", "mail-row-time", compactDate(message.updatedAt)),
+      );
+      const subjectLine = createElement("span", "mail-row-subjectline");
+      subjectLine.append(createElement("span", "mail-row-subject", message.subject || "(No subject)"));
+      const preview = createElement("span", "mail-row-preview", message.preview || "No message preview.");
+      const footLine = createElement("span", "mail-row-footline");
+      const mailbox = mailboxByAddress(message.from);
+      const deliveryState = message.status === "sent"
+        ? "Sent"
+        : message.status === "failed"
+          ? `Failed${message.safeErrorCode ? ` - ${message.safeErrorCode}` : ""}`
+          : "Sending";
+      footLine.append(
+        createElement("span", "mail-row-mailbox", mailbox?.name || message.from || "Brisbane TVs"),
+        createElement("span", "mail-row-status", deliveryState),
+      );
+      main.append(topLine, subjectLine, preview, footLine);
+      row.append(avatar, main);
+      item.append(row);
+      messageList.append(item);
+    });
+  }
+
   function renderCurrentList() {
     updateNavigation();
     if (state.folder === "drafts") renderDraftRows();
+    else if (state.folder === "sent") renderOutboxRows();
     else renderMessageRows();
   }
 
@@ -411,7 +515,7 @@ if (inboxRoot) {
       }
 
       state.messages = Array.isArray(payload.messages) ? payload.messages : [];
-      state.capabilities = payload.capabilities || state.capabilities;
+      applySendingState(payload.capabilities || {});
       updateMailboxCounts(payload.mailboxes);
       applyRoutingState(payload.routing || {
         status: payload.inboundEnabled === true ? "active" : "staged",
@@ -440,16 +544,34 @@ if (inboxRoot) {
       }
       state.drafts = Array.isArray(payload.drafts) ? payload.drafts : [];
       draftTotal.textContent = String(Number(payload.total) || state.drafts.length);
+      applySendingState(payload.capabilities || {});
       if (state.folder === "drafts") renderCurrentList();
     } catch {
       if (state.folder === "drafts") showListError("Saved drafts could not be loaded.");
     }
   }
 
+  async function loadOutbox() {
+    try {
+      const { response, payload } = await requestJson("/operations/api/inbox/outbox?limit=100");
+      if (!response.ok || !payload?.ok) {
+        if (state.folder === "sent") {
+          showListError(response.status === 403 ? "Sign in again to view delivery records." : "Please refresh in a moment.");
+        }
+        return;
+      }
+      state.outbox = Array.isArray(payload.messages) ? payload.messages : [];
+      sentTotal.textContent = String(Number(payload.total) || state.outbox.length);
+      if (state.folder === "sent") renderCurrentList();
+    } catch {
+      if (state.folder === "sent") showListError("Delivery records could not be loaded.");
+    }
+  }
+
   async function refreshAll() {
     refreshButton.classList.add("is-spinning");
     refreshButton.disabled = true;
-    await Promise.all([loadInbox(), loadDrafts()]);
+    await Promise.all([loadInbox(), loadDrafts(), loadOutbox()]);
     refreshButton.classList.remove("is-spinning");
     refreshButton.disabled = false;
   }
@@ -462,7 +584,7 @@ if (inboxRoot) {
     readerEmpty.hidden = false;
     readerThread.replaceChildren();
     client.classList.remove("has-reader");
-    if (state.folder !== "drafts") renderMessageRows();
+    if (state.folder !== "drafts" && state.folder !== "sent") renderMessageRows();
   }
 
   function renderThread(payload) {
@@ -582,6 +704,45 @@ if (inboxRoot) {
     state.composerDirty = dirty;
     if (dirty) setComposeStatus("Unsaved changes");
     else if (composeStatus.textContent === "Unsaved changes") setComposeStatus("");
+    updateSendButton();
+  }
+
+  function updateSendButton() {
+    if (!sendButton || !sendLabel) return;
+    const selectedFrom = composeForm?.elements.from?.value || "";
+    const authorisedFrom = state.capabilities.senderAddress || "";
+
+    if (state.composerSendStatus) {
+      sendButton.disabled = true;
+      sendLabel.textContent = state.composerSendStatus === "sent"
+        ? "Already sent"
+        : "Review delivery";
+      sendButton.title = state.composerSendStatus === "sent"
+        ? "This draft has already been delivered"
+        : "This draft already has a delivery attempt; create a new draft after reviewing it";
+      return;
+    }
+
+    if (!state.capabilities.send) {
+      sendButton.disabled = true;
+      sendLabel.textContent = "Send locked";
+      sendButton.title = state.capabilities.sendDetail
+        || "Cloudflare Email Sending must be onboarded before delivery is enabled";
+      return;
+    }
+
+    if (!authorisedFrom || selectedFrom !== authorisedFrom) {
+      sendButton.disabled = true;
+      sendLabel.textContent = "Use your address";
+      sendButton.title = authorisedFrom
+        ? `Change From to ${authorisedFrom} before sending`
+        : "This staff login does not have an approved sender address";
+      return;
+    }
+
+    sendButton.disabled = false;
+    sendLabel.textContent = "Send";
+    sendButton.title = "Review and confirm this transactional email";
   }
 
   function openComposer(values = {}, draftId = null) {
@@ -590,16 +751,18 @@ if (inboxRoot) {
     state.draftId = draftId;
     state.composerThreadId = values.threadId || "";
     state.composerInReplyTo = values.inReplyTo || "";
+    state.composerSendStatus = values.sendStatus || null;
     composeTitle.textContent = draftId ? "Edit draft" : values.inReplyTo ? "Reply" : "New message";
     discardCompose.textContent = draftId ? "Close" : "Discard";
-    composeForm.elements.from.value = values.from || selectedComposeAddress();
+    composeForm.elements.from.value = values.from
+      || state.capabilities.senderAddress
+      || selectedComposeAddress();
     composeForm.elements.to.value = values.to || "";
     composeForm.elements.subject.value = values.subject || "";
     composeForm.elements.plainText.value = values.plainText || "";
     state.composerDirty = false;
     setComposeStatus("");
-    sendButton.disabled = true;
-    sendButton.title = "Cloudflare Email Sending must be onboarded before delivery is enabled";
+    updateSendButton();
     if (typeof composeDialog.showModal === "function") composeDialog.showModal();
     else composeDialog.setAttribute("open", "");
     window.setTimeout(() => composeForm.elements.to.focus(), 0);
@@ -617,6 +780,7 @@ if (inboxRoot) {
     state.draftId = null;
     state.composerThreadId = "";
     state.composerInReplyTo = "";
+    state.composerSendStatus = null;
     state.composerDirty = false;
     setComposeStatus("");
   }
@@ -629,20 +793,16 @@ if (inboxRoot) {
         setConnection("That draft could not be opened.", "error");
         return;
       }
+      applySendingState(payload.capabilities || {});
       openComposer(payload.draft, payload.draft.id);
     } catch {
       setConnection("That draft could not be opened.", "error");
     }
   }
 
-  async function saveDraft(event) {
-    event.preventDefault();
-    if (!composeForm || !composeForm.reportValidity()) return;
-    saveDraftButton.disabled = true;
-    setComposeStatus("Saving...");
-
+  function composerDraft() {
     const formData = new FormData(composeForm);
-    const draft = {
+    return {
       from: formData.get("from"),
       to: formData.get("to"),
       subject: formData.get("subject"),
@@ -650,6 +810,14 @@ if (inboxRoot) {
       threadId: state.composerThreadId,
       inReplyTo: state.composerInReplyTo,
     };
+  }
+
+  async function persistDraft({ closeAfter = false } = {}) {
+    if (!composeForm || !composeForm.reportValidity()) return;
+    saveDraftButton.disabled = true;
+    setComposeStatus("Saving...");
+
+    const draft = composerDraft();
     const path = state.draftId
       ? `/operations/api/inbox/drafts/${encodeURIComponent(state.draftId)}`
       : "/operations/api/inbox/drafts";
@@ -664,19 +832,103 @@ if (inboxRoot) {
         setComposeStatus(
           response.status === 403
             ? "Secure session expired. Sign in again."
+            : payload?.error === "draft_send_attempted"
+              ? "This draft already has a delivery attempt and cannot be changed."
             : "Draft could not be saved.",
           true,
         );
-        return;
+        return null;
       }
+      applySendingState(payload.capabilities || {});
+      state.draftId = payload.draft.id;
+      state.composerSendStatus = payload.draft.sendStatus || null;
       setComposerDirty(false);
       setComposeStatus("Saved. Nothing was sent.");
       await loadDrafts();
-      window.setTimeout(() => closeComposer({ force: true }), 450);
+      if (closeAfter) window.setTimeout(() => closeComposer({ force: true }), 450);
+      return state.draftId;
     } catch {
       setComposeStatus("Draft could not be saved.", true);
+      return null;
     } finally {
       saveDraftButton.disabled = false;
+      updateSendButton();
+    }
+  }
+
+  async function saveDraft(event) {
+    event.preventDefault();
+    await persistDraft({ closeAfter: true });
+  }
+
+  async function sendDraft() {
+    if (!composeForm || !composeForm.reportValidity()) return;
+    if (!state.capabilities.send) {
+      setComposeStatus(state.capabilities.sendDetail || "Cloudflare Email Sending is not ready.", true);
+      return;
+    }
+
+    const draft = composerDraft();
+    if (draft.from !== state.capabilities.senderAddress) {
+      setComposeStatus(`Change From to ${state.capabilities.senderAddress} before sending.`, true);
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Send this email now?\n\nFrom: ${draft.from}\nTo: ${draft.to}\nSubject: ${draft.subject}\n\nThis action cannot be undone.`,
+    );
+    if (!confirmed) return;
+
+    sendButton.disabled = true;
+    saveDraftButton.disabled = true;
+    let draftId = state.draftId;
+    if (!draftId || state.composerDirty) {
+      draftId = await persistDraft({ closeAfter: false });
+    }
+    if (!draftId) {
+      saveDraftButton.disabled = false;
+      updateSendButton();
+      return;
+    }
+
+    sendButton.disabled = true;
+    saveDraftButton.disabled = true;
+    setComposeStatus("Sending...");
+    try {
+      const { response, payload } = await requestJson(
+        `/operations/api/inbox/drafts/${encodeURIComponent(draftId)}/send`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: "{}",
+        },
+      );
+      if (!response.ok || !payload?.ok) {
+        const message = response.status === 403
+            ? "This login cannot send from the selected Brisbane TVs address."
+          : payload?.error === "send_already_attempted"
+            ? "A delivery attempt already exists. Check Delivery before taking any further action."
+            : payload?.error === "email_sending_unavailable"
+              ? "Cloudflare Email Sending is not ready yet."
+              : `Delivery failed${payload?.safeErrorCode ? ` (${payload.safeErrorCode})` : ""}.`;
+        setComposeStatus(message, true);
+        await Promise.all([loadDrafts(), loadOutbox()]);
+        return;
+      }
+
+      state.composerSendStatus = "sent";
+      setComposerDirty(false);
+      setComposeStatus(payload.auditPending
+        ? "Cloudflare accepted the email. The audit record needs attention."
+        : "Sent and recorded.");
+      await Promise.all([loadDrafts(), loadOutbox()]);
+      window.setTimeout(() => closeComposer({ force: true }), 750);
+    } catch {
+      setComposeStatus("Delivery could not be confirmed. Check Delivery before trying anything else.", true);
+      await loadOutbox();
+    } finally {
+      saveDraftButton.disabled = false;
+      updateSendButton();
     }
   }
 
@@ -708,11 +960,12 @@ if (inboxRoot) {
   }
 
   function activateFolder(folder) {
-    if (!["inbox", "drafts", "archived"].includes(folder)) return;
+    if (!["inbox", "drafts", "sent", "archived"].includes(folder)) return;
     state.folder = folder;
     closeReader();
     renderCurrentList();
     if (folder === "drafts") loadDrafts();
+    else if (folder === "sent") loadOutbox();
     else loadInbox();
   }
 
@@ -722,6 +975,7 @@ if (inboxRoot) {
     closeReader();
     renderCurrentList();
     if (state.folder === "drafts") renderDraftRows();
+    else if (state.folder === "sent") renderOutboxRows();
     else loadInbox();
   }
 
@@ -729,7 +983,7 @@ if (inboxRoot) {
   function performSearch() {
     state.query = searchInput.value.trim().slice(0, 120);
     clearSearch.hidden = !state.query;
-    if (state.folder === "drafts") renderCurrentList();
+    if (state.folder === "drafts" || state.folder === "sent") renderCurrentList();
     else loadInbox();
   }
 
@@ -779,6 +1033,7 @@ if (inboxRoot) {
   composeForm?.addEventListener("input", () => setComposerDirty(true));
   composeForm?.addEventListener("change", () => setComposerDirty(true));
   composeForm?.addEventListener("submit", saveDraft);
+  sendButton?.addEventListener("click", sendDraft);
   composeDialog?.addEventListener("keydown", (event) => {
     if (
       composeDialog.open

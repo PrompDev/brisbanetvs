@@ -11,6 +11,7 @@ const MAX_THREAD_ID_LENGTH = 200;
 const MAX_MESSAGE_ID_LENGTH = 4_096;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DRAFT_STATUSES = new Set(["draft", "archived"]);
+const SEND_STATUSES = new Set(["queued", "sending", "sent", "failed", "cancelled"]);
 
 function hasOwn(object, key) {
   return Object.prototype.hasOwnProperty.call(object, key);
@@ -62,9 +63,9 @@ function requestedDraftStatus(value) {
 
 /**
  * Parse a complete draft on create or a partial draft on save. The returned
- * object is always a complete, send-safe record. This project has no send
- * endpoint; validation still removes header-control characters so a future
- * approved delivery workflow cannot inherit an unsafe draft.
+ * object is always a complete, send-safe record. Saving remains inert; the
+ * separate delivery endpoint revalidates this record after its own identity,
+ * feature-flag, binding, confirmation and idempotency checks.
  */
 export function normaliseDraft(payload, existing = null) {
   if (!isRecord(payload)) return null;
@@ -169,10 +170,11 @@ function cleanDatabaseText(value, maximum, fallback = "") {
 
 function preview(value) {
   const compact = cleanDatabaseText(value, 280).replace(/\s+/g, " ").trim();
-  return compact.length > 220 ? `${compact.slice(0, 219)}…` : compact;
+  return compact.length > 220 ? `${compact.slice(0, 219)}\u2026` : compact;
 }
 
 export function toDraftSummary(row) {
+  const sendStatus = cleanDatabaseText(row?.send_status, 32);
   return {
     id: cleanDatabaseText(row?.id, 200),
     to: cleanDatabaseText(row?.to_address, MAX_EMAIL_LENGTH),
@@ -184,6 +186,9 @@ export function toDraftSummary(row) {
     inReplyTo: cleanDatabaseText(row?.reply_to_message_id, MAX_MESSAGE_ID_LENGTH),
     createdAt: cleanDatabaseText(row?.created_at, 64),
     updatedAt: cleanDatabaseText(row?.updated_at, 64),
+    sendStatus: SEND_STATUSES.has(sendStatus) ? sendStatus : null,
+    sentAt: sendStatus === "sent" ? cleanDatabaseText(row?.send_updated_at, 64) : null,
+    safeErrorCode: cleanDatabaseText(row?.safe_error_code, 100),
   };
 }
 

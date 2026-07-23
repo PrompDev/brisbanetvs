@@ -333,25 +333,36 @@ The prepared implementation:
 - Replies prefer the parsed `Reply-To` address, then the visible `From`
   address; the SMTP envelope sender is retained separately for audit and is
   never mistaken for the customer by default.
-- It does not forward, reply, send, or make attachments downloadable.
+- It does not forward, automatically reply, or make attachments downloadable.
 - Incoming mail is limited in size and failed storage is rejected rather than
   silently dropped.
 - The Operations page has mailbox filters, search, read/archive state, safe
   plain-text threads and a responsive reply composer.
-- Staff can save response, thank-you or invoice drafts from any of the three
-  approved aliases. Saving a draft never sends it.
+- Staff can save response, thank-you or invoice drafts from the three approved
+  aliases. Saving a draft never sends it.
+- A separately locked send route is prepared behind
+  `MAIL_SEND_ENABLED=false`. It is unusable without both the flag and the
+  restricted Cloudflare Email Sending binding.
+- When enabled, each Cloudflare Access identity can send only from its mapped
+  Brisbane TVs address. The UI requires a fresh human confirmation, claims
+  the draft once in `mail_outbox`, and records Cloudflare's message ID or a
+  safe failure code. It does not retry an uncertain delivery automatically.
+- The Delivery view reads the protected outbox audit; it never treats a saved
+  draft as proof of delivery.
 
-Cloudflare Email Routing remains **off**. The existing domain MX records and
-business mail provider have not been changed, so these three aliases are not
-yet receiving through this system.
+An isolated Cloudflare receiver is live at `inbound.brisbanetvs.com` with
+three exact Worker routes and catch-all disabled. The root domain's existing
+MX records and business mail provider remain unchanged. Root aliases must be
+forwarded at the current provider to their matching isolated aliases, or moved
+only through a separately approved root migration with rollback.
 
-Turning it on is a separate live-mail migration: Cloudflare Email Routing
-replaces the root MX path, and three explicit routing rules would direct the
-aliases to the Worker. Email Sending has its own `cf-bounce` DNS records. This
-can interact with the domain's existing mail-authentication records, so
-inventory every address currently handled by the existing provider, preserve
-or migrate each one, record the current MX/SPF/DKIM state, and prepare a
-rollback before enabling it.
+The recommended receive path does not replace the root MX records: the
+existing mail provider forwards each approved root alias to its matching
+`inbound.brisbanetvs.com` receiver address. A future root-domain move to
+Cloudflare Email Routing would be a separate migration because it replaces the
+root MX path. Email Sending has its own `cf-bounce` DNS records and can be
+onboarded without that root receive cutover. Its SPF/DKIM/DMARC state still
+needs a controlled test before sending is enabled.
 
 Migration `0009_mailbox_threads_outbox.sql` must be applied before deploying
 the new page or ingest code. It adds canonical mailbox, read, deduplication and
@@ -369,15 +380,26 @@ workflow.
 4. Give DeAndre, Kody and Tom permanent Cloudflare Access identities through
    the selected Google, Microsoft or other identity provider. Do not make an
    OTP sent into the protected mailbox the only way to open that mailbox.
-5. Enable Email Routing only after the legacy-address migration and rollback
-   plan are ready. Create three exact Worker rules; do not use catch-all.
+5. At the current provider, forward each approved root alias to its matching
+   isolated receiver address. Keep the existing root MX records. If a future
+   root Email Routing migration is approved, inventory every address and
+   prepare rollback first; create exact Worker rules and do not use catch-all.
 6. Send labelled external tests to all three aliases. Confirm one D1 message
    and one private R2 object per test, correct mailbox filtering and no
    duplicates.
 7. Set `TEAM_INBOX_ENABLED=true` only after those receive tests pass.
-8. Add outbound delivery separately: a reviewed draft must enter the outbox,
-   a queue consumer must call the Cloudflare `send_email` binding, and the
-   returned provider message ID must be recorded before the UI reports sent.
+8. Add outbound delivery separately. Keep `MAIL_SEND_ENABLED=false` while
+   Tom activates Workers Paid and `brisbanetvs.com` is onboarded for Email
+   Sending. Preserve the existing root MX records and merge Cloudflare into
+   the single SPF policy rather than creating a second SPF record.
+9. Add an `OPERATIONS_EMAIL` binding restricted with
+   `allowed_sender_addresses` for exactly `deandre@`, `kody@` and `tom@`.
+   Run a controlled message to an address Brisbane TVs owns, verify SPF,
+   DKIM, DMARC and the Cloudflare message ID, then set
+   `MAIL_SEND_ENABLED=true`.
+10. The human-confirmed route calls the binding only after an atomic D1
+    outbox claim. Any failed or uncertain attempt remains locked for manual
+    review so a retry cannot duplicate a customer email.
 
 Cloudflare Email Sending can later deliver transactional replies such as
 contact acknowledgements and invoices from the three aliases. Promotions are

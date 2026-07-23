@@ -39,10 +39,10 @@ import "../../../styles/operations-mailbox.css";
         <strong>Ready</strong>
         <small>Nothing sends automatically</small>
       </div>
-      <div class="mail-readiness-item is-locked">
+      <div class="mail-readiness-item is-locked" data-readiness-sending-card>
         <span>Sending</span>
-        <strong>Locked</strong>
-        <small>Requires separate approval</small>
+        <strong data-readiness-sending>Locked</strong>
+        <small data-readiness-sending-detail>Onboarding and live test required</small>
       </div>
     </div>
 
@@ -85,6 +85,14 @@ import "../../../styles/operations-mailbox.css";
             </svg>
             <span>Drafts</span>
             <strong data-draft-total>0</strong>
+          </button>
+          <button class="mail-nav-button" type="button" data-folder="sent">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m3 11 18-8-7 18-3-7z"></path>
+              <path d="m11 14 4-4"></path>
+            </svg>
+            <span>Delivery</span>
+            <strong data-sent-total>0</strong>
           </button>
           <button class="mail-nav-button" type="button" data-folder="archived">
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -290,7 +298,7 @@ import "../../../styles/operations-mailbox.css";
               <path d="m3 11 18-8-7 18-3-7z"></path>
               <path d="m11 14 4-4"></path>
             </svg>
-            Send locked
+            <span data-send-label>Send locked</span>
           </button>
         </div>
       </footer>

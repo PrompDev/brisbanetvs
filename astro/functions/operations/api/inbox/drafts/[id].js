@@ -6,6 +6,7 @@ import {
   sameOriginMutation,
   toDraftDetail,
 } from "../_drafts.js";
+import { sendingCapability } from "../_sending.js";
 
 async function requireMailbox(request, env, eventName) {
   const access = await requireOperationsAccess(request, env);
@@ -19,7 +20,13 @@ async function requireMailbox(request, env, eventName) {
 
 async function findDraft(env, id) {
   return env.OPERATIONS_DB.prepare(
-    "SELECT id, from_address, to_address, subject, plain_text, status, thread_id, reply_to_message_id, created_at, updated_at, created_by, updated_by FROM mail_drafts WHERE id = ? LIMIT 1",
+    `SELECT d.id, d.from_address, d.to_address, d.subject, d.plain_text, d.status,
+      d.thread_id, d.reply_to_message_id, d.created_at, d.updated_at,
+      d.created_by, d.updated_by, o.status AS send_status,
+      o.updated_at AS send_updated_at, o.safe_error_code
+    FROM mail_drafts d
+    LEFT JOIN mail_outbox o ON o.draft_id = d.id
+    WHERE d.id = ? LIMIT 1`,
   ).bind(id).first();
 }
 
@@ -32,8 +39,14 @@ export async function onRequestGet({ request, env, params }) {
 
   try {
     const draft = await findDraft(env, id);
+    const capability = sendingCapability(env, mailbox.access.identity?.email);
     return draft
-      ? json({ ok: true, draft: toDraftDetail(draft), sendEnabled: false })
+      ? json({
+        ok: true,
+        draft: toDraftDetail(draft),
+        sendEnabled: capability.send,
+        capabilities: capability,
+      })
       : json({ ok: false, error: "draft_not_found" }, 404);
   } catch (error) {
     console.error(JSON.stringify({
@@ -58,6 +71,9 @@ async function saveDraft({ request, env, params }) {
   try {
     const existing = await findDraft(env, id);
     if (!existing) return json({ ok: false, error: "draft_not_found" }, 404);
+    if (existing.send_status) {
+      return json({ ok: false, error: "draft_send_attempted" }, 409);
+    }
 
     const draft = normaliseDraft(parsed.payload, existing);
     if (!draft) return json({ ok: false, error: "invalid_draft" }, 400);
@@ -78,6 +94,7 @@ async function saveDraft({ request, env, params }) {
       id,
     ).run();
 
+    const capability = sendingCapability(env, mailbox.access.identity?.email);
     return json({
       ok: true,
       draft: toDraftDetail({
@@ -91,7 +108,8 @@ async function saveDraft({ request, env, params }) {
         reply_to_message_id: draft.inReplyTo,
         updated_at: now,
       }),
-      sendEnabled: false,
+      sendEnabled: capability.send,
+      capabilities: capability,
     });
   } catch (error) {
     console.error(JSON.stringify({
@@ -102,7 +120,8 @@ async function saveDraft({ request, env, params }) {
   }
 }
 
-// Both complete PUT saves and partial PATCH autosaves remain draft-only. No
-// route in this application can turn a saved draft into outbound email.
+// Both complete PUT saves and partial PATCH autosaves remain draft-only.
+// Delivery is a separate, authenticated POST with its own confirmation,
+// identity, binding, feature-flag and idempotency checks.
 export const onRequestPut = saveDraft;
 export const onRequestPatch = saveDraft;
