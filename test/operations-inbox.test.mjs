@@ -14,6 +14,11 @@ import {
   normaliseDraft,
   sameOriginMutation,
 } from "../astro/functions/operations/api/inbox/_drafts.js";
+import { mailboxRoutingReadiness } from "../astro/functions/operations/api/inbox/_readiness.js";
+import {
+  canonicalOperationsMailbox,
+  OPERATIONS_TEST_MAILBOXES,
+} from "../workers/mailboxes.js";
 
 const migrationPath = (name) => fileURLToPath(new URL(`../workers/migrations/${name}`, import.meta.url));
 
@@ -41,6 +46,68 @@ test("mailbox summaries ignore unknown recipients and unsafe counts", () => {
     ]).map(({ id, count }) => [id, count]),
     [["deandre", 4], ["kody", 0], ["tom", 0]],
   );
+});
+
+test("isolated receiver aliases map to the three canonical staff mailboxes", () => {
+  assert.deepEqual(OPERATIONS_TEST_MAILBOXES, [
+    "deandre@inbound.brisbanetvs.com",
+    "kody@inbound.brisbanetvs.com",
+    "tom@inbound.brisbanetvs.com",
+  ]);
+  assert.equal(
+    canonicalOperationsMailbox(" KODY@inbound.brisbanetvs.com "),
+    "kody@brisbanetvs.com",
+  );
+  assert.equal(canonicalOperationsMailbox("other@inbound.brisbanetvs.com"), null);
+});
+
+test("mailbox readiness distinguishes staged, isolated-test and root delivery", () => {
+  assert.deepEqual(
+    mailboxRoutingReadiness({}).status,
+    "staged",
+  );
+  const testReady = mailboxRoutingReadiness({
+    MAIL_TEST_RECEIVER_ENABLED: "true",
+    MAIL_TEST_RECEIVER_DOMAIN: "inbound.brisbanetvs.com",
+  });
+  assert.equal(testReady.status, "test_ready");
+  assert.equal(testReady.rootDeliveryActive, false);
+  assert.equal(testReady.testReceiverActive, true);
+  assert.equal(testReady.testDomain, "inbound.brisbanetvs.com");
+
+  const active = mailboxRoutingReadiness({
+    TEAM_INBOX_ENABLED: "true",
+    MAIL_TEST_RECEIVER_ENABLED: "true",
+  });
+  assert.equal(active.status, "active");
+  assert.equal(active.rootDeliveryActive, true);
+  assert.equal(active.testReceiverActive, false);
+  assert.equal(active.testDomain, null);
+});
+
+test("mail Worker uses exact inbound aliases with private storage and no sending binding", () => {
+  const config = readFileSync(
+    fileURLToPath(new URL("../workers/mail-wrangler.toml", import.meta.url)),
+    "utf8",
+  );
+  for (const address of OPERATIONS_TEST_MAILBOXES) {
+    assert.match(config, new RegExp(address.replaceAll(".", "\\.")));
+  }
+  assert.doesNotMatch(config, /\*\s*@|catch_all|send_email/i);
+  assert.match(config, /binding = "INBOX_MAIL_RAW"/);
+  assert.match(config, /binding = "OPERATIONS_DB"/);
+  assert.match(config, /\[observability\][\s\S]*enabled = true/);
+});
+
+test("mail composer warns on unsaved work and supports keyboard save", () => {
+  const script = readFileSync(
+    fileURLToPath(new URL("../astro/src/scripts/operations-inbox.js", import.meta.url)),
+    "utf8",
+  );
+  assert.match(script, /Discard unsaved changes\?/);
+  assert.match(script, /event\.ctrlKey \|\| event\.metaKey/);
+  assert.match(script, /requestSubmit\(saveDraftButton\)/);
+  assert.match(script, /closeComposer\(\{ force: true \}\)/);
 });
 
 test("drafts accept exact Brisbane TVs sender aliases and reply metadata", () => {

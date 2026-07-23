@@ -6,6 +6,7 @@ import {
   requestedMailbox,
   TEAM_MAILBOXES,
 } from "./_mailboxes.js";
+import { mailboxRoutingReadiness } from "./_readiness.js";
 
 const MAX_LIMIT = 100;
 const MAX_OFFSET = 1_000;
@@ -96,7 +97,8 @@ export async function onRequestGet({ request, env }) {
       env.OPERATIONS_DB.prepare(mailboxCountsSql).all(),
     ]);
 
-    const inboundEnabled = env.TEAM_INBOX_ENABLED === "true";
+    const routing = mailboxRoutingReadiness(env);
+    const inboundEnabled = routing.rootDeliveryActive;
     return json({
       ok: true,
       mailboxAddress: mailbox?.address || null,
@@ -104,10 +106,13 @@ export async function onRequestGet({ request, env }) {
       mailboxes: mailboxSummaries(mailboxCountResult.results),
       acceptedAddresses: TEAM_MAILBOXES.map(({ id, name, address }) => ({ id, name, address })),
       inboundEnabled,
-      delivery: inboundEnabled ? "active" : "staged",
+      delivery: routing.status,
+      routing,
       outboundEnabled: false,
       capabilities: {
-        receive: inboundEnabled,
+        receive: inboundEnabled || routing.testReceiverActive,
+        receiveRoot: inboundEnabled,
+        receiveTest: routing.testReceiverActive,
         createDrafts: true,
         send: false,
       },

@@ -118,6 +118,21 @@ if (
   throw new Error("mail ingest deduplication was not scoped to each approved mailbox");
 }
 
+const stagedReceiverMail = createMessage({ to: "kody@inbound.brisbanetvs.com" });
+const stagedReceiverEnv = createEnvironment();
+await receiveInboundMail(stagedReceiverMail.message, stagedReceiverEnv.env);
+const stagedReceiverWrite = stagedReceiverEnv.writes[0]?.args || [];
+if (
+  stagedReceiverMail.result.rejection
+  || stagedReceiverEnv.objects.length !== 1
+  || stagedReceiverEnv.writes.length !== 1
+  || !stagedReceiverWrite.includes("kody@brisbanetvs.com")
+  || stagedReceiverWrite.includes("kody@inbound.brisbanetvs.com")
+  || !/^kody@brisbanetvs\.com:[a-f0-9]{64}$/.test(stagedReceiverWrite.at(-1) || "")
+) {
+  throw new Error("isolated test receiver did not store mail under Kody's canonical mailbox");
+}
+
 const replyToMail = createMessage({
   from: "bounce+123@platform.example",
   raw: [

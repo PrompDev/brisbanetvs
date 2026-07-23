@@ -123,6 +123,74 @@
   box-shadow: 0 0 0 4px rgba(213, 93, 85, 0.15);
 }
 
+.mail-readiness {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid var(--mail-border);
+  border-radius: 0.85rem;
+  background: var(--mail-surface);
+}
+
+.mail-readiness-item {
+  position: relative;
+  min-width: 0;
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.78rem 0.9rem 0.78rem 1.15rem;
+}
+
+.mail-readiness-item + .mail-readiness-item {
+  border-left: 1px solid var(--mail-border);
+}
+
+.mail-readiness-item::before {
+  position: absolute;
+  top: 0.85rem;
+  left: 0.65rem;
+  width: 0.33rem;
+  height: 0.33rem;
+  border-radius: 50%;
+  background: #9da5a8;
+  content: "";
+}
+
+.mail-readiness-item.is-ready::before {
+  background: #28a477;
+}
+
+.mail-readiness-item.is-staged::before {
+  background: var(--mail-accent-strong);
+}
+
+.mail-readiness-item.is-locked::before {
+  background: #7d878c;
+}
+
+.mail-readiness-item span {
+  color: var(--mail-faint);
+  font-size: 0.57rem;
+  font-weight: 820;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.mail-readiness-item strong {
+  overflow: hidden;
+  color: var(--mail-text);
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mail-readiness-item small {
+  overflow: hidden;
+  color: var(--mail-muted);
+  font-size: 0.6rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .mail-client {
   min-height: 42rem;
   height: min(72vh, 52rem);
@@ -1120,6 +1188,21 @@
   color: #c1524c;
 }
 
+.mail-compose-status.is-dirty {
+  color: var(--mail-accent-strong);
+  font-weight: 760;
+}
+
+.mail-keyboard-hint {
+  margin-left: 0.32rem;
+  border: 1px solid var(--mail-border);
+  border-radius: 0.28rem;
+  padding: 0.08rem 0.25rem;
+  color: var(--mail-faint);
+  font-size: 0.52rem;
+  font-weight: 700;
+}
+
 .mail-visually-hidden {
   position: absolute;
   width: 1px;
@@ -1189,6 +1272,19 @@
     min-height: 42rem;
     display: block;
     border-radius: 0.85rem;
+  }
+
+  .mail-readiness {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mail-readiness-item:nth-child(3) {
+    border-left: 0;
+    border-top: 1px solid var(--mail-border);
+  }
+
+  .mail-readiness-item:nth-child(4) {
+    border-top: 1px solid var(--mail-border);
   }
 
   .mail-rail {
@@ -1309,6 +1405,10 @@
   .mail-compose-dialog {
     width: calc(100vw - 0.75rem);
     max-height: calc(100vh - 0.75rem);
+  }
+
+  .mail-keyboard-hint {
+    display: none;
   }
 
   .mail-compose-form {

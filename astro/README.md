@@ -130,6 +130,27 @@ together.
 
 ---
 
+## Operations customer mailbox
+
+The staff-only `/operations/inbox/` page reads the three approved mailboxes:
+`deandre@brisbanetvs.com`, `kody@brisbanetvs.com` and
+`tom@brisbanetvs.com`. Drafts are stored in Operations D1, but there is no send
+endpoint and Cloudflare Email Sending is not bound to the app.
+
+Inbound delivery is currently tested through three exact addresses on
+`inbound.brisbanetvs.com`. The dedicated Worker in
+`../workers/mail-worker.js` stores safe message fields in D1 and raw MIME in
+private R2. Its `addresses` configuration is intentionally exact and has no
+catch-all. Test-subdomain messages are mapped back to the matching canonical
+root mailbox so the dashboard does not expose a second set of staff mailboxes.
+
+`MAIL_TEST_RECEIVER_ENABLED=true` means the isolated receiver has passed a live
+delivery test. Keep `TEAM_INBOX_ENABLED=false` until the current business mail
+provider forwards the three root addresses to the isolated addresses, or a
+separately approved root MX migration is completed and tested.
+
+---
+
 ## Operations analytics
 
 The staff-only `/operations/analytics/` page reports aggregate, consent-aware

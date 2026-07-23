@@ -23,6 +23,29 @@ import "../../../styles/operations-mailbox.css";
       </div>
     </header>
 
+    <div class="mail-readiness" aria-label="Mailbox readiness">
+      <div class="mail-readiness-item is-ready">
+        <span>Dashboard</span>
+        <strong>Ready</strong>
+        <small>Protected staff access</small>
+      </div>
+      <div class="mail-readiness-item is-checking" data-readiness-incoming-card>
+        <span>Incoming</span>
+        <strong data-readiness-incoming>Checking</strong>
+        <small data-readiness-incoming-detail>Confirming routing state</small>
+      </div>
+      <div class="mail-readiness-item is-ready">
+        <span>Drafts</span>
+        <strong>Ready</strong>
+        <small>Nothing sends automatically</small>
+      </div>
+      <div class="mail-readiness-item is-locked">
+        <span>Sending</span>
+        <strong>Locked</strong>
+        <small>Requires separate approval</small>
+      </div>
+    </div>
+
     <div class="mail-client" data-mail-client>
       <aside class="mail-rail" aria-label="Mailbox navigation">
         <div class="mail-rail-brand">
@@ -260,7 +283,7 @@ import "../../../styles/operations-mailbox.css";
         </div>
         <div class="mail-compose-actions">
           <button class="mail-secondary-button" type="submit" data-save-draft>
-            Save draft
+            Save draft <span class="mail-keyboard-hint" aria-hidden="true">Ctrl S</span>
           </button>
           <button class="mail-send-button" type="button" data-send-message disabled title="Cloudflare Email Sending is not enabled yet">
             <svg viewBox="0 0 24 24" aria-hidden="true">
