@@ -1,4 +1,5 @@
 import PostalMime from "postal-mime";
+import { canonicalOperationsMailbox } from "./mailboxes.js";
 
 const MAX_INBOUND_BYTES = 8 * 1024 * 1024;
 const MAX_SUBJECT_LENGTH = 512;
@@ -20,7 +21,22 @@ function cleanHeader(value, maximum = MAX_HEADER_LENGTH) {
 }
 
 function cleanAddress(value) {
-  return cleanText(value, MAX_ADDRESS_LENGTH).toLowerCase();
+  const address = cleanHeader(value, MAX_ADDRESS_LENGTH).toLowerCase();
+  return /^[^\s@<>]+@[^\s@<>]+$/.test(address) ? address : "";
+}
+
+function firstParsedAddress(value) {
+  const candidates = Array.isArray(value) ? value : [value];
+  for (const candidate of candidates) {
+    if (!candidate || typeof candidate !== "object") continue;
+    const address = cleanAddress(candidate.address);
+    if (address) return address;
+    if (Array.isArray(candidate.group)) {
+      const groupAddress = firstParsedAddress(candidate.group);
+      if (groupAddress) return groupAddress;
+    }
+  }
+  return "";
 }
 
 function messageHeader(message, name) {
@@ -29,10 +45,6 @@ function messageHeader(message, name) {
   } catch {
     return "";
   }
-}
-
-function inboundThreadId(messageId, inReplyTo) {
-  return inReplyTo || messageId || crypto.randomUUID();
 }
 
 function inboundObjectKey(id, now) {
@@ -68,6 +80,47 @@ function parsedMailDetails(message, parsed) {
   };
 }
 
+function referencedMessageIds(details) {
+  const ids = [];
+  const add = (value) => {
+    const cleaned = cleanHeader(value);
+    if (cleaned && !ids.includes(cleaned)) ids.push(cleaned);
+  };
+
+  add(details.inReplyTo);
+  const referenced = details.references.match(/<[^<>]{1,998}>/g) || [];
+  referenced.slice(-20).reverse().forEach(add);
+  return ids.slice(0, 20);
+}
+
+async function resolveThreadId(env, details, mailboxAddress) {
+  const references = referencedMessageIds(details);
+  if (!references.length) return crypto.randomUUID();
+
+  const placeholders = references.map(() => "?").join(", ");
+  const row = await env.OPERATIONS_DB.prepare(
+    `SELECT thread_id FROM mail_messages
+      WHERE mailbox_address = ? AND message_id IN (${placeholders}) AND thread_id <> ''
+      ORDER BY received_at DESC
+      LIMIT 1`,
+  ).bind(mailboxAddress, ...references).first();
+
+  return cleanHeader(row?.thread_id, 200) || crypto.randomUUID();
+}
+
+async function sha256Hex(value) {
+  const digest = await crypto.subtle.digest("SHA-256", value);
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+async function duplicateExists(env, ingestKey) {
+  if (!ingestKey) return false;
+  const row = await env.OPERATIONS_DB.prepare(
+    "SELECT id FROM mail_messages WHERE ingest_key = ? LIMIT 1",
+  ).bind(ingestKey).first();
+  return Boolean(row?.id);
+}
+
 /**
  * Stores routed incoming email for staff review. It never forwards, replies,
  * or sends mail. Cloudflare Email Routing must be explicitly configured with
@@ -87,11 +140,19 @@ export async function receiveInboundMail(message, env) {
     return;
   }
 
+  const mailboxAddress = canonicalOperationsMailbox(message.to);
+  if (!mailboxAddress) {
+    message.setReject("This mailbox does not exist");
+    console.warn(JSON.stringify({ event: "mail_inbox_unknown_recipient_rejected" }));
+    return;
+  }
+
   const id = crypto.randomUUID();
   const now = new Date();
   const receivedAt = now.toISOString();
   const objectKey = inboundObjectKey(id, now);
   let raw;
+  let ingestKey = "";
 
   try {
     // The raw MIME stream is single-use. Buffer it once, then use that one
@@ -109,27 +170,42 @@ export async function receiveInboundMail(message, env) {
       maxNestingDepth: 16,
     });
     const details = parsedMailDetails(message, parsed);
-    const fromAddress = cleanAddress(message.from);
-    const toAddress = cleanAddress(message.to);
+    const envelopeFromAddress = cleanAddress(message.from);
+    const headerFromAddress = firstParsedAddress(parsed?.from);
+    const replyToAddress = firstParsedAddress(parsed?.replyTo)
+      || headerFromAddress
+      || envelopeFromAddress;
+    const fromAddress = headerFromAddress || replyToAddress || envelopeFromAddress;
+    const toAddress = mailboxAddress;
+    ingestKey = `${mailboxAddress}:${await sha256Hex(raw)}`;
+
+    if (await duplicateExists(env, ingestKey)) {
+      console.log(JSON.stringify({ event: "mail_inbox_duplicate_ignored" }));
+      return;
+    }
+
+    const threadId = await resolveThreadId(env, details, mailboxAddress);
 
     await env.INBOX_MAIL_RAW.put(objectKey, raw, {
       httpMetadata: { contentType: "message/rfc822" },
     });
 
-    const existingContact = fromAddress
+    const existingContact = replyToAddress
       ? await env.OPERATIONS_DB.prepare(
         "SELECT id FROM contacts WHERE lower(email) = ? LIMIT 1",
-      ).bind(fromAddress).first()
+      ).bind(replyToAddress).first()
       : null;
 
     await env.OPERATIONS_DB.prepare(
-      "INSERT INTO mail_messages (id, thread_id, contact_id, direction, from_address, to_address, subject, plain_text, received_at, status, created_at, updated_at, raw_object_key, message_id, in_reply_to, references_header, attachment_count, size_bytes) VALUES (?, ?, ?, 'inbound', ?, ?, ?, ?, ?, 'stored', ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO mail_messages (id, thread_id, contact_id, direction, from_address, reply_to_address, envelope_from_address, to_address, subject, plain_text, received_at, status, created_at, updated_at, raw_object_key, message_id, in_reply_to, references_header, attachment_count, size_bytes, mailbox_address, ingest_key) VALUES (?, ?, ?, 'inbound', ?, ?, ?, ?, ?, ?, ?, 'stored', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     )
       .bind(
         id,
-        inboundThreadId(details.messageId, details.inReplyTo),
+        threadId,
         existingContact?.id || null,
         fromAddress,
+        replyToAddress,
+        envelopeFromAddress,
         toAddress,
         details.subject,
         details.plainText,
@@ -142,6 +218,8 @@ export async function receiveInboundMail(message, env) {
         details.references,
         details.attachmentCount,
         raw.byteLength,
+        mailboxAddress,
+        ingestKey,
       )
       .run();
 
@@ -158,6 +236,14 @@ export async function receiveInboundMail(message, env) {
         // Do not log identifiers or message data. The failed storage event is
         // enough for an operator to investigate from Workers logs.
       }
+    }
+    try {
+      if (await duplicateExists(env, ingestKey)) {
+        console.log(JSON.stringify({ event: "mail_inbox_duplicate_ignored" }));
+        return;
+      }
+    } catch {
+      // Continue to the safe rejection below when duplicate verification fails.
     }
     message.setReject("The team inbox could not safely store this message");
     // Parser and storage errors can contain attacker-controlled MIME header

@@ -1,5 +1,11 @@
 import { hasOperationsDatabase, json, requireOperationsAccess } from "../../_lib/auth.js";
-import { inboxRouteId, normaliseDraft, readDraftJson, toDraftDetail } from "../_drafts.js";
+import {
+  inboxRouteId,
+  normaliseDraft,
+  readDraftJson,
+  sameOriginMutation,
+  toDraftDetail,
+} from "../_drafts.js";
 
 async function requireMailbox(request, env, eventName) {
   const access = await requireOperationsAccess(request, env);
@@ -13,7 +19,7 @@ async function requireMailbox(request, env, eventName) {
 
 async function findDraft(env, id) {
   return env.OPERATIONS_DB.prepare(
-    "SELECT id, to_address, subject, plain_text, status, created_at, updated_at, created_by FROM mail_drafts WHERE id = ? LIMIT 1",
+    "SELECT id, from_address, to_address, subject, plain_text, status, thread_id, reply_to_message_id, created_at, updated_at, created_by, updated_by FROM mail_drafts WHERE id = ? LIMIT 1",
   ).bind(id).first();
 }
 
@@ -41,6 +47,7 @@ export async function onRequestGet({ request, env, params }) {
 async function saveDraft({ request, env, params }) {
   const mailbox = await requireMailbox(request, env, "operations_draft_database_not_configured");
   if (mailbox.response) return mailbox.response;
+  if (!sameOriginMutation(request)) return json({ ok: false, error: "invalid_origin" }, 403);
 
   const id = inboxRouteId(params?.id);
   if (!id) return json({ ok: false, error: "draft_not_found" }, 404);
@@ -57,17 +64,31 @@ async function saveDraft({ request, env, params }) {
 
     const now = new Date().toISOString();
     await env.OPERATIONS_DB.prepare(
-      "UPDATE mail_drafts SET to_address = ?, subject = ?, plain_text = ?, status = ?, updated_at = ? WHERE id = ?",
-    ).bind(draft.toAddress, draft.subject, draft.plainText, draft.status, now, id).run();
+      "UPDATE mail_drafts SET from_address = ?, to_address = ?, subject = ?, plain_text = ?, status = ?, thread_id = ?, reply_to_message_id = ?, updated_at = ?, updated_by = ? WHERE id = ?",
+    ).bind(
+      draft.fromAddress,
+      draft.toAddress,
+      draft.subject,
+      draft.plainText,
+      draft.status,
+      draft.threadId,
+      draft.inReplyTo,
+      now,
+      mailbox.access.identity?.email || "staff",
+      id,
+    ).run();
 
     return json({
       ok: true,
       draft: toDraftDetail({
         ...existing,
+        from_address: draft.fromAddress,
         to_address: draft.toAddress,
         subject: draft.subject,
         plain_text: draft.plainText,
         status: draft.status,
+        thread_id: draft.threadId,
+        reply_to_message_id: draft.inReplyTo,
         updated_at: now,
       }),
       sendEnabled: false,

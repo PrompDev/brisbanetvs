@@ -1,8 +1,15 @@
 import { hasOperationsDatabase, json, requireOperationsAccess } from "../_lib/auth.js";
 import { boundedInteger, requestedListStatus } from "./_drafts.js";
+import {
+  mailboxForAddress,
+  mailboxSummaries,
+  requestedMailbox,
+  TEAM_MAILBOXES,
+} from "./_mailboxes.js";
 
 const MAX_LIMIT = 100;
 const MAX_OFFSET = 1_000;
+const MAX_SEARCH_LENGTH = 120;
 const MESSAGE_STATUSES = new Set(["all", "stored", "archived", "blocked"]);
 
 function safeText(value, maximum, fallback = "") {
@@ -26,18 +33,21 @@ function toMessage(row) {
     id: safeText(row?.id, 200),
     threadId: safeText(row?.thread_id, 200),
     from: safeText(row?.from_address, 320),
+    to: safeText(row?.to_address, 320),
     subject: safeText(row?.subject, 180, "(No subject)"),
     preview: preview(row?.plain_text),
     receivedAt: safeText(row?.received_at, 64),
     status: safeText(row?.status, 32, "stored"),
     attachmentCount: safeCount(row?.attachment_count),
+    readAt: safeText(row?.read_at, 64) || null,
+    mailbox: mailboxForAddress(row?.mailbox_address || row?.to_address),
   };
 }
 
 /**
- * This is intentionally read-only. Incoming delivery is not enabled until the
- * existing domain mail service has a reviewed migration plan, and there is no
- * outbound binding or send endpoint in this application.
+ * Lists safe inbound message summaries. Raw MIME and attachment objects remain
+ * private in R2, and outbound delivery stays disabled until Email Sending is
+ * explicitly onboarded and reviewed.
  */
 export async function onRequestGet({ request, env }) {
   const access = await requireOperationsAccess(request, env);
@@ -51,24 +61,48 @@ export async function onRequestGet({ request, env }) {
   const status = requestedListStatus(url.searchParams.get("status"), MESSAGE_STATUSES);
   const limit = Math.max(1, boundedInteger(url.searchParams.get("limit"), 50, MAX_LIMIT));
   const offset = boundedInteger(url.searchParams.get("offset"), 0, MAX_OFFSET);
-  const where = status === "all"
-    ? "WHERE direction = 'inbound'"
-    : "WHERE direction = 'inbound' AND status = ?";
-  const values = status === "all" ? [] : [status];
-  const listSql = `SELECT id, thread_id, from_address, subject, plain_text, received_at, status, attachment_count
+  const mailbox = requestedMailbox(url.searchParams.get("mailbox"));
+  const search = safeText(url.searchParams.get("query"), MAX_SEARCH_LENGTH).trim().toLowerCase();
+  const conditions = ["direction = 'inbound'"];
+  const values = [];
+
+  if (status !== "all") {
+    conditions.push("status = ?");
+    values.push(status);
+  }
+  if (mailbox) {
+    conditions.push("lower(mailbox_address) = ?");
+    values.push(mailbox.address);
+  }
+  if (search) {
+    const searchValue = `%${search}%`;
+    conditions.push("(lower(from_address) LIKE ? OR lower(to_address) LIKE ? OR lower(subject) LIKE ? OR lower(plain_text) LIKE ?)");
+    values.push(searchValue, searchValue, searchValue, searchValue);
+  }
+
+  const where = `WHERE ${conditions.join(" AND ")}`;
+  const listSql = `SELECT id, thread_id, from_address, to_address, mailbox_address, subject, plain_text, received_at, status, attachment_count, read_at
     FROM mail_messages ${where} ORDER BY received_at DESC, id DESC LIMIT ? OFFSET ?`;
   const countSql = `SELECT COUNT(*) AS count FROM mail_messages ${where}`;
+  const mailboxCountsSql = `SELECT lower(mailbox_address) AS address, COUNT(*) AS count
+    FROM mail_messages
+    WHERE direction = 'inbound' AND status = 'stored'
+    GROUP BY lower(mailbox_address)`;
 
   try {
-    const [listResult, countRow] = await Promise.all([
+    const [listResult, countRow, mailboxCountResult] = await Promise.all([
       env.OPERATIONS_DB.prepare(listSql).bind(...values, limit, offset).all(),
       env.OPERATIONS_DB.prepare(countSql).bind(...values).first(),
+      env.OPERATIONS_DB.prepare(mailboxCountsSql).all(),
     ]);
 
     const inboundEnabled = env.TEAM_INBOX_ENABLED === "true";
     return json({
       ok: true,
-      mailboxAddress: "team@brisbanetvs.com",
+      mailboxAddress: mailbox?.address || null,
+      mailbox: mailbox || { id: "all", name: "All mailboxes", address: null },
+      mailboxes: mailboxSummaries(mailboxCountResult.results),
+      acceptedAddresses: TEAM_MAILBOXES.map(({ id, name, address }) => ({ id, name, address })),
       inboundEnabled,
       delivery: inboundEnabled ? "active" : "staged",
       outboundEnabled: false,
@@ -78,6 +112,7 @@ export async function onRequestGet({ request, env }) {
         send: false,
       },
       status,
+      query: search,
       total: safeCount(countRow?.count),
       offset,
       limit,

@@ -1,7 +1,14 @@
+import {
+  DEFAULT_TEAM_MAILBOX,
+  isTeamMailboxAddress,
+} from "./_mailboxes.js";
+
 const MAX_DRAFT_BYTES = 16_000;
 const MAX_EMAIL_LENGTH = 320;
 const MAX_SUBJECT_LENGTH = 180;
 const MAX_BODY_LENGTH = 10_000;
+const MAX_THREAD_ID_LENGTH = 200;
+const MAX_MESSAGE_ID_LENGTH = 4_096;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DRAFT_STATUSES = new Set(["draft", "archived"]);
 
@@ -11,6 +18,19 @@ function hasOwn(object, key) {
 
 export function isRecord(value) {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+export function sameOriginMutation(request) {
+  const origin = request.headers.get("origin");
+  const fetchSite = request.headers.get("sec-fetch-site");
+  if (fetchSite && fetchSite !== "same-origin") return false;
+  if (!origin) return true;
+
+  try {
+    return new URL(origin).origin === new URL(request.url).origin;
+  } catch {
+    return false;
+  }
 }
 
 function cleanSingleLine(value, maximum) {
@@ -50,15 +70,21 @@ export function normaliseDraft(payload, existing = null) {
   if (!isRecord(payload)) return null;
 
   const hasTo = hasOwn(payload, "to");
+  const hasFrom = hasOwn(payload, "from");
   const hasSubject = hasOwn(payload, "subject");
   const hasPlainText = hasOwn(payload, "plainText");
   const hasStatus = hasOwn(payload, "status");
+  const hasThreadId = hasOwn(payload, "threadId");
+  const hasInReplyTo = hasOwn(payload, "inReplyTo");
 
   if (
     (hasTo && typeof payload.to !== "string")
+    || (hasFrom && typeof payload.from !== "string")
     || (hasSubject && typeof payload.subject !== "string")
     || (hasPlainText && typeof payload.plainText !== "string")
     || (hasStatus && typeof payload.status !== "string")
+    || (hasThreadId && typeof payload.threadId !== "string")
+    || (hasInReplyTo && typeof payload.inReplyTo !== "string")
   ) {
     return null;
   }
@@ -66,6 +92,10 @@ export function normaliseDraft(payload, existing = null) {
   const toAddress = (hasTo
     ? cleanSingleLine(payload.to, MAX_EMAIL_LENGTH)
     : existingText(existing, "to_address")
+  ).toLowerCase();
+  const fromAddress = (hasFrom
+    ? cleanSingleLine(payload.from, MAX_EMAIL_LENGTH)
+    : cleanSingleLine(existingText(existing, "from_address"), MAX_EMAIL_LENGTH) || DEFAULT_TEAM_MAILBOX
   ).toLowerCase();
   const subject = hasSubject
     ? cleanSingleLine(payload.subject, MAX_SUBJECT_LENGTH)
@@ -76,9 +106,32 @@ export function normaliseDraft(payload, existing = null) {
   const status = hasStatus
     ? requestedDraftStatus(payload.status)
     : requestedDraftStatus(existingText(existing, "status")) || "draft";
+  const threadId = hasThreadId
+    ? cleanSingleLine(payload.threadId, MAX_THREAD_ID_LENGTH)
+    : cleanSingleLine(existingText(existing, "thread_id"), MAX_THREAD_ID_LENGTH);
+  const inReplyTo = hasInReplyTo
+    ? cleanSingleLine(payload.inReplyTo, MAX_MESSAGE_ID_LENGTH)
+    : cleanSingleLine(existingText(existing, "reply_to_message_id"), MAX_MESSAGE_ID_LENGTH);
 
-  if (!EMAIL_PATTERN.test(toAddress) || !subject || !plainText || !status) return null;
-  return { toAddress, subject, plainText, status };
+  if (
+    !EMAIL_PATTERN.test(toAddress)
+    || !isTeamMailboxAddress(fromAddress)
+    || !subject
+    || !plainText
+    || !status
+  ) {
+    return null;
+  }
+
+  return {
+    toAddress,
+    fromAddress,
+    subject,
+    plainText,
+    status,
+    threadId,
+    inReplyTo,
+  };
 }
 
 export async function readDraftJson(request) {
@@ -123,9 +176,12 @@ export function toDraftSummary(row) {
   return {
     id: cleanDatabaseText(row?.id, 200),
     to: cleanDatabaseText(row?.to_address, MAX_EMAIL_LENGTH),
+    from: cleanDatabaseText(row?.from_address, MAX_EMAIL_LENGTH, DEFAULT_TEAM_MAILBOX),
     subject: cleanDatabaseText(row?.subject, MAX_SUBJECT_LENGTH, "(No subject)"),
     preview: preview(row?.plain_text),
     status: requestedDraftStatus(row?.status) || "draft",
+    threadId: cleanDatabaseText(row?.thread_id, MAX_THREAD_ID_LENGTH),
+    inReplyTo: cleanDatabaseText(row?.reply_to_message_id, MAX_MESSAGE_ID_LENGTH),
     createdAt: cleanDatabaseText(row?.created_at, 64),
     updatedAt: cleanDatabaseText(row?.updated_at, 64),
   };
