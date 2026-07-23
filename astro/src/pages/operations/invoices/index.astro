@@ -151,6 +151,57 @@ import "../../../styles/operations-invoices.css";
               <strong data-editor-total>A$0.00</strong>
             </div>
 
+            <section class="invoice-payment-settings" aria-labelledby="invoice-payment-settings-title">
+              <header>
+                <div>
+                  <span>Payment block</span>
+                  <strong id="invoice-payment-settings-title">How the customer can pay</strong>
+                </div>
+                <p>The payment link generates the QR code. These details stay only in this browser tab.</p>
+              </header>
+
+              <div class="invoice-field-grid is-two">
+                <label class="invoice-field">
+                  <span>Online payment link <b aria-hidden="true">*</b></span>
+                  <input name="paymentUrl" type="url" maxlength="500" inputmode="url" placeholder="https://brisbanetvs.com/pay" required />
+                </label>
+                <label class="invoice-field">
+                  <span>Bank name</span>
+                  <input name="bankName" type="text" maxlength="100" placeholder="Your bank" />
+                </label>
+              </div>
+
+              <div class="invoice-field-grid is-two">
+                <label class="invoice-field">
+                  <span>Account name</span>
+                  <input name="bankAccountName" type="text" maxlength="120" placeholder="Brisbane TVs" />
+                </label>
+                <label class="invoice-field">
+                  <span>BSB</span>
+                  <input name="bankBsb" type="text" maxlength="12" inputmode="numeric" placeholder="000-000" />
+                </label>
+              </div>
+
+              <div class="invoice-field-grid is-two">
+                <label class="invoice-field">
+                  <span>Account number</span>
+                  <input name="bankAccountNumber" type="text" maxlength="24" inputmode="numeric" placeholder="00000000" />
+                </label>
+                <label class="invoice-field">
+                  <span>Payment reference <small>optional</small></span>
+                  <input name="paymentReference" type="text" maxlength="80" placeholder="Uses the invoice number when blank" />
+                </label>
+              </div>
+
+              <div class="invoice-payment-placeholder-note">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 3 2.8 20h18.4z"></path>
+                  <path d="M12 9v4M12 17h.01"></path>
+                </svg>
+                Replace the placeholder payment link, BSB and account number before issuing a customer invoice.
+              </div>
+            </section>
+
             <div class="invoice-field-grid is-two invoice-notes-grid">
               <label class="invoice-field">
                 <span>Customer note <small>optional</small></span>
@@ -188,6 +239,10 @@ import "../../../styles/operations-invoices.css";
               <div>
                 <span>Total</span>
                 <strong data-review-total>A$0.00</strong>
+              </div>
+              <div>
+                <span>Payment details</span>
+                <strong data-review-payment>Placeholder details — replace before issue</strong>
               </div>
             </div>
 
@@ -277,6 +332,15 @@ import "../../../styles/operations-invoices.css";
             </div>
           </div>
 
+          <a
+            class="invoice-sheet-pay-link"
+            data-preview-payment-link
+            target="_blank"
+            rel="noreferrer"
+          >
+            View and pay online
+          </a>
+
           <div class="invoice-sheet-table-wrap">
             <table class="invoice-sheet-table">
               <thead>
@@ -298,6 +362,31 @@ import "../../../styles/operations-invoices.css";
 
           <div class="invoice-sheet-bottom">
             <div class="invoice-sheet-payment-column">
+              <div class="invoice-sheet-payment-options">
+                <div class="invoice-sheet-qr-row">
+                  <img data-preview-payment-qr alt="Scan to pay online" width="232" height="232" />
+                  <div>
+                    <a data-preview-payment-link target="_blank" rel="noreferrer">View and pay online</a>
+                    <div class="invoice-sheet-payment-brands" aria-label="Accepted online payment methods">
+                      <img src="/media/operations/payments/visa.svg" alt="Visa" />
+                      <img src="/media/operations/payments/mastercard.svg" alt="Mastercard" />
+                      <img src="/media/operations/payments/amex.svg" alt="American Express" />
+                      <span><img src="/media/operations/payments/applepay.svg" alt="Apple Pay" /></span>
+                      <span><img src="/media/operations/payments/googlepay.svg" alt="Google Pay" /></span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="invoice-sheet-bank">
+                  <span>Bank transfer</span>
+                  <p data-preview-bank-name-wrap><b>Bank</b><span data-preview-bank-name></span></p>
+                  <p><b>Account name</b><span data-preview-bank-account-name></span></p>
+                  <p><b>BSB</b><span data-preview-bank-bsb></span></p>
+                  <p><b>Account number</b><span data-preview-bank-account-number></span></p>
+                  <p><b>Reference</b><span data-preview-payment-reference></span></p>
+                </div>
+              </div>
+
               <div class="invoice-sheet-notes" data-preview-notes-wrap hidden>
                 <span>Note</span>
                 <p data-preview-notes></p>

@@ -1,8 +1,16 @@
+import qrcode from "qrcode-generator";
+
 const builder = document.querySelector("[data-invoice-builder]");
 
 if (builder) {
   const STORAGE_KEY = "brisbane-operations-invoice-draft-v1";
   const STEP_ORDER = ["details", "items", "review"];
+  const PAYMENT_PLACEHOLDERS = {
+    paymentUrl: "https://brisbanetvs.com/pay",
+    bankAccountName: "Brisbane TVs",
+    bankBsb: "000-000",
+    bankAccountNumber: "00000000",
+  };
   const currency = new Intl.NumberFormat("en-AU", {
     style: "currency",
     currency: "AUD",
@@ -67,6 +75,12 @@ if (builder) {
       supplierAbn: "",
       customerNote: "",
       paymentInstructions: "",
+      paymentUrl: PAYMENT_PLACEHOLDERS.paymentUrl,
+      bankName: "",
+      bankAccountName: PAYMENT_PLACEHOLDERS.bankAccountName,
+      bankBsb: PAYMENT_PLACEHOLDERS.bankBsb,
+      bankAccountNumber: PAYMENT_PLACEHOLDERS.bankAccountNumber,
+      paymentReference: "",
       items: [createLine()],
     };
   };
@@ -102,6 +116,12 @@ if (builder) {
       supplierAbn: cleanText(value.supplierAbn, 14),
       customerNote: cleanText(value.customerNote, 800),
       paymentInstructions: cleanText(value.paymentInstructions, 800),
+      paymentUrl: cleanText(value.paymentUrl, 500) || defaults.paymentUrl,
+      bankName: cleanText(value.bankName, 100),
+      bankAccountName: cleanText(value.bankAccountName, 120) || defaults.bankAccountName,
+      bankBsb: cleanText(value.bankBsb, 12) || defaults.bankBsb,
+      bankAccountNumber: cleanText(value.bankAccountNumber, 24) || defaults.bankAccountNumber,
+      paymentReference: cleanText(value.paymentReference, 80),
       items: items.length ? items : [createLine()],
     };
   }
@@ -130,6 +150,12 @@ if (builder) {
       "supplierAbn",
       "customerNote",
       "paymentInstructions",
+      "paymentUrl",
+      "bankName",
+      "bankAccountName",
+      "bankBsb",
+      "bankAccountNumber",
+      "paymentReference",
     ].forEach((name) => {
       field(name).value = state[name];
     });
@@ -150,6 +176,12 @@ if (builder) {
       "supplierAbn",
       "customerNote",
       "paymentInstructions",
+      "paymentUrl",
+      "bankName",
+      "bankAccountName",
+      "bankBsb",
+      "bankAccountNumber",
+      "paymentReference",
     ].forEach((name) => {
       state[name] = field(name).value.trim();
     });
@@ -221,6 +253,53 @@ if (builder) {
     const hasValue = Boolean(String(value || "").trim());
     element.textContent = hasValue ? value : "";
     wrap.hidden = !hasValue;
+  }
+
+  function safePaymentUrl(value) {
+    try {
+      const url = new URL(String(value || "").trim());
+      return url.protocol === "https:" || url.protocol === "http:" ? url.href : "";
+    } catch {
+      return "";
+    }
+  }
+
+  function renderPaymentBlock(number) {
+    const paymentUrl = safePaymentUrl(state.paymentUrl);
+    builder.querySelectorAll("[data-preview-payment-link]").forEach((link) => {
+      if (paymentUrl) {
+        link.href = paymentUrl;
+        link.removeAttribute("aria-disabled");
+      } else {
+        link.removeAttribute("href");
+        link.setAttribute("aria-disabled", "true");
+      }
+    });
+
+    const qr = qrcode(0, "M");
+    qr.addData(paymentUrl || PAYMENT_PLACEHOLDERS.paymentUrl);
+    qr.make();
+    builder.querySelector("[data-preview-payment-qr]").src = qr.createDataURL(8, 4);
+
+    const bankNameWrap = builder.querySelector("[data-preview-bank-name-wrap]");
+    setText("[data-preview-bank-name]", state.bankName);
+    bankNameWrap.hidden = !state.bankName;
+    setText("[data-preview-bank-account-name]", state.bankAccountName);
+    setText("[data-preview-bank-bsb]", state.bankBsb);
+    setText("[data-preview-bank-account-number]", state.bankAccountNumber);
+    setText("[data-preview-payment-reference]", state.paymentReference || number);
+
+    const usingPlaceholderDetails = (
+      state.paymentUrl === PAYMENT_PLACEHOLDERS.paymentUrl
+      || state.bankBsb === PAYMENT_PLACEHOLDERS.bankBsb
+      || state.bankAccountNumber === PAYMENT_PLACEHOLDERS.bankAccountNumber
+    );
+    setText(
+      "[data-review-payment]",
+      usingPlaceholderDetails
+        ? "Placeholder details — replace before issue"
+        : "QR, card and bank transfer included",
+    );
   }
 
   function renderLineItems() {
@@ -320,6 +399,7 @@ if (builder) {
     setText("[data-editor-total]", currency.format(summary.total));
     builder.querySelector("[data-preview-gst-row]").hidden = !state.gstRegistered;
 
+    renderPaymentBlock(number);
     setOptionalText("[data-preview-notes]", "[data-preview-notes-wrap]", state.customerNote);
     setOptionalText("[data-preview-payment]", "[data-preview-payment-wrap]", state.paymentInstructions);
 
@@ -406,6 +486,11 @@ if (builder) {
     const items = completeItems();
     if (!items.length) {
       showMessage("Add at least one complete line item with a description, quantity and unit price.");
+      return false;
+    }
+    if (!safePaymentUrl(state.paymentUrl)) {
+      markInvalid(field("paymentUrl"));
+      showMessage("Add a valid http or https payment link so the invoice QR code can be generated.");
       return false;
     }
     if (items.some((item) => item.unitPriceValue < 0)) {

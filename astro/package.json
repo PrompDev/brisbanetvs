@@ -15,9 +15,10 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^4.16.0",
-    "@astrojs/sitemap": "^3.2.0",
     "@astrojs/rss": "^4.0.7",
-    "jose": "^6.2.3"
+    "@astrojs/sitemap": "^3.2.0",
+    "astro": "^4.16.0",
+    "jose": "^6.2.3",
+    "qrcode-generator": "^2.0.4"
   }
 }
