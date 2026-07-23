@@ -757,49 +757,10 @@
 }
 
 .invoice-sheet-brand {
-  display: flex;
-  align-items: center;
-  gap: .6rem;
-}
-
-.invoice-sheet-mark {
-  position: relative;
   display: block;
-  width: 2rem;
-  height: 2rem;
-  border: 1.5px solid #17222b;
-}
-
-.invoice-sheet-mark i {
-  position: absolute;
-  top: .57rem;
-  left: .56rem;
-  width: .76rem;
-  height: 1px;
-  background: #17222b;
-  transform: rotate(45deg);
-}
-
-.invoice-sheet-mark i + i {
-  top: 1.1rem;
-  transform: rotate(-45deg);
-}
-
-.invoice-sheet-brand strong,
-.invoice-sheet-brand small {
-  display: block;
-  letter-spacing: .16em;
-}
-
-.invoice-sheet-brand strong {
-  font-size: .8rem;
-}
-
-.invoice-sheet-brand small {
-  margin-top: .1rem;
-  color: #69757c;
-  font-size: .52rem;
-  letter-spacing: .3em;
+  width: clamp(6.6rem, 15vw, 8.4rem);
+  height: auto;
+  filter: invert(1) hue-rotate(180deg);
 }
 
 .invoice-sheet-parties {
@@ -1117,7 +1078,6 @@
 }
 
 :root[data-theme="dark"] .invoice-sheet .invoice-sheet-header > h2,
-:root[data-theme="dark"] .invoice-sheet .invoice-sheet-brand strong,
 :root[data-theme="dark"] .invoice-sheet .invoice-sheet-parties strong,
 :root[data-theme="dark"] .invoice-sheet .invoice-sheet-hero strong,
 :root[data-theme="dark"] .invoice-sheet .invoice-sheet-summary dd {

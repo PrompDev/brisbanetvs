@@ -45,8 +45,16 @@ const marketingNavigation = navigation.filter((item) => item.key === "analytics"
       <aside class="operations-sidebar" aria-label="Operations navigation">
         <div class="operations-brand-wrap">
           <a class="operations-brand" href="/operations/" aria-label="Brisbane TVs operations">
-            <span class="operations-brand-mark" aria-hidden="true"><i></i><i></i></span>
-            <span><strong>BRISBANE</strong><small>TVS · OPERATIONS</small></span>
+            <span class="operations-brand-lockup">
+              <img
+                class="operations-brand-logo"
+                src="https://cdn.brisbanetvs.com/brisbanetvs-logo-white.png"
+                alt=""
+                width="4000"
+                height="990"
+              />
+              <small class="operations-brand-context">OPERATIONS</small>
+            </span>
           </a>
         </div>
 
@@ -89,8 +97,16 @@ const marketingNavigation = navigation.filter((item) => item.key === "analytics"
       <div class="operations-content">
         <header class="operations-mobile-header">
           <a class="operations-brand" href="/operations/" aria-label="Brisbane TVs operations">
-            <span class="operations-brand-mark" aria-hidden="true"><i></i><i></i></span>
-            <span><strong>BRISBANE</strong><small>TVS · OPERATIONS</small></span>
+            <span class="operations-brand-lockup">
+              <img
+                class="operations-brand-logo"
+                src="https://cdn.brisbanetvs.com/brisbanetvs-logo-white.png"
+                alt=""
+                width="4000"
+                height="990"
+              />
+              <small class="operations-brand-context">OPERATIONS</small>
+            </span>
           </a>
           <div class="operations-mobile-actions">
             <span class="operations-mobile-secure"><span class="operations-secure-dot" aria-hidden="true"></span> Secure</span>
@@ -195,13 +211,10 @@ const marketingNavigation = navigation.filter((item) => item.key === "analytics"
 
   .operations-shell { display: grid; grid-template-columns: 14.875rem minmax(0, 1fr); min-height: 100vh; }
   .operations-sidebar { display: flex; position: sticky; top: 0; flex-direction: column; height: 100vh; padding: 1.55rem 1.05rem 1rem; background: #131619; color: #fff; }
-  .operations-brand { display: flex; align-items: center; gap: .7rem; color: #fff; text-decoration: none; }
-  .operations-brand-mark { position: relative; display: block; flex: 0 0 auto; width: 1.85rem; height: 1.85rem; border: 1.5px solid currentColor; }
-  .operations-brand-mark i { position: absolute; top: .52rem; left: .5rem; width: .72rem; height: 1px; background: currentColor; transform: rotate(45deg); }
-  .operations-brand-mark i + i { top: 1.02rem; transform: rotate(-45deg); }
-  .operations-brand strong, .operations-brand small { display: block; }
-  .operations-brand strong { font-size: .82rem; letter-spacing: .16em; }
-  .operations-brand small { margin-top: .12rem; color: #9ea4a8; font-size: .49rem; letter-spacing: .26em; }
+  .operations-brand { display: inline-flex; color: #fff; text-decoration: none; }
+  .operations-brand-lockup { display: inline-flex; flex-direction: column; align-items: flex-start; gap: .28rem; }
+  .operations-brand-logo { display: block; width: 8.4rem; height: auto; }
+  .operations-brand-context { display: block; margin: 0; color: #9ea4a8; font-size: .49rem; font-weight: 700; letter-spacing: .28em; line-height: 1; }
   .operations-nav { display: grid; gap: .2rem; margin-top: 2.35rem; }
   .operations-nav-link { display: flex; align-items: center; gap: .68rem; border-radius: .5rem; padding: .66rem .7rem; color: #aeb3b8; text-decoration: none; transition: background .18s ease, color .18s ease; }
   .operations-nav-link:hover { background: #202428; color: #fff; }
@@ -405,8 +418,8 @@ const marketingNavigation = navigation.filter((item) => item.key === "analytics"
     .operations-shell { grid-template-columns: 1fr; }
     .operations-sidebar { display: none; }
     .operations-mobile-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.2rem 1.3rem .95rem; border-bottom: 1px solid #e1ded7; background: #fffdf9; }
-    .operations-mobile-header .operations-brand { color: #131619; }
-    .operations-mobile-header .operations-brand small { color: #697076; }
+    .operations-mobile-header .operations-brand-lockup { border-radius: .22rem; padding: .48rem .58rem .42rem; background: #131619; }
+    .operations-mobile-header .operations-brand-context { color: #aeb3b8; }
     .operations-mobile-secure { display: inline-flex; align-items: center; gap: .45rem; color: #536270; font-size: .76rem; font-weight: 730; }
     .operations-mobile-secure .operations-secure-dot { margin: 0; }
     .operations-mobile-nav { display: flex; overflow-x: auto; gap: .35rem; padding: .7rem 1.25rem; border-bottom: 1px solid #dedbd4; background: #fffdf9; }
@@ -415,8 +428,7 @@ const marketingNavigation = navigation.filter((item) => item.key === "analytics"
     .operations-theme-toggle.is-compact { width: auto; min-height: 2.15rem; padding: .42rem .58rem; }
     :root[data-theme="dark"] .operations-mobile-header,
     :root[data-theme="dark"] .operations-mobile-nav { border-color: var(--operations-border); background: var(--operations-sidebar); }
-    :root[data-theme="dark"] .operations-mobile-header .operations-brand { color: var(--operations-text); }
-    :root[data-theme="dark"] .operations-mobile-header .operations-brand small,
+    :root[data-theme="dark"] .operations-mobile-header .operations-brand-context,
     :root[data-theme="dark"] .operations-mobile-secure,
     :root[data-theme="dark"] .operations-mobile-nav-link { color: var(--operations-muted); }
     :root[data-theme="dark"] .operations-mobile-nav-link.is-active { color: #171717; background: #ececec; }
