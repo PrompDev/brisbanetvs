@@ -97,6 +97,6 @@ brisbanetvs/
 
 ## Notes
 
-- **Email:** Email routing still needs to be connected back to SiteGround to send/receive emails.
+- **Email:** Existing `@brisbanetvs.com` delivery still uses the current mail provider. An isolated Cloudflare receiver at `inbound.brisbanetvs.com` tests the Operations inbox without changing the root MX records; outbound sending remains locked.
 - **DNS/Hosting:** Domain and DNS are managed through Cloudflare.
 - **Legacy root files:** These are plain HTML/CSS; production is built from `astro/`.

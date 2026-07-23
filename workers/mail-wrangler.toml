@@ -1,0 +1,32 @@
+name = "brisbanetvs-mail-ingest"
+main = "mail-worker.js"
+compatibility_date = "2026-07-23"
+compatibility_flags = ["nodejs_compat"]
+account_id = "8d813ed7931872a79e12d13a6669b601"
+workers_dev = false
+
+# These isolated test addresses do not alter the existing root-domain MX
+# records. Wrangler creates only exact Email Routing rules: no catch-all.
+addresses = [
+  "deandre@inbound.brisbanetvs.com",
+  "kody@inbound.brisbanetvs.com",
+  "tom@inbound.brisbanetvs.com",
+]
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+invocation_logs = true
+head_sampling_rate = 1
+
+[[r2_buckets]]
+binding = "INBOX_MAIL_RAW"
+bucket_name = "brisbanetvs-operations-mail"
+
+[[d1_databases]]
+binding = "OPERATIONS_DB"
+database_name = "brisbanetvs-operations"
+database_id = "56374f18-ad57-47e3-a536-800de56c665d"

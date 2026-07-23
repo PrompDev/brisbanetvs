@@ -6,6 +6,9 @@ if (inboxRoot) {
   const connectionCopy = inboxRoot.querySelector("[data-connection-copy]");
   const routingState = inboxRoot.querySelector("[data-routing-state]");
   const routingDetail = inboxRoot.querySelector("[data-routing-detail]");
+  const readinessIncomingCard = inboxRoot.querySelector("[data-readiness-incoming-card]");
+  const readinessIncoming = inboxRoot.querySelector("[data-readiness-incoming]");
+  const readinessIncomingDetail = inboxRoot.querySelector("[data-readiness-incoming-detail]");
   const listKicker = inboxRoot.querySelector("[data-list-kicker]");
   const listTitle = inboxRoot.querySelector("[data-list-title]");
   const listCount = inboxRoot.querySelector("[data-list-count]");
@@ -70,6 +73,8 @@ if (inboxRoot) {
     draftId: null,
     composerThreadId: "",
     composerInReplyTo: "",
+    composerDirty: false,
+    routing: { status: "staged", rootDeliveryActive: false, testReceiverActive: false },
     capabilities: { receive: false, createDrafts: true, send: false },
   };
 
@@ -146,6 +151,49 @@ if (inboxRoot) {
     connectionCopy.textContent = message;
     connectionStatus.classList.remove("is-checking", "is-ready", "is-staged", "is-error");
     connectionStatus.classList.add(`is-${tone}`);
+  }
+
+  function applyRoutingState(routing = {}) {
+    const status = ["active", "test_ready", "staged"].includes(routing.status)
+      ? routing.status
+      : "staged";
+    state.routing = {
+      status,
+      rootDeliveryActive: routing.rootDeliveryActive === true,
+      testReceiverActive: routing.testReceiverActive === true,
+      testDomain: typeof routing.testDomain === "string" ? routing.testDomain : "",
+    };
+    readinessIncomingCard.classList.remove("is-checking", "is-ready", "is-staged");
+
+    if (status === "active") {
+      setConnection("Cloudflare is receiving mail for the Operations inbox.", "ready");
+      routingState.textContent = "Root routing active";
+      routingDetail.textContent = "Three explicit staff address rules are enabled.";
+      readinessIncoming.textContent = "Live";
+      readinessIncomingDetail.textContent = "Root staff addresses";
+      readinessIncomingCard.classList.add("is-ready");
+      return;
+    }
+
+    if (status === "test_ready") {
+      setConnection(
+        "The isolated Cloudflare test receiver is ready. Existing business mail is unchanged.",
+        "ready",
+      );
+      routingState.textContent = "Test receiver ready";
+      routingDetail.textContent = "Root addresses still use the existing mail provider.";
+      readinessIncoming.textContent = "Test ready";
+      readinessIncomingDetail.textContent = state.routing.testDomain || "Isolated receiver";
+      readinessIncomingCard.classList.add("is-ready");
+      return;
+    }
+
+    setConnection("Mailbox dashboard ready. Inbound activation is staged.", "staged");
+    routingState.textContent = "Inbound activation staged";
+    routingDetail.textContent = "Existing business mail remains unchanged.";
+    readinessIncoming.textContent = "Staged";
+    readinessIncomingDetail.textContent = "Root mail unchanged";
+    readinessIncomingCard.classList.add("is-staged");
   }
 
   function updateNavigation() {
@@ -225,8 +273,10 @@ if (inboxRoot) {
           ? "Try a different sender, subject or phrase."
           : state.folder === "archived"
             ? "Archived conversations will be kept here."
-            : state.capabilities.receive
+            : state.routing.rootDeliveryActive
               ? "New customer mail will appear here."
+              : state.routing.testReceiverActive
+                ? "Messages sent to the isolated test addresses will appear here. Root business mail stays unchanged."
               : "The dashboard is ready. Customer mail will appear after inbound routing is connected.",
       ));
       return;
@@ -363,17 +413,11 @@ if (inboxRoot) {
       state.messages = Array.isArray(payload.messages) ? payload.messages : [];
       state.capabilities = payload.capabilities || state.capabilities;
       updateMailboxCounts(payload.mailboxes);
-      const enabled = payload.inboundEnabled === true;
-      setConnection(
-        enabled
-          ? "Cloudflare is receiving mail for the Operations inbox."
-          : "Mailbox dashboard ready. Inbound routing is not connected yet.",
-        enabled ? "ready" : "staged",
-      );
-      routingState.textContent = enabled ? "Routing active" : "Inbound not connected";
-      routingDetail.textContent = enabled
-        ? "Three explicit staff address rules are enabled."
-        : "Existing business mail remains unchanged.";
+      applyRoutingState(payload.routing || {
+        status: payload.inboundEnabled === true ? "active" : "staged",
+        rootDeliveryActive: payload.inboundEnabled === true,
+        testReceiverActive: false,
+      });
       replyNote.textContent = payload.capabilities?.send
         ? "Review your reply before sending."
         : "Replies save as drafts while Cloudflare sending is being enabled.";
@@ -531,6 +575,13 @@ if (inboxRoot) {
   function setComposeStatus(message, error = false) {
     composeStatus.textContent = message;
     composeStatus.classList.toggle("is-error", error);
+    composeStatus.classList.toggle("is-dirty", message === "Unsaved changes");
+  }
+
+  function setComposerDirty(dirty) {
+    state.composerDirty = dirty;
+    if (dirty) setComposeStatus("Unsaved changes");
+    else if (composeStatus.textContent === "Unsaved changes") setComposeStatus("");
   }
 
   function openComposer(values = {}, draftId = null) {
@@ -545,6 +596,7 @@ if (inboxRoot) {
     composeForm.elements.to.value = values.to || "";
     composeForm.elements.subject.value = values.subject || "";
     composeForm.elements.plainText.value = values.plainText || "";
+    state.composerDirty = false;
     setComposeStatus("");
     sendButton.disabled = true;
     sendButton.title = "Cloudflare Email Sending must be onboarded before delivery is enabled";
@@ -553,13 +605,19 @@ if (inboxRoot) {
     window.setTimeout(() => composeForm.elements.to.focus(), 0);
   }
 
-  function closeComposer() {
+  function closeComposer({ force = false } = {}) {
     if (!composeDialog) return;
+    if (
+      !force
+      && state.composerDirty
+      && !window.confirm("Discard unsaved changes?")
+    ) return;
     if (composeDialog.open && typeof composeDialog.close === "function") composeDialog.close();
     else composeDialog.removeAttribute("open");
     state.draftId = null;
     state.composerThreadId = "";
     state.composerInReplyTo = "";
+    state.composerDirty = false;
     setComposeStatus("");
   }
 
@@ -611,9 +669,10 @@ if (inboxRoot) {
         );
         return;
       }
+      setComposerDirty(false);
       setComposeStatus("Saved. Nothing was sent.");
       await loadDrafts();
-      window.setTimeout(closeComposer, 450);
+      window.setTimeout(() => closeComposer({ force: true }), 450);
     } catch {
       setComposeStatus("Draft could not be saved.", true);
     } finally {
@@ -715,9 +774,21 @@ if (inboxRoot) {
   });
   inboxRoot.querySelector("[data-archive-thread]").addEventListener("click", archiveSelected);
   inboxRoot.querySelector("[data-mark-unread]").addEventListener("click", markSelectedUnread);
-  composeDialog?.querySelector("[data-close-compose]")?.addEventListener("click", closeComposer);
-  discardCompose?.addEventListener("click", closeComposer);
+  composeDialog?.querySelector("[data-close-compose]")?.addEventListener("click", () => closeComposer());
+  discardCompose?.addEventListener("click", () => closeComposer());
+  composeForm?.addEventListener("input", () => setComposerDirty(true));
+  composeForm?.addEventListener("change", () => setComposerDirty(true));
   composeForm?.addEventListener("submit", saveDraft);
+  composeDialog?.addEventListener("keydown", (event) => {
+    if (
+      composeDialog.open
+      && (event.ctrlKey || event.metaKey)
+      && event.key.toLowerCase() === "s"
+    ) {
+      event.preventDefault();
+      composeForm?.requestSubmit(saveDraftButton);
+    }
+  });
   composeDialog?.addEventListener("cancel", (event) => {
     event.preventDefault();
     closeComposer();
