@@ -538,6 +538,74 @@
   font-weight: 400;
 }
 
+.invoice-payment-settings {
+  margin: 0 0 1rem;
+  border: 1px solid #dedad1;
+  border-radius: .72rem;
+  padding: 1rem;
+  background: #faf9f6;
+}
+
+.invoice-payment-settings > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: .9rem;
+}
+
+.invoice-payment-settings > header span,
+.invoice-payment-settings > header strong {
+  display: block;
+}
+
+.invoice-payment-settings > header span {
+  color: #758189;
+  font-size: .61rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.invoice-payment-settings > header strong {
+  margin-top: .18rem;
+  color: #263844;
+  font-size: .85rem;
+}
+
+.invoice-payment-settings > header p {
+  max-width: 18rem;
+  margin: 0;
+  color: #6b7982;
+  font-size: .69rem;
+  line-height: 1.45;
+  text-align: right;
+}
+
+.invoice-payment-placeholder-note {
+  display: flex;
+  align-items: flex-start;
+  gap: .5rem;
+  margin-top: .7rem;
+  border-radius: .52rem;
+  padding: .62rem .7rem;
+  color: #765c25;
+  background: #f8f0dc;
+  font-size: .68rem;
+  line-height: 1.45;
+}
+
+.invoice-payment-placeholder-note svg {
+  flex: 0 0 auto;
+  width: .95rem;
+  height: .95rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
 .invoice-notes-grid {
   margin: 0;
 }
@@ -587,6 +655,10 @@
   font-size: .82rem;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.invoice-review-list > div:last-child {
+  grid-column: 1 / -1;
 }
 
 .invoice-print-callout {
@@ -831,6 +903,19 @@
   flex: 1 1 auto !important;
 }
 
+.invoice-sheet-pay-link {
+  display: inline-block;
+  margin-top: 1rem;
+  color: #1976d2;
+  font-size: .72rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.invoice-sheet-pay-link:hover {
+  text-decoration: underline;
+}
+
 .invoice-sheet-table-wrap {
   margin-top: 1rem;
 }
@@ -887,6 +972,99 @@
 
 .invoice-sheet-payment-column {
   min-width: 0;
+}
+
+.invoice-sheet-payment-options {
+  margin-bottom: 1rem;
+}
+
+.invoice-sheet-qr-row {
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+}
+
+.invoice-sheet-qr-row > img {
+  display: block;
+  flex: 0 0 auto;
+  width: clamp(4.6rem, 10vw, 5.8rem);
+  height: auto;
+  aspect-ratio: 1;
+}
+
+.invoice-sheet-qr-row > div {
+  display: flex;
+  min-width: 0;
+  min-height: clamp(4.6rem, 10vw, 5.8rem);
+  flex-direction: column;
+  justify-content: center;
+  gap: .55rem;
+}
+
+.invoice-sheet-qr-row a {
+  color: #1976d2;
+  font-size: .72rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.invoice-sheet-payment-brands {
+  display: flex;
+  align-items: center;
+  gap: .28rem;
+}
+
+.invoice-sheet-payment-brands > img {
+  display: block;
+  width: auto;
+  height: 1.18rem;
+}
+
+.invoice-sheet-payment-brands > span {
+  display: grid;
+  height: 1.18rem;
+  place-items: center;
+  border: 1px solid #d0d0d0;
+  border-radius: .22rem;
+  padding: 0 .35rem;
+  background: #fff;
+}
+
+.invoice-sheet-payment-brands > span img {
+  display: block;
+  width: auto;
+  height: .6rem;
+}
+
+.invoice-sheet-bank {
+  margin-top: .75rem;
+}
+
+.invoice-sheet-bank > span {
+  display: block;
+  margin-bottom: .35rem;
+  color: #1a1a1a;
+  font-size: .61rem;
+  font-weight: 700;
+}
+
+.invoice-sheet-bank p {
+  display: grid;
+  grid-template-columns: 4.8rem minmax(0, 1fr);
+  gap: .5rem;
+  margin: .16rem 0;
+  color: #333;
+  font-size: .58rem;
+  line-height: 1.45;
+}
+
+.invoice-sheet-bank p b {
+  font-weight: 500;
+}
+
+.invoice-sheet-bank p > span {
+  overflow-wrap: anywhere;
 }
 
 .invoice-sheet-summary {
@@ -959,7 +1137,7 @@
   display: flex;
   justify-content: center;
   gap: .45rem;
-  margin-top: 5rem;
+  margin-top: 2.5rem;
   color: #b9b6aa;
   font-size: .5rem;
   letter-spacing: .13em;
@@ -1056,10 +1234,24 @@
 
 :root[data-theme="dark"] .invoice-tax-box,
 :root[data-theme="dark"] .invoice-line-item,
+:root[data-theme="dark"] .invoice-payment-settings,
 :root[data-theme="dark"] .invoice-form-actions,
 :root[data-theme="dark"] .invoice-review-list > div {
   border-color: var(--operations-border);
   background: var(--operations-surface-soft);
+}
+
+:root[data-theme="dark"] .invoice-payment-settings > header strong {
+  color: var(--operations-text);
+}
+
+:root[data-theme="dark"] .invoice-payment-settings > header p {
+  color: var(--operations-muted);
+}
+
+:root[data-theme="dark"] .invoice-payment-placeholder-note {
+  color: #f0cf80;
+  background: rgba(201, 142, 31, .14);
 }
 
 :root[data-theme="dark"] .invoice-primary-button {
@@ -1147,6 +1339,15 @@
   .invoice-tax-box:has([name="gstRegistered"]:checked),
   .invoice-review-list {
     grid-template-columns: 1fr;
+  }
+
+  .invoice-payment-settings > header {
+    flex-direction: column;
+  }
+
+  .invoice-payment-settings > header p {
+    max-width: none;
+    text-align: left;
   }
 
   .invoice-line-head {
@@ -1319,6 +1520,7 @@
   }
 
   .invoice-sheet-table tr,
+  .invoice-sheet-payment-options,
   .invoice-sheet-notes,
   .invoice-sheet-payment,
   .invoice-sheet-summary {
