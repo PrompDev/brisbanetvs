@@ -80,7 +80,6 @@ if (builder) {
       bankAccountName: PAYMENT_PLACEHOLDERS.bankAccountName,
       bankBsb: PAYMENT_PLACEHOLDERS.bankBsb,
       bankAccountNumber: PAYMENT_PLACEHOLDERS.bankAccountNumber,
-      paymentReference: "",
       items: [createLine()],
     };
   };
@@ -121,7 +120,6 @@ if (builder) {
       bankAccountName: cleanText(value.bankAccountName, 120) || defaults.bankAccountName,
       bankBsb: cleanText(value.bankBsb, 12) || defaults.bankBsb,
       bankAccountNumber: cleanText(value.bankAccountNumber, 24) || defaults.bankAccountNumber,
-      paymentReference: cleanText(value.paymentReference, 80),
       items: items.length ? items : [createLine()],
     };
   }
@@ -155,7 +153,6 @@ if (builder) {
       "bankAccountName",
       "bankBsb",
       "bankAccountNumber",
-      "paymentReference",
     ].forEach((name) => {
       field(name).value = state[name];
     });
@@ -181,7 +178,6 @@ if (builder) {
       "bankAccountName",
       "bankBsb",
       "bankAccountNumber",
-      "paymentReference",
     ].forEach((name) => {
       state[name] = field(name).value.trim();
     });
@@ -264,7 +260,7 @@ if (builder) {
     }
   }
 
-  function renderPaymentBlock(number) {
+  function renderPaymentBlock() {
     const paymentUrl = safePaymentUrl(state.paymentUrl);
     builder.querySelectorAll("[data-preview-payment-link]").forEach((link) => {
       if (paymentUrl) {
@@ -287,7 +283,6 @@ if (builder) {
     setText("[data-preview-bank-account-name]", state.bankAccountName);
     setText("[data-preview-bank-bsb]", state.bankBsb);
     setText("[data-preview-bank-account-number]", state.bankAccountNumber);
-    setText("[data-preview-payment-reference]", state.paymentReference || number);
 
     const usingPlaceholderDetails = (
       state.paymentUrl === PAYMENT_PLACEHOLDERS.paymentUrl
@@ -399,7 +394,7 @@ if (builder) {
     setText("[data-editor-total]", currency.format(summary.total));
     builder.querySelector("[data-preview-gst-row]").hidden = !state.gstRegistered;
 
-    renderPaymentBlock(number);
+    renderPaymentBlock();
     setOptionalText("[data-preview-notes]", "[data-preview-notes-wrap]", state.customerNote);
     setOptionalText("[data-preview-payment]", "[data-preview-payment-wrap]", state.paymentInstructions);
 
