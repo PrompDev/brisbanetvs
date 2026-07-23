@@ -267,7 +267,7 @@ if (builder) {
       const row = document.createElement("tr");
       row.className = "invoice-preview-empty";
       const cell = document.createElement("td");
-      cell.colSpan = 4;
+      cell.colSpan = 5;
       cell.textContent = "Line items will appear here.";
       row.append(cell);
       body.append(row);
@@ -278,12 +278,14 @@ if (builder) {
       const description = document.createElement("td");
       const quantity = document.createElement("td");
       const price = document.createElement("td");
+      const tax = document.createElement("td");
       const amount = document.createElement("td");
       description.textContent = item.description;
       quantity.textContent = item.quantityValue.toLocaleString("en-AU", { maximumFractionDigits: 2 });
       price.textContent = currency.format(item.unitPriceValue);
+      tax.textContent = state.gstRegistered ? "10%" : "—";
       amount.textContent = currency.format(item.quantityValue * item.unitPriceValue);
-      row.append(description, quantity, price, amount);
+      row.append(description, quantity, price, tax, amount);
       body.append(row);
     });
   }
@@ -292,7 +294,7 @@ if (builder) {
     const items = completeItems();
     const summary = totals();
     const customerContact = [state.customerEmail, state.customerPhone].filter(Boolean).join(" · ");
-    const documentTitle = state.gstRegistered ? "Tax invoice" : "Invoice";
+    const documentTitle = state.gstRegistered ? "Tax Invoice" : "Invoice";
     const number = state.invoiceNumber || "Draft";
 
     setText("[data-preview-title]", documentTitle);
@@ -310,9 +312,11 @@ if (builder) {
     previewAbn.hidden = !previewAbn.textContent;
 
     renderPreviewItems(items);
-    setText("[data-preview-subtotal]", currency.format(summary.subtotal));
+    setText("[data-preview-subtotal]", currency.format(summary.subtotal - summary.gst));
     setText("[data-preview-gst]", currency.format(summary.gst));
     setText("[data-preview-total]", currency.format(summary.total));
+    setText("[data-preview-amount-due]", currency.format(summary.total));
+    setText("[data-preview-bottom-due]", currency.format(summary.total));
     setText("[data-editor-total]", currency.format(summary.total));
     builder.querySelector("[data-preview-gst-row]").hidden = !state.gstRegistered;
 

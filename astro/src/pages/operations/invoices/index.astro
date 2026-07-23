@@ -231,89 +231,104 @@ import "../../../styles/operations-invoices.css";
 
         <article class="invoice-sheet" data-invoice-preview>
           <header class="invoice-sheet-header">
-            <div class="invoice-sheet-brand">
+            <h2 data-preview-title>Invoice</h2>
+            <div class="invoice-sheet-brand" aria-label="Brisbane TVs">
               <span class="invoice-sheet-mark" aria-hidden="true"><i></i><i></i></span>
               <div>
                 <strong>BRISBANE</strong>
                 <small>TVS</small>
               </div>
             </div>
-            <div class="invoice-sheet-title">
-              <h2 data-preview-title>Invoice</h2>
-              <p data-preview-number>Draft</p>
-            </div>
           </header>
 
           <div class="invoice-sheet-parties">
             <div>
-              <span>From</span>
+              <strong data-preview-customer>Customer name</strong>
+              <p data-preview-business hidden></p>
+              <p data-preview-address></p>
+              <p data-preview-contact></p>
+            </div>
+            <div>
               <strong>Brisbane TVs</strong>
               <p>Brisbane, Queensland</p>
               <p data-preview-abn hidden></p>
-            </div>
-            <div>
-              <span>Bill to</span>
-              <strong data-preview-customer>Customer name</strong>
-              <p data-preview-business hidden></p>
-              <p data-preview-contact></p>
-              <p data-preview-address></p>
+              <p>Admin@brisbanetvs.com</p>
+              <p>0432 145 101</p>
             </div>
           </div>
 
-          <dl class="invoice-sheet-meta">
+          <div class="invoice-sheet-hero">
+            <div class="invoice-sheet-hero-primary">
+              <span>Amount due</span>
+              <strong data-preview-amount-due>A$0.00</strong>
+            </div>
+            <div class="invoice-sheet-hero-primary">
+              <span>Due date</span>
+              <strong data-preview-due>—</strong>
+            </div>
+            <div class="invoice-sheet-hero-spacer"></div>
             <div>
-              <dt>Issue date</dt>
-              <dd data-preview-issue>—</dd>
+              <span>Issue date</span>
+              <strong data-preview-issue>—</strong>
             </div>
             <div>
-              <dt>Due date</dt>
-              <dd data-preview-due>—</dd>
+              <span>Invoice number</span>
+              <strong data-preview-number>Draft</strong>
             </div>
-          </dl>
+          </div>
 
           <div class="invoice-sheet-table-wrap">
             <table class="invoice-sheet-table">
               <thead>
                 <tr>
                   <th>Description</th>
-                  <th>Qty</th>
-                  <th>Unit price</th>
+                  <th>Quantity</th>
+                  <th>Price</th>
+                  <th>Tax</th>
                   <th>Amount</th>
                 </tr>
               </thead>
               <tbody data-preview-items>
                 <tr class="invoice-preview-empty">
-                  <td colspan="4">Line items will appear here.</td>
+                  <td colspan="5">Line items will appear here.</td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <div class="invoice-sheet-summary">
-            <dl>
-              <div>
-                <dt>Subtotal</dt>
-                <dd data-preview-subtotal>A$0.00</dd>
+          <div class="invoice-sheet-bottom">
+            <div class="invoice-sheet-payment-column">
+              <div class="invoice-sheet-notes" data-preview-notes-wrap hidden>
+                <span>Note</span>
+                <p data-preview-notes></p>
               </div>
-              <div data-preview-gst-row hidden>
-                <dt>GST included</dt>
-                <dd data-preview-gst>A$0.00</dd>
-              </div>
-              <div class="is-total">
-                <dt>Total</dt>
-                <dd data-preview-total>A$0.00</dd>
-              </div>
-            </dl>
-          </div>
 
-          <div class="invoice-sheet-notes" data-preview-notes-wrap hidden>
-            <span>Note</span>
-            <p data-preview-notes></p>
-          </div>
+              <div class="invoice-sheet-payment" data-preview-payment-wrap hidden>
+                <span>Payment instructions</span>
+                <p data-preview-payment></p>
+              </div>
+            </div>
 
-          <div class="invoice-sheet-payment" data-preview-payment-wrap hidden>
-            <span>Payment instructions</span>
-            <p data-preview-payment></p>
+            <div class="invoice-sheet-summary">
+              <dl>
+                <div>
+                  <dt>Subtotal</dt>
+                  <dd data-preview-subtotal>A$0.00</dd>
+                </div>
+                <div data-preview-gst-row hidden>
+                  <dt>Total GST 10%</dt>
+                  <dd data-preview-gst>A$0.00</dd>
+                </div>
+                <div class="is-total">
+                  <dt>Total</dt>
+                  <dd data-preview-total>A$0.00</dd>
+                </div>
+                <div class="is-due">
+                  <dt>Amount due</dt>
+                  <dd data-preview-bottom-due>A$0.00</dd>
+                </div>
+              </dl>
+            </div>
           </div>
 
           <footer class="invoice-sheet-footer">
